@@ -52,6 +52,7 @@ const CONFIGURATOR_DEFAULT = {
   ambientPressReduction:     75,
   frameBevelAlpha:           75,
   frameBevelWidth:           3,
+  iconName:                  'send',  // paper-airplane glyph on the SUBMIT face
 };
 
 const state = {
@@ -265,6 +266,22 @@ function initControls() {
   wireRangeNum('btn-letter-spacing','btn-letter-spacing-num','letterSpacing',
     v => parseFloat(v.toFixed(3)));
 
+  // Icon
+  wireSelect('btn-icon-position', 'iconPosition');
+  wireRangeNum('btn-icon-size', 'btn-icon-size-num', 'iconSize');
+  wireRangeNum('btn-icon-gap',  'btn-icon-gap-num',  'iconGap');
+  wireCheckbox('btn-icon-use-color', 'iconUseColor', on => depRow('icon-color-row', on));
+  wireColor('btn-icon-color', 'iconColor');
+  wireCheckbox('btn-icon-fill', 'iconFill');
+  const iconNameInput = $('btn-icon-name');
+  if (iconNameInput) {
+    iconNameInput.addEventListener('input', () => {
+      state.iconName = iconNameInput.value.trim();
+      syncIconPicker();
+      updatePreview();
+    });
+  }
+
   // Face
   wireCheckbox('btn-use-press-color', 'usePressColor', on => depRow('press-color-row', on));
   wireColor('btn-press-color', 'pressColor');
@@ -451,6 +468,93 @@ function initControls() {
 }
 
 
+// ── Icon picker ──────────────────────────────────────────────
+// Curated Material Symbols (Rounded) chosen for instant recognition on button
+// faces. Rendered as ligatures, so `name` must be a real Material Symbols
+// codepoint name. The user may also free-type any other valid symbol name.
+const ICON_CHOICES = [
+  // Actions / Submit
+  { name: 'send',          label: 'Send',          group: 'Actions' },
+  { name: 'upload',        label: 'Upload',        group: 'Actions' },
+  { name: 'download',      label: 'Download',      group: 'Actions' },
+  { name: 'save',          label: 'Save',          group: 'Actions' },
+  { name: 'print',         label: 'Print',         group: 'Actions' },
+  { name: 'share',         label: 'Share',         group: 'Actions' },
+  { name: 'edit',          label: 'Edit',          group: 'Actions' },
+  { name: 'delete',        label: 'Delete',        group: 'Actions' },
+  { name: 'add',           label: 'Add',           group: 'Actions' },
+  { name: 'remove',        label: 'Remove',        group: 'Actions' },
+  { name: 'search',        label: 'Search',        group: 'Actions' },
+  { name: 'refresh',       label: 'Refresh',       group: 'Actions' },
+  { name: 'login',         label: 'Log in',        group: 'Actions' },
+  { name: 'logout',        label: 'Log out',       group: 'Actions' },
+  // Confirmation / Status
+  { name: 'check_circle',  label: 'Confirm',       group: 'Confirmation' },
+  { name: 'cancel',        label: 'Cancel',        group: 'Confirmation' },
+  { name: 'close',         label: 'Close',         group: 'Confirmation' },
+  { name: 'done',          label: 'Done',          group: 'Confirmation' },
+  { name: 'lock',          label: 'Lock',          group: 'Confirmation' },
+  { name: 'lock_open',     label: 'Unlock',        group: 'Confirmation' },
+  // Navigation / Arrows
+  { name: 'arrow_forward', label: 'Next',          group: 'Navigation' },
+  { name: 'arrow_back',    label: 'Back',          group: 'Navigation' },
+  { name: 'arrow_upward',  label: 'Up',            group: 'Navigation' },
+  { name: 'arrow_downward',label: 'Down',          group: 'Navigation' },
+  { name: 'chevron_right', label: 'Continue',      group: 'Navigation' },
+  { name: 'open_in_new',   label: 'Open link',     group: 'Navigation' },
+  { name: 'home',          label: 'Home',          group: 'Navigation' },
+  // Media controls
+  { name: 'play_arrow',    label: 'Play',          group: 'Media' },
+  { name: 'pause',         label: 'Pause',         group: 'Media' },
+  { name: 'stop',          label: 'Stop',          group: 'Media' },
+  { name: 'skip_next',     label: 'Skip next',     group: 'Media' },
+  { name: 'skip_previous', label: 'Skip previous', group: 'Media' },
+  { name: 'mic',           label: 'Record',        group: 'Media' },
+  // Commerce
+  { name: 'shopping_cart', label: 'Add to cart',   group: 'Commerce' },
+  { name: 'shopping_bag',  label: 'Shop',          group: 'Commerce' },
+  { name: 'payments',      label: 'Pay',           group: 'Commerce' },
+  { name: 'star',          label: 'Favorite',      group: 'Commerce' },
+  // Communication
+  { name: 'mail',          label: 'Email',         group: 'Communication' },
+  { name: 'phone',         label: 'Call',          group: 'Communication' },
+  { name: 'chat',          label: 'Chat',          group: 'Communication' },
+  { name: 'notifications', label: 'Notify',        group: 'Communication' },
+];
+
+function renderIconPicker() {
+  const container = $('icon-picker');
+  if (!container) return;
+  const noneSwatch = `<button type="button" class="icon-swatch icon-swatch--none" data-icon="" title="No icon">None</button>`;
+  const swatches = ICON_CHOICES.map(ic =>
+    `<button type="button" class="icon-swatch" data-icon="${ic.name}" title="${ic.label} — ${ic.name}"><span class="material-symbols-rounded">${ic.name}</span></button>`
+  ).join('');
+  container.innerHTML = noneSwatch + swatches;
+  container.querySelectorAll('.icon-swatch').forEach(sw => {
+    sw.addEventListener('click', () => {
+      state.iconName = sw.dataset.icon;
+      const nameInput = $('btn-icon-name');
+      if (nameInput) nameInput.value = state.iconName;
+      syncIconPicker();
+      updatePreview();
+    });
+  });
+  syncIconPicker();
+}
+
+function syncIconPicker() {
+  const container = $('icon-picker');
+  const current = (state.iconName || '').trim();
+  if (container) {
+    container.querySelectorAll('.icon-swatch').forEach(sw => {
+      sw.classList.toggle('selected', sw.dataset.icon === current);
+    });
+  }
+  const nameInput = $('btn-icon-name');
+  if (nameInput && nameInput.value !== current) nameInput.value = current;
+  depRow('icon-color-row', !!state.iconUseColor);
+}
+
 // ── Style picker ─────────────────────────────────────────────
 
 const STYLE_STORAGE_KEY = 'clicky-button-styles';
@@ -559,6 +663,7 @@ function syncAllControls() {
               : id === 'bz-x2' ? 'bzX2' : 'bzY2';
     if (el) el.value = state[key];
   });
+  syncIconPicker();
 }
 
 function renderStylePicker() {
@@ -751,6 +856,10 @@ function downloadZip(styleName) {
   const cssSnippet = buildCss(state, ':root');
   const htmlSnippet = buildGridHtml(state);
   const slug = slugifyFilename(styleName);
+  // Exported buttons that use an icon need the Material Symbols Rounded webfont.
+  const iconFontLink = (state.iconName || '').trim()
+    ? `\n  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0..1,0&display=block">`
+    : '';
 
   const standaloneHtml =
 `<!DOCTYPE html>
@@ -758,7 +867,7 @@ function downloadZip(styleName) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>${styleName || 'Clicky Button'}</title>
+  <title>${styleName || 'Clicky Button'}</title>${iconFontLink}
   <link rel="stylesheet" href="${slug}.css">
 </head>
 <body style="padding:40px;background:#f4f1ed;">
@@ -792,6 +901,7 @@ ${cssSnippet}
 // ── Boot ──────────────────────────────────────────────────────
 function boot() {
   initControls();
+  renderIconPicker();
   renderStylePicker();
   // Reflect the configurator's default state (amber SUBMIT) into every control
   // so the inputs match the preview on first load, then render.
