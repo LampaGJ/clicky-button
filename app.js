@@ -268,7 +268,7 @@ function initControls() {
 
   // Icon
   wireSelect('btn-icon-position', 'iconPosition');
-  wireRangeNum('btn-icon-size', 'btn-icon-size-num', 'iconSize');
+  wireRangeNum('btn-icon-size', 'btn-icon-size-num', 'iconScale', v => parseFloat(v.toFixed(2)));
   wireRangeNum('btn-icon-gap',  'btn-icon-gap-num',  'iconGap');
   wireCheckbox('btn-icon-use-color', 'iconUseColor', on => depRow('icon-color-row', on));
   wireColor('btn-icon-color', 'iconColor');
