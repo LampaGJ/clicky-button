@@ -1,0 +1,760 @@
+/* ============================================================
+   CLICKY BUTTON GENERATOR — App UI Styles
+   ============================================================ */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --app-bg:          #111213;
+  --panel-bg:        #1a1c1e;
+  --panel-border:    #2a2d31;
+  --text-primary:    #e8eaed;
+  --text-secondary:  #9aa0a6;
+  --text-tertiary:   #5f6368;
+  --accent:          #5b8dee;
+  --accent-hover:    #7ba5f3;
+  --accent-active:   #4272d4;
+  --success:         #34a853;
+  --ctrl-bg:         #2a2d31;
+  --ctrl-border:     #3c4043;
+  --radius-sm:       6px;
+  --radius-md:       10px;
+  --font-ui:         -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono:       "JetBrains Mono", "Fira Code", "Cascadia Code", monospace;
+  --transition-ui:   140ms ease;
+
+  /* Layout rows */
+  --preview-height:  52vh;
+}
+
+html, body {
+  height: 100%;
+  background: var(--app-bg);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  line-height: 1.5;
+  overflow: hidden;
+}
+
+/* ── App layout — two rows: preview | controls ──── */
+
+.app-layout {
+  display: grid;
+  grid-template-rows: var(--preview-height) 1fr;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PREVIEW SECTION
+   ═══════════════════════════════════════════════════════════ */
+
+.preview-canvas {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--app-bg);
+  border-bottom: 1px solid var(--panel-border);
+  position: relative;  /* anchor for speed-float */
+}
+
+/* ── Toolbar ── */
+
+.preview-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px clamp(10px, 2vw, 14px);
+  border-bottom: 1px solid var(--panel-border);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  background: var(--panel-bg);
+}
+
+.preview-bg-toggle { margin-right: auto; }
+.toolbar-mode-toggle { margin-left: auto; }
+
+/* ── Style picker (toolbar center) ── */
+
+.toolbar-style-picker {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.toolbar-style-picker select,
+.toolbar-style-picker button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 10px;
+  background: var(--ctrl-bg);
+  border: 1px solid var(--ctrl-border);
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+  transition: background var(--transition-ui), color var(--transition-ui), border-color var(--transition-ui);
+}
+
+.toolbar-style-picker select {
+  max-width: 180px;
+  -webkit-appearance: none;
+  appearance: none;
+  padding-right: 20px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23888'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+}
+
+.toolbar-style-picker button:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.style-picker-delete {
+  opacity: 0.6;
+}
+
+.style-picker-delete:hover {
+  opacity: 1;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+#style-delete-btn:hover {
+  background: #c00;
+  border-color: #c00;
+  color: #fff;
+}
+
+/* ── Three-panel row ── */
+
+.preview-panels {
+  display: grid;
+  grid-template-columns: 1fr 3fr 1fr;
+  flex: 1;
+  min-height: 0;
+  gap: 1px;
+  background: var(--panel-border);  /* gap color = border */
+  overflow: hidden;
+}
+
+.preview-panel {
+  display: flex;
+  flex-direction: column;
+  background: var(--app-bg);
+  overflow: hidden;
+  min-width: 0;
+}
+
+.preview-panel-label {
+  flex-shrink: 0;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  padding: 4px 10px 3px;
+  background: var(--panel-bg);
+  border-bottom: 1px solid var(--panel-border);
+}
+
+/* ── Panel A: State Test ── */
+
+.preview-panel--state .state-test-stage {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 6px 28px; /* bottom pad leaves room for speed-float */
+  overflow: auto;
+  min-height: 0;
+}
+
+/* State-specific frozen overrides for the state test buttons */
+.state-resting .btn-face {
+  transform: translateY(0) !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  box-shadow: var(--face-shadow-resting) !important;
+  background-color: var(--face-color) !important;
+  transition: none !important;
+  animation: none !important;
+}
+
+.state-pressed-max .btn-face {
+  transform: translateY(var(--press-translate)) !important;
+  padding-top: var(--press-translate) !important;
+  padding-bottom: 0 !important;
+  box-shadow: var(--face-shadow-pressed) !important;
+  background-color: var(--face-pressed) !important;
+  transition: none !important;
+  animation: none !important;
+}
+
+
+.state-toggle-point .btn-face {
+  transform: translateY(var(--toggle-height)) !important;
+  padding-top: max(0px, var(--toggle-height)) !important;
+  padding-bottom: 0 !important;
+  box-shadow: var(--face-shadow-pressed) !important;
+  background-color: var(--face-pressed) !important;
+  transition: none !important;
+  animation: none !important;
+}
+
+/* Hover state — face lifted by --hover-lift (negative Y = upward) */
+.state-hover .btn-face {
+  transform: translateY(calc(-1 * var(--hover-lift))) !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  box-shadow: var(--face-shadow-resting) !important;
+  background-color: var(--face-color) !important;
+  transition: none !important;
+  animation: none !important;
+}
+
+/* Scale state-test items down to fit the narrow 1/5-width panel.
+   zoom collapses the layout box proportionally (baseline across current browsers).
+   @supports fallback uses transform + negative margins for older engines. */
+.state-test-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  zoom: 0.52;
+}
+
+@supports not (zoom: 1) {
+  .state-test-item {
+    transform: scale(0.52);
+    transform-origin: center center;
+    /* Collapse layout footprint: shrink the intrinsic box by the scale factor.
+       Using a negative margin-based approach isn't viable without knowing the
+       exact px dimensions; instead, constrain width and hide overflow. */
+    width: fit-content;
+    max-width: 100%;
+  }
+}
+
+.state-test-caption {
+  font-size: 9px;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  text-align: center;
+}
+
+/* ── Panel B: Working Preview ── */
+
+.preview-stage {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  padding: 16px 12px 28px; /* bottom pad for speed-float */
+  transition: background 200ms ease;
+  overflow: hidden;
+}
+
+/* Background variants — shared across working + 3D panels */
+.preview-canvas.bg-light   .preview-stage { background: #f0ede8; }
+.preview-canvas.bg-dark    .preview-stage { background: #1a1a1a; }
+.preview-canvas.bg-neutral .preview-stage { background: #888; }
+.preview-canvas.bg-light   .state-test-stage { background: #f0ede8; }
+.preview-canvas.bg-dark    .state-test-stage { background: #1a1a1a; }
+.preview-canvas.bg-neutral .state-test-stage { background: #888; }
+
+/* Responsive bg-class fallback — also apply directly on stage */
+.preview-stage.bg-light   { background: #f0ede8; }
+.preview-stage.bg-dark    { background: #1a1a1a; }
+.preview-stage.bg-neutral { background: #888; }
+
+/* ── Panel C: 3D View ── */
+
+.preview-panel--3d {
+  position: relative;
+}
+
+.preview-panel--3d .preview-stage--3d {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 8px 8px;
+  overflow: hidden;
+  min-height: 0;
+  perspective: 1400px;
+  perspective-origin: 50% 35%;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.preview-panel--3d .preview-stage--3d.dragging {
+  cursor: grabbing;
+}
+
+.preview-panel--3d .preview-stage--3d .btn-grid {
+  transform: rotateX(var(--view3d-rx, 50deg)) rotateY(var(--view3d-ry, -20deg));
+  transform-style: preserve-3d;
+  /* Disable pointer events on the grid during drag so the stage captures them */
+  pointer-events: none;
+}
+
+.preview-panel--3d .preview-stage--3d .btn-housing {
+  transform-style: preserve-3d;
+}
+
+/* bg for 3d panel matches main preview */
+.preview-canvas.bg-light   .preview-stage--3d { background: #f0ede8; }
+.preview-canvas.bg-dark    .preview-stage--3d { background: #1a1a1a; }
+.preview-canvas.bg-neutral .preview-stage--3d { background: #888; }
+
+/* ── Floating speed slider — detached pill, full-round corners ── */
+
+.speed-float {
+  position: absolute;
+  bottom: 10px;                       /* lifted off the preview/settings seam */
+  left: 50%;
+  transform: translateX(-50%);
+  width: clamp(200px, 50%, 480px);
+  padding: 6px 16px 5px;
+  background: rgba(20, 22, 24, 0.55); /* less opaque */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 14px;                /* fully rounded all corners */
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.speed-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+}
+
+.speed-icon {
+  font-size: 18px;
+  line-height: 1;
+  user-select: none;
+  opacity: 0.9;
+  width: 22px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.speed-row input[type="range"] {
+  flex: 1;
+  min-width: 0;
+  width: auto;
+  height: 6px;
+  background: var(--ctrl-border);
+  border-radius: 3px;
+}
+
+.speed-row input[type="range"]::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--ctrl-border);
+}
+
+.speed-row input[type="range"]::-moz-range-track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--ctrl-border);
+}
+
+.speed-row input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid rgba(20, 22, 24, 0.9);
+  cursor: pointer;
+  margin-top: -6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
+
+.speed-row input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid rgba(20, 22, 24, 0.9);
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
+
+.speed-readout {
+  text-align: center;
+  font-size: 10px;
+  color: var(--text-tertiary);
+  margin-top: 1px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.speed-readout #master-speed-readout {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CONTROLS PANEL — three-column card grid
+   ═══════════════════════════════════════════════════════════ */
+
+.controls-panel {
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: var(--panel-bg);
+  border-bottom: 1px solid var(--panel-border);
+  scrollbar-width: thin;
+  scrollbar-color: var(--panel-border) transparent;
+}
+
+/* Three-column grid of card columns */
+.controls-columns {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  padding: 14px 16px;
+  min-height: 100%;
+  align-items: start;
+}
+
+/* Each column scrolls independently if very tall — relies on the parent
+   controls-panel for scroll; columns just stack their cards naturally */
+.ctrl-column {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+/* ── Card ── */
+
+.ctrl-card {
+  background: var(--app-bg);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius-md);
+  padding: 10px 12px 8px;
+  min-width: 0;
+}
+
+.ctrl-card-header {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin-bottom: 6px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.ctrl-card-header .material-symbols-rounded {
+  font-size: 16px;
+}
+
+/* ── Control rows ── */
+
+.ctrl-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  min-height: 28px;
+}
+
+/* First ctrl-row in a card needs no top pad */
+.ctrl-card .ctrl-row:first-of-type {
+  padding-top: 2px;
+}
+
+.ctrl-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ctrl-label em {
+  font-style: normal;
+  color: var(--text-tertiary);
+  font-size: 11px;
+  margin-left: 3px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FORM CONTROLS (shared)
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── Range inputs ── */
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 80px;
+  height: 4px;
+  background: var(--ctrl-border);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  transition: background var(--transition-ui), transform var(--transition-ui);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: none;
+  cursor: pointer;
+}
+
+input[type="range"]:hover::-webkit-slider-thumb {
+  background: var(--accent-hover);
+  transform: scale(1.15);
+}
+
+input[type="range"]:focus-visible::-webkit-slider-thumb {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ── Number inputs ── */
+
+.num-input {
+  width: 52px;
+  padding: 3px 6px;
+  background: var(--ctrl-bg);
+  border: 1px solid var(--ctrl-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-family: var(--font-mono);
+  text-align: right;
+  outline: none;
+}
+
+.num-input:focus { border-color: var(--accent); }
+
+/* ── Color pickers ── */
+
+input[type="color"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 36px;
+  height: 24px;
+  border: 1px solid var(--ctrl-border);
+  border-radius: var(--radius-sm);
+  background: none;
+  cursor: pointer;
+  padding: 1px;
+  grid-column: 2 / -1;
+}
+
+input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+input[type="color"]::-webkit-color-swatch { border: none; border-radius: 4px; }
+
+/* ── Text input ── */
+
+.text-input {
+  padding: 4px 8px;
+  background: var(--ctrl-bg);
+  border: 1px solid var(--ctrl-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 12px;
+  width: 100%;
+  outline: none;
+  grid-column: 2 / -1;
+}
+
+.text-input:focus { border-color: var(--accent); }
+
+/* ── Select ── */
+
+select {
+  padding: 4px 8px;
+  background: var(--ctrl-bg);
+  border: 1px solid var(--ctrl-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: 12px;
+  outline: none;
+  cursor: pointer;
+  grid-column: 2 / -1;
+  max-width: 100%;
+}
+
+select:focus { border-color: var(--accent); }
+
+/* ── Checkbox toggle ── */
+
+.toggle-check {
+  width: 32px;
+  height: 18px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--ctrl-border);
+  border-radius: 9px;
+  cursor: pointer;
+  position: relative;
+  transition: background var(--transition-ui);
+  grid-column: 2 / -1;
+  flex-shrink: 0;
+  touch-action: manipulation;
+}
+
+.toggle-check::after {
+  content: '';
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform var(--transition-ui);
+}
+
+.toggle-check:checked { background: var(--accent); }
+.toggle-check:checked::after { transform: translateX(14px); }
+.toggle-check:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ── Radio toggle pills ── */
+
+.preview-bg-toggle,
+.toolbar-mode-toggle {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.toggle-pill { display: flex; }
+
+.toggle-pill input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 0; height: 0;
+}
+
+.toggle-pill span {
+  display: flex;
+  align-items: center;
+  padding: 3px 10px;
+  background: var(--ctrl-bg);
+  border: 1px solid var(--ctrl-border);
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background var(--transition-ui), color var(--transition-ui), border-color var(--transition-ui);
+  user-select: none;
+}
+
+.toggle-pill input:checked + span { background: var(--accent); border-color: var(--accent); color: #fff; }
+.toggle-pill input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ── Custom bezier ── */
+
+.custom-bezier .bezier-inputs { display: flex; gap: 4px; grid-column: 2 / -1; }
+.bz-num { width: 44px !important; text-align: center !important; }
+
+/* ── Scrollbar ── */
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--panel-border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--ctrl-border); }
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE — narrow viewport (<= 900px): single column
+   ═══════════════════════════════════════════════════════════ */
+
+@media (max-width: 900px) {
+  :root {
+    --preview-height: auto;
+  }
+
+  html, body { overflow: auto; }
+
+  .app-layout {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+    grid-template-rows: auto 1fr;
+  }
+
+  .preview-canvas {
+    height: auto;
+    min-height: 0;
+  }
+
+  /* Stack preview panels vertically on narrow viewports */
+  .preview-panels {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    background: var(--panel-border);
+  }
+
+  .preview-panel--state .state-test-stage,
+  .preview-stage {
+    min-height: 140px;
+  }
+
+  .preview-panel--3d .preview-stage--3d {
+    min-height: 140px;
+  }
+
+  .speed-float {
+    width: calc(100% - 24px);
+    border-radius: 0;
+    bottom: 0;
+    left: 0;
+    transform: none;
+  }
+
+  /* Collapse to single column */
+  .controls-columns {
+    grid-template-columns: 1fr;
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .controls-panel { overflow: visible; height: auto; }
+
+  input[type="range"] { width: 70px; }
+}

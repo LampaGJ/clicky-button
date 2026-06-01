@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Clicky Button Generator</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20,400,0,0">
+  <script>
+    // Cache-bust local asset loads so each refresh fetches fresh styles.css / app.js.
+    (function () {
+      var bust = Date.now().toString(36);
+      document.write('<link rel="stylesheet" href="styles.css?v=' + bust + '">');
+      window.__BUST = bust;
+    })();
+  </script>
+</head>
+<!-- ontouchstart="" enables :active on iOS Safari without any JS overhead -->
+<body ontouchstart="">
+  <div class="app-layout">
+
+    <!-- ═══════════════════════════════════════════════════════
+         PREVIEW SECTION
+         Three panels: State Test | Working Preview | 3D View
+         ═══════════════════════════════════════════════════════ -->
+    <section class="preview-canvas">
+
+      <!-- Shared toolbar: bg toggle + mode toggle -->
+      <div class="preview-toolbar">
+        <div class="preview-bg-toggle">
+          <label class="toggle-pill">
+            <input type="radio" name="preview-bg" value="light" checked>
+            <span>Light</span>
+          </label>
+          <label class="toggle-pill">
+            <input type="radio" name="preview-bg" value="dark">
+            <span>Dark</span>
+          </label>
+          <label class="toggle-pill">
+            <input type="radio" name="preview-bg" value="neutral">
+            <span>Neutral</span>
+          </label>
+        </div>
+
+        <div class="toolbar-style-picker" id="style-picker"></div>
+
+        <div class="toolbar-mode-toggle">
+          <label class="toggle-pill">
+            <input type="radio" name="btn-mode" id="mode-click" value="click" checked>
+            <span>Click</span>
+          </label>
+          <label class="toggle-pill">
+            <input type="radio" name="btn-mode" id="mode-toggle" value="toggle">
+            <span>Toggle</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Three preview panels side by side -->
+      <div class="preview-panels">
+
+        <!-- Panel A: State Test — three frozen states -->
+        <div class="preview-panel preview-panel--state">
+          <div class="preview-panel-label">State Test</div>
+          <div class="state-test-stage" id="state-test-stage"></div>
+        </div>
+
+        <!-- Panel B: Working Preview — live interactive -->
+        <div class="preview-panel preview-panel--working">
+          <div class="preview-panel-label">Working Preview</div>
+          <div class="preview-stage" id="preview-stage"></div>
+        </div>
+
+        <!-- Panel C: 3D View — drag to rotate -->
+        <div class="preview-panel preview-panel--3d">
+          <div class="preview-panel-label">3D View</div>
+          <div class="preview-stage preview-stage--3d" id="preview-stage-3d"></div>
+        </div>
+
+      </div><!-- /preview-panels -->
+
+      <!-- Floating speed slider — anchored to bottom of preview section -->
+      <div class="speed-float">
+        <label class="speed-row" for="master-speed">
+          <span class="speed-icon" aria-label="Slower">🐢</span>
+          <input type="range" id="master-speed" min="-2" max="0" value="0" step="0.05">
+          <span class="speed-icon" aria-label="Faster">🐰</span>
+        </label>
+        <div class="speed-readout"><span id="master-speed-readout">1.00×</span> speed</div>
+      </div>
+
+      <style id="preview-style"></style>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         CONTROLS — three-column card layout
+         ═══════════════════════════════════════════════════════ -->
+    <div class="controls-panel">
+      <div class="controls-columns">
+
+        <!-- ══════════════════════════════
+             COLUMN 1 — Shape & Text
+             ══════════════════════════════ -->
+        <div class="ctrl-column">
+
+          <!-- Card: Size & Shape -->
+          <div class="ctrl-card">
+            <div class="ctrl-card-header"><span class="material-symbols-rounded">rounded_corner</span> Size &amp; Shape</div>
+            <label class="ctrl-row"><span class="ctrl-label">Width <em>px</em></span>
+              <input type="range" id="container-width" min="60" max="400" value="180" step="2">
+              <input type="number" id="container-width-num" min="60" max="400" value="180" step="2" class="num-input"></label>
+            <label class="ctrl-row"><span class="ctrl-label">Height <em>px</em></span>
+              <input type="range" id="container-height" min="32" max="200" value="88" step="2">
+              <input type="number" id="container-height-num" min="32" max="200" value="88" step="2" class="num-input"></label>
+            <label class="ctrl-row"><span class="ctrl-label">Button Radius <em>%</em></span>
+              <input type="range" id="btn-radius" min="0" max="50" value="8" step="1">
+              <input type="number" id="btn-radius-num" min="0" max="50" value="8" step="1" class="num-input"></label>
+            <label class="ctrl-row"><span class="ctrl-label">Chrome Radius <em>%</em></span>
+              <input type="range" id="btn-chrome-radius" min="0" max="50" value="12" step="1">
+              <input type="number" id="btn-chrome-radius-num" min="0" max="50" value="12" step="1" class="num-input"></label>
+          </div>
+
+          <!-- Card: Typography -->
+          <div class="ctrl-card">
+            <div class="ctrl-card-header"><span class="material-symbols-rounded">format_size</span> Typography</div>
+            <label class="ctrl-row"><span class="ctrl-label">Text Color</span>
+              <input type="color" id="btn-text-color" value="#1a1a1a"></label>
+            <label class="ctrl-row"><span class="ctrl-label">Text Wrap</span>
+              <input type="checkbox" id="btn-text-wrap" class="toggle-check" checked></label>
+            <label class="ctrl-row"><span class="ctrl-label">Font Size <em>cqi · 0=auto</em></span>
+              <input type="range" id="btn-font-size" min="0" max="40" value="0" step="1">
+              <input type="number" id="btn-font-size-num" min="0" max="40" value="0" step="1" class="num-input"></label>
+            <label class="ctrl-row"><span class="ctrl-label">Font Weight</span>
+              <select id="btn-font-weight">
+                <option value="400">400 Regular</option>
+                <option value="500">500 Medium</option>
+                <option value="600">600 Semi-bold</option>
+                <option value="700" selected>700 Bold</option>
+                <option value="800">800 Extra-bold</option>
+                <option value="900">900 Black</option>
+              </select></label>
+            <label class="ctrl-row"><span class="ctrl-label">Letter Spacing <em>em</em></span>
+              <input type="range" id="btn-letter-spacing" min="-0.1" max="0.5" value="0.08" step="0.01">
+              <input type="number" id="btn-letter-spacing-num" min="-0.1" max="0.5" value="0.08" step="0.01" class="num-input"></label>
+          </div>
+
+          <!-- Card: Grid Layout -->
+          <div class="ctrl-card">
+            <div class="ctrl-card-header"><span class="material-symbols-rounded">grid_view</span> Grid Layout</div>
+            <label class="ctrl-row"><span class="ctrl-label">Button Count</span>
+              <input type="range" id="btn-count" min="1" max="12" value="4" step="1">
+              <input type="number" id="btn-count-num" min="1" max="12" value="4" step="1" class="num-input"></label>
+            <label class="ctrl-row"><span class="ctrl-label">Labels</span>
+              <input type="text" id="btn-labels" value="PLAY,STOP,REC,PAUSE" class="text-input" placeholder="comma-separated"></label>
+            <div class="ctrl-row"><span class="ctrl-label">Direction</span>
+              <select id="grid-direction">
+                <option value="row" selected>Row</option>
+                <option value="column">Column</option>
+                <option value="row-reverse">Row Reverse</option>
+                <option value="column-reverse">Column Reverse</option>
+              </select></div>
+            <div class="ctrl-row"><span class="ctrl-label">Wrap</span>
+              <select id="grid-wrap">
+                <option value="wrap" selected>Wrap</option>
+                <option value="nowrap">No Wrap</option>
+                <option value="wrap-reverse">Wrap Reverse</option>
+              </select></div>
+            <label class="ctrl-row"><span class="ctrl-label">Gap <em>px</em></span>
+              <input type="range" id="grid-gap" min="0" max="40" value="12" step="2">
+              <input type="number" id="grid-gap-num" min="0" max="40" value="12" step="2" class="num-input"></label>
+            <div class="ctrl-row"><span class="ctrl-label">Justify</span>
+              <select id="grid-justify">
+                <option value="flex-start">Start</option>
+                <option value="center" selected>Center</option>
+                <option value="flex-end">End</option>
+                <option value="space-between">Space Between</option>
+                <option value="space-around">Space Around</option>
+                <option value="space-evenly">Space Evenly</option>
+              </select></div>
+            <div class="ctrl-row"><span class="ctrl-label">Align</span>
+              <select id="grid-align">
+                <option value="center" selected>Center</option>
+                <option value="stretch">Stretch</option>
+                <option value="flex-start">Start</option>
+                <option value="flex-end">End</option>
+              </select></div>
+          </div>
+
+        </div><!-- /column 1 -->
+
+        <!-- ══════════════════════════════
+             COLUMN 2 — Materials
+             ══════════════════════════════ -->
+        <div class="ctrl-column">
+
+          <!-- Card: Face -->
+          <div class="ctrl-card">
+            <div class="ctrl-card-header"><span class="material-symbols-rounded">palette</span> Face</div>
+            <label class="ctrl-row"><span class="ctrl-label">Face Color</span>
+              <input type="color" id="btn-face-color" value="#c8c0b4"></label>
+            <label class="ctrl-row"><span class="ctrl-label">Alt Press Color</span>
+              <input type="checkbox" id="btn-use-press-color" class="toggle-check"></label>
+            <label class="ctrl-row" id="press-color-row" style="opacity:0.4;pointer-events:none"><span class="ctrl-label">Pressed Color</span>
+              <input type="color" id="btn-press-color" value="#b8b0a4"></label>
+            <label class="ctrl-row"><span class="ctrl-label">Alt Toggle Color</span>
+              <input type="checkbox" id="btn-use-toggle-color" class="toggle-check"></label>
+            <label class="ctrl-row" id="toggle-color-row" style="opacity:0.4;pointer-events:none"><span class="ctrl-label">Toggle Color</span>
+              <input type="color" id="btn-toggle-color" value="#b8b0a4"></label>
+            <label class="ctrl-row"><span class="ctrl-label">Press Darken <em>%</em></span>
+              <input type="range" id="btn-press-darken" min="0" max="50" value="0" step="1">
+              <input type="number" id="btn-press-darken-num" min="0" max="50" value="0" step="1" class="num-input"></label>
+            <label class="ctrl-row"><span class="ctrl-label">Edge Shadow <em>%</em></span>
+              <input type="range" id="btn-face-edge-alpha" min="0" max="100" value="0" step="5">
+              <input type="number" id="btn-face-edge-alpha-num" min="0" max="100" value="0" step="5" class="num-input"></label>
+          </div>
+
+          <!-- Card: Chrome Frame -->
+          <div class="ctrl-card">
+            <div class="ctrl-card-header"><span class="material-symbols-rounded">border_outer</span> Chrome Frame</div>
+            <label class="ctrl-row"><span class="ctrl-label">Frame Enable</span>
+              <input type="checkbox" id="btn-frame-enabled" checked class="toggle-check"></label>
+            <label class="ctrl-row" id="frame-width-row"><span class="ctrl-label">Frame Width <em>px</em></span>
+              <input type="range" id="btn-frame-width" min="0" max="40" value="14" step="1">
+              <input type="number" id="btn-frame-width-num" min="0" max="40" value="14" step="1" class="num-input"></label>
+            <label class="ctrl-row" id="frame-color-hi-row"><span class="ctrl-label">Chrome Hi <em>top</em></span>
+              <input type="color" id="btn-frame-color-hi" value="#e8e8ec"></label>
+            <label class="ctrl-row" id="frame-color-row"><span class="ctrl-label">Chrome Mid</span>
+              <input type="color" id="btn-frame-color" value="#b8bcc0"></label>
+            <label class="ctrl-row" id="frame-color-lo-row"><span class="ctrl-label">Chrome Lo <em>bot</em></span>
+              <input type="color" id="btn-frame-color-lo" value="#8c9094"></label>
+            <label class="ctrl-row" id="frame-bevel-alpha-row"><span class="ctrl-label">Bevel Intensity <em>%</em></span>
+              <input type="range" id="btn-frame-bevel-alpha" min="0" max="100" value="50" step="5">
+              <input type="number" id="btn-frame-bevel-alpha-num" min="0" max="100" value="50" step="5" class="num-input"></label>
+            <label class="ctrl-row" id="frame-bevel-width-row"><span class="ctrl-label">Bevel Width <em>px</em></span>
+              <input type="range" id="btn-frame-bevel-width" min="0" max="6" value="1" step="1">
+              <input type="number" id="btn-frame-bevel-width-num" min="0" max="6" value="1" step="1" class="num-input"></label>
+          </div>
+
+          <!-- Card: Depth -->
+          <div class="ctrl-card">
+            <div class="ctrl-card-header"><span class="material-symbols-rounded">layers</span> Depth</div>
+            <label class="ctrl-row"><span class="ctrl-label">Press Depth <em>% height</em></span>
+              <input type="range" id="btn-press-depth" min="1" max="50" value="16" step="1">
+              <input type="number" id="btn-press-depth-num" min="1" max="50" value="16" step="1" class="num-input"></label>
+            <label class="ctrl-row"><span class="ctrl-label">Wall Band <em>% height</em></span>
+              <input type="range" id="btn-wall-h" min="1" max="50" value="16" step="1">
+              <input type="number" id="btn-wall-h-num" min="1" max="50" value="16" step="1" class="num-input"></label>
+          </div>
+
+          <!-- Card: Button Wall (moving side of the keycap) -->
+          <div class="ctrl-card">
+            <div class="ctrl-card-header"><span class="material-symbols-rounded">crop_16_9</span> Button Wall</div>
+            <label class="ctrl-row"><span class="ctrl-label">Alt Wall Color</span>
+              <input type="checkbox" id="btn-use-button-wall-color" class="toggle-check"></label>
+            <label class="ctrl-row" id="button-wall-color-row" style="opacity:0.4;pointer-events:none"><span class="ctrl-label">Wall Color</span>
+              <input type="color" id="btn-button-wall-color" value="#c8c0b4"></label>
+            <label class="ctrl-row"><span class="ctrl-label">Wall Alpha <em>%</em></span>
+              <input type="range" id="btn-button-wall-shadow-alpha" min="0" max="100" value="85" step="5">
+              <input type="number" id="btn-button-wall-shadow-alpha-num" min="0" max="100" value="85" step="5" class="num-input"></label>
+            <label class="ctrl-row"><span class="ctrl-label">Edge Darken <em>%</em></span>
+              <input type="range" id="btn-button-wall-shadow-edge-ratio" min="0" max="100" value="50" step="5">
+              <input type="number" id="btn-button-wall-shadow-edge-ratio-num" min="0" max="100" value="50" step="5" class="num-input"></label>
+            <label class="ctrl-row"><span class="ctrl-label">Gradient Spread <em>0–100</em></span>
+              <input type="range" id="btn-button-wall-gradient-spread" min="0" max="100" value="20" step="5">
+              <input type="number" id="btn-button-wall-gradient-spread-num" min="0" max="100" value="20" step="5" class="num-input"></label>
+          </div>
+
+          <!-- Card: Button Cavity (static housing slot) -->
+          <div class="ctrl-card">
+            <div class="ctrl-card-header"><span class="material-symbols-rounded">crop_din</span> Button Cavity</div>
+            <label class="ctrl-row"><span class="ctrl-label">Alt Cavity Color</span>
+              <input type="checkbox" id="btn-use-cavity-wall-color" class="toggle-check"></label>
+            <label class="ctrl-row" id="cavity-wall-color-row" style="opacity:0.4;pointer-events:none"><span class="ctrl-label">Cavity Color</span>
+              <input type="color" id="btn-cavity-wall-color" value="#b8bcc0"></label>
+            <label class="ctrl-row"><span class="ctrl-label">Cavity Alpha <em>%</em></span>
+              <input type="range" id="btn-cavity-wall-shadow-alpha" min="0" max="100" value="85" step="5">
+              <input type="number" id="btn-cavity-wall-shadow-alpha-num" min="0" max="100" value="85" step="5" class="num-input"></label>
+            <label class="ctrl-row"><span class="ctrl-label">Edge Darken <em>%</em></span>
+              <input type="range" id="btn-cavity-wall-shadow-edge-ratio" min="0" max="100" value="50" step="5">
+              <input type="number" id="btn-cavity-wall-shadow-edge-ratio-num" min="0" max="100" value="50" step="5" class="num-input"></label>
+            <label class="ctrl-row"><span class="ctrl-label">Gradient Spread <em>0–100</em></span>
+              <input type="range" id="btn-cavity-wall-gradient-spread" min="0" max="100" value="20" step="5">
+              <input type="number" id="btn-cavity-wall-gradient-spread-num" min="0" max="100" value="20" step="5" class="num-input"></label>
+          </div>
+
+        </div><!-- /column 2 -->
+
+        <!-- ══════════════════════════════
+             COLUMN 3 — Lighting & Interaction
+             ══════════════════════════════ -->
+        <div class="ctrl-column">
+
+          <!-- Card: Face Shadows -->
+          <div class="ctrl-card">
+            <div class="ctrl-card-header"><span class="material-symbols-rounded">blur_on</span> Face Shadows</div>
+            <label class="ctrl-row"><span class="ctrl-label">Inset Y <em>% cqb</em></span>
+              <input type="range" id="btn-inset-depth" min="1" max="20" value="8" step="1">
+              <input type="number" id="btn-inset-depth-num" min="1" max="20" value="8" step="1" class="num-input"></label>
+            <label class="ctrl-row"><span class="ctrl-label">Inset Blur <em>% cqb</em></span>
+              <input type="range" id="btn-inset-blur" min="0" max="30" value="12" step="1">
+              <input type="number" id="btn-inset-blur-num" min="0" max="30" value="12" step="1" class="num-input"></label>
+            <label class="ctrl-row"><span class="ctrl-label">Alpha Top <em>%</em></span>
+              <input type="range" id="btn-inset-alpha-top" min="0" max="100" value="55" step="5">
+              <input type="number" id="btn-inset-alpha-top-num" min="0" max="100" value="55" step="5" class="num-input"></label>
+            <label class="ctrl-row"><span class="ctrl-label">Alpha Bot <em>%</em></span>
+              <input type="range" id="btn-inset-alpha-bot" min="0" max="100" value="28" step="5">
+              <input type="number" id="btn-inset-alpha-bot-num" min="0" max="100" value="28" step="5" class="num-input"></label>
+          </div>
+
+          <!-- Card: Rim Highlight -->
+          <div class="ctrl-card">
+            <div class="ctrl-card-header"><span class="material-symbols-rounded">border_top</span> Rim Highlight</div>
+            <label class="ctrl-row"><span class="ctrl-label">Enable</span>
+              <input type="checkbox" id="btn-top-highlight" checked class="toggle-check"></label>
+            <label class="ctrl-row" id="highlight-color-row"><span class="ctrl-label">Color</span>
+              <input type="color" id="btn-highlight-color" value="#ffffff"></label>
+            <label class="ctrl-row" id="highlight-opacity-row"><span class="ctrl-label">Alpha <em>%</em></span>
+              <input type="range" id="btn-highlight-opacity" min="0" max="100" value="30" step="5">
+              <input type="number" id="btn-highlight-opacity-num" min="0" max="100" value="30" step="5" class="num-input"></label>
+            <label class="ctrl-row" id="rim-height-row"><span class="ctrl-label">Offset <em>% cqb</em></span>
+              <input type="range" id="btn-rim-height" min="0" max="40" value="16" step="1">
+              <input type="number" id="btn-rim-height-num" min="0" max="40" value="16" step="1" class="num-input"></label>
+          </div>
+
+          <!-- Card: Ambient Shadow -->
+          <div class="ctrl-card">
+            <div class="ctrl-card-header"><span class="material-symbols-rounded">shadow</span> Ambient Shadow</div>
+            <label class="ctrl-row"><span class="ctrl-label">Intensity <em>%</em></span>
+              <input type="range" id="btn-ambient-intensity" min="0" max="100" value="25" step="5">
+              <input type="number" id="btn-ambient-intensity-num" min="0" max="100" value="25" step="5" class="num-input"></label>
+            <label class="ctrl-row"><span class="ctrl-label">Blur <em>× wall-h</em></span>
+              <input type="range" id="btn-ambient-blur-mult" min="0" max="8" value="3" step="0.25">
+              <input type="number" id="btn-ambient-blur-mult-num" min="0" max="8" value="3" step="0.25" class="num-input"></label>
+            <label class="ctrl-row"><span class="ctrl-label">Y Offset <em>× wall-h</em></span>
+              <input type="range" id="btn-ambient-y-mult" min="0" max="4" value="1.5" step="0.25">
+              <input type="number" id="btn-ambient-y-mult-num" min="0" max="4" value="1.5" step="0.25" class="num-input"></label>
+            <label class="ctrl-row"><span class="ctrl-label">Press Reduction <em>%</em></span>
+              <input type="range" id="btn-ambient-press-reduction" min="0" max="100" value="50" step="5">
+              <input type="number" id="btn-ambient-press-reduction-num" min="0" max="100" value="50" step="5" class="num-input"></label>
+          </div>
+
+          <!-- Card: Timing & Easing -->
+          <div class="ctrl-card">
+            <div class="ctrl-card-header"><span class="material-symbols-rounded">show_chart</span> Timing &amp; Easing</div>
+            <label class="ctrl-row"><span class="ctrl-label">Release <em>ms</em></span>
+              <input type="range" id="btn-duration" min="50" max="600" value="160" step="10">
+              <input type="number" id="btn-duration-num" min="50" max="600" value="160" step="10" class="num-input"></label>
+            <label class="ctrl-row"><span class="ctrl-label">Press <em>ms</em></span>
+              <input type="range" id="btn-press-duration" min="20" max="200" value="80" step="5">
+              <input type="number" id="btn-press-duration-num" min="20" max="200" value="80" step="5" class="num-input"></label>
+            <div class="ctrl-row"><span class="ctrl-label">Easing</span>
+              <select id="btn-easing-preset">
+                <optgroup label="Standard">
+                  <option value="bouncy" selected>Bouncy (overshoot)</option>
+                  <option value="snappy">Snappy</option>
+                  <option value="soft">Soft</option>
+                  <option value="linear">Linear</option>
+                </optgroup>
+                <optgroup label="Mechanical switches">
+                  <option value="red">Cherry MX Red (linear, light)</option>
+                  <option value="brown">Cherry MX Brown (tactile)</option>
+                  <option value="blue">Cherry MX Blue (clicky)</option>
+                  <option value="black">Cherry MX Black (linear, heavy)</option>
+                  <option value="clear">Cherry MX Clear (tactile, heavy)</option>
+                  <option value="topre">Topre (cushioned)</option>
+                  <option value="buckling">Buckling spring (IBM)</option>
+                </optgroup>
+                <option value="custom">Custom</option>
+              </select></div>
+            <div id="custom-bezier-row" class="ctrl-row custom-bezier" style="display:none">
+              <span class="ctrl-label">Cubic-Bezier</span>
+              <div class="bezier-inputs">
+                <input type="number" id="bz-x1" value="0.34" min="0" max="1" step="0.01" class="num-input bz-num">
+                <input type="number" id="bz-y1" value="1.56" min="-2" max="3" step="0.01" class="num-input bz-num">
+                <input type="number" id="bz-x2" value="0.64" min="0" max="1" step="0.01" class="num-input bz-num">
+                <input type="number" id="bz-y2" value="1.0" min="-2" max="3" step="0.01" class="num-input bz-num">
+              </div></div>
+            <label class="ctrl-row"><span class="ctrl-label">Overshoot</span>
+              <input type="checkbox" id="btn-overshoot" checked class="toggle-check"></label>
+            <label class="ctrl-row" id="toggle-height-row"><span class="ctrl-label">Toggle Rest <em>% depth</em></span>
+              <input type="range" id="btn-toggle-height" min="-100" max="100" value="50" step="5">
+              <input type="number" id="btn-toggle-height-num" min="-100" max="100" value="50" step="5" class="num-input"></label>
+          </div>
+
+          <!-- Card: Per-Property Animation -->
+          <div class="ctrl-card">
+            <div class="ctrl-card-header"><span class="material-symbols-rounded">animation</span> Animation Timing</div>
+            <div class="ctrl-row"><span class="ctrl-label" style="grid-column:1/-1;font-style:italic;color:var(--text-tertiary);font-size:11px;line-height:1.4">
+              Each property animates over the full press cycle by default. Delay shrinks the window symmetrically around the midpoint (0 = full, 25 = middle 50%, 45 = brief flash at midpoint).
+            </span></div>
+            <label class="ctrl-row"><span class="ctrl-label">Shadow Delay <em>%</em></span>
+              <input type="range" id="btn-shadow-anim-delay" min="0" max="45" value="0" step="1">
+              <input type="number" id="btn-shadow-anim-delay-num" min="0" max="45" value="0" step="1" class="num-input"></label>
+            <label class="ctrl-row"><span class="ctrl-label">Color Delay <em>%</em></span>
+              <input type="range" id="btn-color-anim-delay" min="0" max="45" value="0" step="1">
+              <input type="number" id="btn-color-anim-delay-num" min="0" max="45" value="0" step="1" class="num-input"></label>
+          </div>
+
+          <!-- Card: Hover, Focus & Border -->
+          <div class="ctrl-card">
+            <div class="ctrl-card-header"><span class="material-symbols-rounded">ads_click</span> Hover, Focus &amp; Border</div>
+            <label class="ctrl-row"><span class="ctrl-label">Hover Lift <em>px</em></span>
+              <input type="range" id="btn-hover-lift" min="0" max="10" value="2" step="1">
+              <input type="number" id="btn-hover-lift-num" min="0" max="10" value="2" step="1" class="num-input"></label>
+            <div class="ctrl-row"><span class="ctrl-label">Focus Style</span>
+              <select id="btn-focus-style">
+                <option value="tint" selected>Tint (brighter face)</option>
+                <option value="glow">Glow</option>
+                <option value="outline">Outline</option>
+                <option value="none">None</option>
+              </select></div>
+            <label class="ctrl-row"><span class="ctrl-label">Focus Color</span>
+              <input type="color" id="btn-focus-color" value="#5b8dee"></label>
+            <label class="ctrl-row"><span class="ctrl-label">Focus Size <em>px</em></span>
+              <input type="range" id="btn-focus-size" min="1" max="6" value="3" step="1">
+              <input type="number" id="btn-focus-size-num" min="1" max="6" value="3" step="1" class="num-input"></label>
+            <label class="ctrl-row"><span class="ctrl-label">Border Width <em>px</em></span>
+              <input type="range" id="btn-border-width" min="0" max="6" value="0" step="1">
+              <input type="number" id="btn-border-width-num" min="0" max="6" value="0" step="1" class="num-input"></label>
+            <label class="ctrl-row"><span class="ctrl-label">Border Color</span>
+              <input type="color" id="btn-border-color" value="#444444"></label>
+            <div class="ctrl-row"><span class="ctrl-label">Border Style</span>
+              <select id="btn-border-style">
+                <option value="solid" selected>Solid</option>
+                <option value="dashed">Dashed</option>
+                <option value="dotted">Dotted</option>
+              </select></div>
+          </div>
+
+        </div><!-- /column 3 -->
+
+      </div><!-- /controls-columns -->
+    </div><!-- /controls-panel -->
+
+
+  </div><!-- /app-layout -->
+
+  <script type="module">
+    // Dev cache-buster — propagates ?v= through static asset imports so each
+    // reload picks up the latest app.js and lib/clicky-button.js.
+    const v = Date.now().toString(36);
+    await import(`./app.js?v=${v}`);
+  </script>
+</body>
+</html>
