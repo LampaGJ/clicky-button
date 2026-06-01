@@ -4,7 +4,7 @@ Design tactile, skeuomorphic **"clicky" buttons** in the browser — tune every 
 
 **▶ [Open the generator](https://lampagj.github.io/clicky-button/)**
 
-![Clicky Button Generator — the live editor with PLAY/STOP/REC/PAUSE keys, a 3D view, and the control panel](assets/screenshot.png)
+![Clicky Button Generator — the live editor showing an amber SUBMIT button, a 3D view, and the control panel](assets/screenshot.png)
 
 ---
 

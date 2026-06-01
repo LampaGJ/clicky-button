@@ -28,8 +28,35 @@ const {
 } = internals;
 
 // ── State ─────────────────────────────────────────────────────
+// Default style the configurator boots with — the "Amber Contact sales today"
+// preset, relabeled SUBMIT as a single button. These are overrides on top of
+// the library's neutral defaultClickyConfig (the library default stays generic;
+// only the configurator's starting point is opinionated). Reverse-engineered
+// from amber-contact-sales-today.css (gitignored).
+const CONFIGURATOR_DEFAULT = {
+  btnCount:                  1,
+  btnLabels:                 'SUBMIT',
+  containerWidth:            400,
+  radiusRatio:               50,   // clamps to a full pill at this geometry
+  faceColor:                 '#fdd34c',
+  pressDarken:               26,
+  pressDepthRatio:           32,
+  buttonWallShadowAlpha:     40,
+  buttonWallShadowEdgeRatio: 30,
+  buttonWallGradientSpread:  65,
+  cavityWallShadowAlpha:     40,
+  cavityWallShadowEdgeRatio: 30,
+  cavityWallGradientSpread:  65,
+  rimHeightRatio:            15,
+  highlightOpacity:          0,
+  ambientPressReduction:     75,
+  frameBevelAlpha:           75,
+  frameBevelWidth:           3,
+};
+
 const state = {
   ...defaultClickyConfig,
+  ...CONFIGURATOR_DEFAULT,
   // Generator-UI-only keys (never exported to consumers)
   previewBg:    'light',
   view3dRotateX:  50,
@@ -766,6 +793,9 @@ ${cssSnippet}
 function boot() {
   initControls();
   renderStylePicker();
+  // Reflect the configurator's default state (amber SUBMIT) into every control
+  // so the inputs match the preview on first load, then render.
+  syncAllControls();
   updatePreview();
 }
 

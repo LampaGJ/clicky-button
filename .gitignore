@@ -8,3 +8,6 @@ npm-debug.log*
 # Editor
 .vscode/
 .idea/
+
+# Local style export used as the configurator's default (values baked into app.js)
+amber-contact-sales-today.*
