@@ -209,7 +209,7 @@ generator's Tweakpane panels:
  * // ── Shadow & depth ───────────────────────────────────────
  * @property {number} wallHRatio        — %, of cqb (height)
  * @property {number} pressDepthRatio   — %, of cqb
- * // Button wall (moving side of the keycap) — drop-shadow band in buildFaceShadow
+ * // Button wall (moving side of the keycap) — .btn-wall element behind the cap
  * @property {boolean} useButtonWallColor — false: button-wall base = faceColor
  * @property {string} buttonWallColor    — hex; used only when useButtonWallColor
  * @property {number} buttonWallShadowAlpha — %

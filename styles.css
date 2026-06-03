@@ -181,13 +181,19 @@ html, body {
   min-height: 0;
 }
 
-/* State-specific frozen overrides for the state test buttons */
+/* State-specific frozen overrides for the state test buttons. The wall mirrors
+   the cap's transform (no padding/shadow — those are cap-only). */
 .state-resting .btn-face {
   transform: translateY(0) !important;
   padding-top: 0 !important;
   padding-bottom: 0 !important;
   box-shadow: var(--face-shadow-resting) !important;
   background-color: var(--face-color) !important;
+  transition: none !important;
+  animation: none !important;
+}
+.state-resting .btn-wall {
+  transform: translateY(0) !important;
   transition: none !important;
   animation: none !important;
 }
@@ -198,6 +204,11 @@ html, body {
   padding-bottom: 0 !important;
   box-shadow: var(--face-shadow-pressed) !important;
   background-color: var(--face-pressed) !important;
+  transition: none !important;
+  animation: none !important;
+}
+.state-pressed-max .btn-wall {
+  transform: translateY(var(--press-translate)) !important;
   transition: none !important;
   animation: none !important;
 }
@@ -212,8 +223,18 @@ html, body {
   transition: none !important;
   animation: none !important;
 }
+.state-toggle-point .btn-wall {
+  transform: translateY(var(--toggle-height)) !important;
+  transition: none !important;
+  animation: none !important;
+}
 
 /* Hover state — face lifted by --hover-lift (negative Y = upward) */
+.state-hover .btn-wall {
+  transform: translateY(calc(-1 * var(--hover-lift))) !important;
+  transition: none !important;
+  animation: none !important;
+}
 .state-hover .btn-face {
   transform: translateY(calc(-1 * var(--hover-lift))) !important;
   padding-top: 0 !important;
