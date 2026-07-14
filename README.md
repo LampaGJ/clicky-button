@@ -79,7 +79,7 @@ document.head.appendChild(style);
 document.querySelector('#play').outerHTML = buildClickyHtml({ label: 'PLAY' });
 ```
 
-Public API: `buildClickyCss(config?, opts?)`, `buildClickyHtml({ label, tag, attrs, config? })`, `buildClickyVars(config?)` (the raw CSS custom-property map), and `defaultClickyConfig` (every option with its default). Full config reference: [`claudedocs/clicky-button-importable-module-spec.md`](claudedocs/clicky-button-importable-module-spec.md).
+Public API: `buildClickyCss(config?, opts?)`, `buildClickyHtml({ label, tag, attrs, config? })`, `buildClickyVars(config?)` (the raw CSS custom-property map), and `defaultClickyConfig` (every option with its default). Full config reference: the `@typedef {object} ClickyConfig` block at the top of [`lib/clicky-button.js`](lib/clicky-button.js) — the live, authoritative contract (the earlier design spec is archived at [`claudedocs/past/clicky-button-importable-module-spec.md`](claudedocs/past/clicky-button-importable-module-spec.md)).
 
 ---
 
