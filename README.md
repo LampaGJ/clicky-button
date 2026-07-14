@@ -104,4 +104,5 @@ python3 -m http.server 8000      # or: npx serve
 | `app.js` | Wires the controls to state, live preview, save/export |
 | `styles.css` | Styling for the generator app itself |
 | `lib/clicky-button.js` | The importable, dependency-free button engine |
+| `gallery.html` | Standalone QA/showcase page: a 24-tile variation matrix generated live from `lib/clicky-button.js` |
 | `claudedocs/` | Config spec & design notes |
