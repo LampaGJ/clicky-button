@@ -14,7 +14,7 @@ Design tactile, skeuomorphic **"clicky" buttons** in the browser — tune every 
 2. **Tweak.** Every control updates the preview instantly. The big preview shows the working buttons; the top strip shows each state frozen side-by-side (resting · hover · pressed · toggled); the right panel shows a 3D view.
 3. **Pick a mode** — *Click* (springs back) or *Toggle* (stays down) — with the toggle top-right of the preview.
 4. **Check it on your background** — flip the preview between *Light / Dark / Neutral*.
-5. **Export.** Hit **Export** to download a `.zip` with a standalone `.html` + `.css` you can drop straight into a page. Hit **+ Save** to keep the current style in the in-app style picker so you can compare variants.
+5. **Export.** Hit **Export** to download a `.zip` with a standalone `.html` + `.css` (plus an optional `.enhancer.js` progressive-enhancement script — never required, since press/toggle motion is pure CSS) you can drop straight into a page. Hit **+ Save** to keep the current style in the in-app style picker so you can compare variants.
 
 The exported CSS is self-contained — the only requirement (`container-type: size` on the button cell, which makes the sizing responsive) is already baked in.
 
@@ -56,7 +56,7 @@ Each has its own color toggle, alpha, edge-darken, and gradient-spread, so you c
 
 ### Option A — drop-in HTML + CSS (no dependencies)
 
-Unzip the **Export** download and reference the CSS:
+Unzip the **Export** download and reference the CSS (the optional `.enhancer.js` file adds a full symmetric press bounce — see the commented-out `<script>` tag in the exported HTML; never required, since press/toggle motion is already pure CSS):
 
 ```html
 <link rel="stylesheet" href="my-button.css">
