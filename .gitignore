@@ -11,3 +11,6 @@ npm-debug.log*
 
 # Local style export used as the configurator's default (values baked into app.js)
 amber-contact-sales-today.*
+
+# Local session handoff (volatile — see /prep)
+WORK-STATE.md
