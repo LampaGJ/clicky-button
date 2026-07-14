@@ -10,6 +10,7 @@
     "test": "vitest run"
   },
   "devDependencies": {
+    "dompurify": "^3.4.12",
     "vitest": "^4.1.10",
     "zod": "^4.4.3"
   }

@@ -122,12 +122,30 @@ export const ClickyConfigSchema = z.object({
   iconColor: hex,
   iconFill: z.boolean(),
 
+  // Edge-pinned icon layout (issue #30)
+  iconPlacement: z.enum(['inline', 'edge']),
+  iconInset: z.number().min(0),
+
+  // Inline SVG icon (issue #31)
+  iconSvg: z.string().regex(/^$|^\s*<svg[\s>]/i, { error: 'must be inline <svg> markup or empty' }),
+
   // Realism pack (#7a specular hotspot, #7c contact shadow)
   specularAlpha: pct0to100,
   lightAngleX: pct0to100,
   lightAngleY: pct0to100,
   specularSize: pct0to100,
   contactIntensity: pct0to100,
+
+  // Per-button variants (issue #29) — v1: color + icon family only.
+  variants: z.record(
+    z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, { error: 'variant keys are label slugs' }),
+    z.strictObject({
+      faceColor: z.string().optional(),
+      textColor: z.string().optional(),
+      iconName:  z.string().optional(),
+      iconColor: z.string().optional(),
+    }),
+  ).default({}),
 });
 
 /** @typedef {import('zod').infer<typeof ClickyConfigSchema>} ClickyConfigParsed */

@@ -68,6 +68,9 @@ const state = {
   previewBg:    'light',
   view3dRotateX:  50,
   view3dRotateY: -20,
+  // Icon-only accessible name (issue #32) — read by buildGridHtml as
+  // state.iconOnlyAriaLabel and applied to every empty-label cell.
+  iconOnlyAriaLabel: '',
 };
 
 // ── DOM helpers ───────────────────────────────────────────────
@@ -112,6 +115,14 @@ function updatePreview() {
   const canvas = document.querySelector('.preview-canvas');
   if (canvas) {
     canvas.className = `preview-canvas bg-${state.previewBg}`;
+  }
+
+  // ── Icon-only aria-label field (issue #32) ────────────────────────────
+  // Shown only once the Labels field is emptied — that's the point at which
+  // an icon-only button (and its required accessible name) becomes possible.
+  const iconOnlyAriaRow = $('icon-only-aria-row');
+  if (iconOnlyAriaRow) {
+    iconOnlyAriaRow.style.display = state.btnLabels.trim() === '' ? '' : 'none';
   }
 
   // ── State-test overrides ─────────────────────────────────────────────
@@ -321,6 +332,9 @@ function initControls() {
   wireRangeNum('btn-count',        'btn-count-num',        'btnCount',
     v => Math.round(v));
   wireText('btn-labels', 'btnLabels');
+  wireText('btn-icon-only-aria', 'iconOnlyAriaLabel');
+  $('btn-shape-circle-preset')?.addEventListener('click', () => applyShapePreset('circle'));
+  $('btn-shape-square-preset')?.addEventListener('click', () => applyShapePreset('square'));
   wireSelect('grid-direction', 'gridDirection');
   wireSelect('grid-wrap',      'gridWrap');
   wireRangeNum('grid-gap', 'grid-gap-num', 'gridGap');
@@ -340,6 +354,8 @@ function initControls() {
 
   // Icon
   wireSelect('btn-icon-position', 'iconPosition');
+  wireSelect('btn-icon-placement', 'iconPlacement', on => depRow('icon-inset-row', on === 'edge'));
+  wireRangeNum('btn-icon-inset', 'btn-icon-inset-num', 'iconInset');
   wireRangeNum('btn-icon-size', 'btn-icon-size-num', 'iconScale', v => parseFloat(v.toFixed(2)));
   wireRangeNum('btn-icon-gap',  'btn-icon-gap-num',  'iconGap');
   wireCheckbox('btn-icon-use-color', 'iconUseColor', on => depRow('icon-color-row', on));
@@ -351,6 +367,12 @@ function initControls() {
       state.iconName = iconNameInput.value.trim();
       syncIconPicker();
       updatePreview();
+    });
+  }
+  const iconSvgInput = $('btn-icon-svg');
+  if (iconSvgInput) {
+    iconSvgInput.addEventListener('input', () => {
+      applyIconSvgInput(iconSvgInput.value);
     });
   }
 
@@ -551,6 +573,7 @@ function initControls() {
     depRow('button-wall-color-row', state.useButtonWallColor);
     depRow('cavity-wall-color-row', state.useCavityWallColor);
     depRow('icon-color-row',        state.iconUseColor);
+    depRow('icon-inset-row',        state.iconPlacement === 'edge');
     depRow('frame-width-row',          state.frameEnabled);
     depRow('frame-color-hi-row',       state.frameEnabled);
     depRow('frame-color-row',          state.frameEnabled);
@@ -635,6 +658,74 @@ function renderIconPicker() {
   syncIconPicker();
 }
 
+// ── Inline SVG icon intake (issue #31) ─────────────────────────
+// Sanitize-on-intake, in the GENERATOR — never at render/export time. The
+// clean string is what gets stored in state.iconSvg; lib/clicky-button.js
+// embeds it verbatim and does zero sanitization of its own (see the trust
+// model on the ClickyConfig typedef). DOMPurify is vendored locally
+// (assets/purify.min.js, loaded via a plain <script> in index.html) — no
+// CDN hot-link, so the page keeps a fully offline-capable asset story.
+function sanitizeAndNormalizeSvg(raw) {
+  if (typeof DOMPurify === 'undefined') return ''; // purify.min.js failed to load
+  const clean = DOMPurify.sanitize(raw, {
+    USE_PROFILES: { svg: true, svgFilters: true },
+    FORBID_TAGS: ['script', 'foreignObject', 'use', 'animate', 'set', 'animateTransform'],
+    FORBID_ATTR: ['href', 'xlink:href'], // blocks external refs so the zero-network claim holds
+  });
+  const trimmed = (clean || '').trim();
+  if (!/^<svg[\s>]/i.test(trimmed)) return '';
+
+  const doc = new DOMParser().parseFromString(trimmed, 'image/svg+xml');
+  if (doc.querySelector('parsererror')) return '';
+  const svgEl = doc.documentElement;
+  if (!svgEl || svgEl.nodeName.toLowerCase() !== 'svg') return '';
+
+  // Require a viewBox — synthesize from width/height if given, else reject
+  // (sizing is CSS-owned; without either there's no coordinate system).
+  if (!svgEl.hasAttribute('viewBox')) {
+    const w = parseFloat(svgEl.getAttribute('width'));
+    const h = parseFloat(svgEl.getAttribute('height'));
+    if (w > 0 && h > 0) {
+      svgEl.setAttribute('viewBox', `0 0 ${w} ${h}`);
+    } else {
+      return '';
+    }
+  }
+  // Strip root width/height so CSS (1em sizing, see buildIconSvgCss) owns it.
+  svgEl.removeAttribute('width');
+  svgEl.removeAttribute('height');
+  // Root fill normalization — a presentation ATTRIBUTE, not CSS. A CSS rule
+  // (`.btn-icon-svg svg { fill: currentColor }`) would beat every inner
+  // element's own explicit fill and flatten multicolor icons to one color;
+  // setting the attribute only on the ROOT, only when absent, lets currentColor
+  // cascade through SVG's normal fill inheritance without clobbering anything.
+  if (!svgEl.hasAttribute('fill')) {
+    svgEl.setAttribute('fill', 'currentColor');
+  }
+  return new XMLSerializer().serializeToString(svgEl);
+}
+
+function applyIconSvgInput(rawValue) {
+  const errorRow = $('icon-svg-error-row');
+  const raw = (rawValue || '').trim();
+  if (!raw) {
+    state.iconSvg = '';
+    if (errorRow) errorRow.style.display = 'none';
+    updatePreview();
+    return;
+  }
+  const normalized = sanitizeAndNormalizeSvg(raw);
+  if (!normalized) {
+    state.iconSvg = '';
+    if (errorRow) errorRow.style.display = '';
+    updatePreview();
+    return;
+  }
+  if (errorRow) errorRow.style.display = 'none';
+  state.iconSvg = normalized;
+  updatePreview();
+}
+
 function syncIconPicker() {
   const container = $('icon-picker');
   const current = (state.iconName || '').trim();
@@ -710,6 +801,25 @@ const MATERIAL_PRESETS = {
     contactIntensity: 10,
   },
 };
+
+// ── Square / circle quick-preset (issue #32) ───────────────────
+// No new CSS mechanism needed — buildVarMap already clamps radius via
+// maxRadiusPx = min(width/2, faceH/2, height/2). Equal width/height +
+// radiusRatio: 100 produces a true circle for free; a lower radiusRatio at
+// the same dimensions gives a rounded square. Good defaults for icon-only
+// buttons in particular.
+const SHAPE_PRESETS = {
+  circle: { containerWidth: 64, containerHeight: 64, radiusRatio: 100 },
+  square: { containerWidth: 64, containerHeight: 64, radiusRatio: 16 },
+};
+
+function applyShapePreset(name) {
+  const preset = SHAPE_PRESETS[name];
+  if (!preset) return;
+  Object.assign(state, preset);
+  syncAllControls();
+  updatePreview();
+}
 
 function renderMaterialPicker() {
   const toolbar = document.querySelector('.preview-toolbar');
@@ -841,6 +951,10 @@ function syncAllControls() {
               : id === 'bz-x2' ? 'bzX2' : 'bzY2';
     if (el) el.value = state[key];
   });
+  const iconSvgEl = $('btn-icon-svg');
+  if (iconSvgEl) iconSvgEl.value = state.iconSvg || '';
+  const iconSvgErrorRow = $('icon-svg-error-row');
+  if (iconSvgErrorRow) iconSvgErrorRow.style.display = 'none';
   syncIconPicker();
 }
 
@@ -1040,8 +1154,18 @@ function downloadZip(styleName) {
   const cssSnippet = buildCss(state, ':root');
   const htmlSnippet = buildGridHtml(state);
   const slug = slugifyFilename(styleName);
-  // Exported buttons that use an icon need the Material Symbols Rounded webfont.
-  const iconFontLink = (state.iconName || '').trim()
+  // Exported buttons that use a ligature icon need the Material Symbols
+  // Rounded webfont — gated on "any LIGATURE icon anywhere": the base
+  // iconName OR any per-button variant's iconName (issue #29), but only when
+  // iconSvg is empty — non-empty iconSvg wins over iconName everywhere
+  // (issue #31), so no button ever actually renders a ligature in that case,
+  // and an SVG-only export should ship with no font link at all.
+  const hasIconSvg = !!(state.iconSvg || '').trim();
+  const anyLigatureIcon = !hasIconSvg && (
+    !!(state.iconName || '').trim() ||
+    Object.values(state.variants || {}).some(v => !!(v && v.iconName || '').trim())
+  );
+  const iconFontLink = anyLigatureIcon
     ? `\n  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0..1,0&display=block">`
     : '';
 

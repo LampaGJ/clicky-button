@@ -29,6 +29,24 @@ describe('snapshot: buildClickyCss', () => {
     await expect(buildClickyCss({ mode: 'toggle', frameEnabled: false, focusStyle: 'outline' }))
       .toMatchFileSnapshot('__snapshots__/css-toggle-no-frame-outline.css');
   });
+
+  it('per-button variants (issue #29): color + icon family override on one slug', async () => {
+    await expect(buildClickyCss({
+      variants: {
+        save: { faceColor: '#2e7d32', textColor: '#fff', iconName: 'save', iconColor: '#fff' },
+      },
+    })).toMatchFileSnapshot('__snapshots__/css-variants.css');
+  });
+
+  it('edge-pinned icon (issue #30)', async () => {
+    await expect(buildClickyCss({ iconName: 'send', iconPlacement: 'edge', iconInset: 16 }))
+      .toMatchFileSnapshot('__snapshots__/css-icon-edge.css');
+  });
+
+  it('inline SVG icon (issue #31)', async () => {
+    await expect(buildClickyCss({ iconSvg: '<svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/></svg>' }))
+      .toMatchFileSnapshot('__snapshots__/css-icon-svg.css');
+  });
 });
 
 describe('snapshot: buildClickyHtml', () => {
@@ -39,5 +57,12 @@ describe('snapshot: buildClickyHtml', () => {
   it('toggle mode', async () => {
     await expect(buildClickyHtml({ label: 'PLAY', config: { mode: 'toggle' } }))
       .toMatchFileSnapshot('__snapshots__/html-toggle.html');
+  });
+
+  it('inline SVG icon, precedence over iconName (issue #31)', async () => {
+    await expect(buildClickyHtml({
+      label: 'PLAY',
+      config: { iconName: 'play_arrow', iconSvg: '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>' },
+    })).toMatchFileSnapshot('__snapshots__/html-icon-svg.html');
   });
 });

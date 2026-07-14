@@ -8,6 +8,10 @@
   <meta http-equiv="Expires" content="0">
   <title>Clicky Button Generator</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0..1,0">
+  <!-- Vendored locally (no CDN hot-link) — see assets/purify.min.js, copied
+       from node_modules/dompurify/dist/purify.min.js. Used at SVG-paste
+       intake time only (issue #31); the exported button never depends on it. -->
+  <script src="assets/purify.min.js"></script>
   <script>
     // Cache-bust local asset loads so each refresh fetches fresh styles.css / app.js.
     (function () {
@@ -45,6 +49,10 @@
         </div>
 
         <div class="toolbar-style-picker" id="style-picker"></div>
+
+        <div class="toolbar-style-picker">
+          <a href="gallery.html" style="display:inline-flex;align-items:center;justify-content:center;padding:3px 10px;background:var(--ctrl-bg);border:1px solid var(--ctrl-border);border-radius:99px;font-size:11px;font-weight:500;line-height:1.4;color:var(--text-secondary);text-decoration:none;white-space:nowrap;">Gallery</a>
+        </div>
 
         <div class="toolbar-mode-toggle">
           <label class="toggle-pill">
@@ -120,6 +128,10 @@
             <label class="ctrl-row"><span class="ctrl-label">Chrome Radius <em>%</em></span>
               <input type="range" id="btn-chrome-radius" min="0" max="50" value="12" step="1">
               <input type="number" id="btn-chrome-radius-num" min="0" max="50" value="12" step="1" class="num-input"></label>
+            <div class="ctrl-row"><span class="ctrl-label">Quick Preset</span>
+              <button type="button" id="btn-shape-circle-preset" title="64×64, fully rounded — good for icon-only buttons">Circle</button>
+              <button type="button" id="btn-shape-square-preset" title="64×64, lightly rounded — good for icon-only buttons">Square</button>
+            </div>
           </div>
 
           <!-- Card: Typography -->
@@ -157,6 +169,14 @@
                 <option value="left" selected>Left of text</option>
                 <option value="right">Right of text</option>
               </select></label>
+            <label class="ctrl-row"><span class="ctrl-label">Placement</span>
+              <select id="btn-icon-placement">
+                <option value="inline" selected>Inline (beside label)</option>
+                <option value="edge">Edge-pinned</option>
+              </select></label>
+            <label class="ctrl-row" id="icon-inset-row" style="opacity:0.4;pointer-events:none"><span class="ctrl-label">Edge Inset <em>px</em></span>
+              <input type="range" id="btn-icon-inset" min="0" max="48" value="12" step="1">
+              <input type="number" id="btn-icon-inset-num" min="0" max="48" value="12" step="1" class="num-input"></label>
             <label class="ctrl-row"><span class="ctrl-label">Size <em>× text</em></span>
               <input type="range" id="btn-icon-size" min="0.5" max="3" value="1.2" step="0.1">
               <input type="number" id="btn-icon-size-num" min="0.5" max="3" value="1.2" step="0.1" class="num-input"></label>
@@ -169,6 +189,10 @@
               <input type="color" id="btn-icon-color" value="#1a1a1a"></label>
             <label class="ctrl-row"><span class="ctrl-label">Filled</span>
               <input type="checkbox" id="btn-icon-fill" class="toggle-check"></label>
+            <label class="ctrl-row" style="align-items:start"><span class="ctrl-label">SVG <em>paste markup</em></span>
+              <textarea id="btn-icon-svg" class="text-input" rows="3" placeholder="&lt;svg viewBox=&quot;0 0 24 24&quot;&gt;...&lt;/svg&gt; — takes precedence over Icon Name"></textarea></label>
+            <div class="ctrl-row" id="icon-svg-error-row" style="display:none"><span class="ctrl-label"></span>
+              <span style="color:#c0392b;font-size:11px;line-height:1.4">Invalid SVG markup — ignored.</span></div>
           </div>
 
           <!-- Card: Grid Layout -->
@@ -179,6 +203,8 @@
               <input type="number" id="btn-count-num" min="1" max="12" value="4" step="1" class="num-input"></label>
             <label class="ctrl-row"><span class="ctrl-label">Labels</span>
               <input type="text" id="btn-labels" value="PLAY,STOP,REC,PAUSE" class="text-input" placeholder="comma-separated"></label>
+            <label class="ctrl-row" id="icon-only-aria-row" style="display:none"><span class="ctrl-label">Aria Label <em>icon-only</em></span>
+              <input type="text" id="btn-icon-only-aria" class="text-input" placeholder="required accessible name"></label>
             <label class="ctrl-row"><span class="ctrl-label">Direction</span>
               <select id="grid-direction">
                 <option value="row" selected>Row</option>
