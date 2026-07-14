@@ -17,6 +17,9 @@ const {
   internals,
   EASING_PRESETS,
 } = await import(__libUrl);
+const { clickyEnhancerJs } = await import(
+  __v ? `./lib/clicky-button-enhancer.js?v=${__v}` : './lib/clicky-button-enhancer.js'
+);
 
 const {
   buildCss,
@@ -25,6 +28,9 @@ const {
   buildGridHtml,
   getLabels,
   buildFocusVisibleCss,
+  KEYCAP_Y,
+  pressedStatePropsCss,
+  toggledRestStatePropsCss,
 } = internals;
 
 // ── State ─────────────────────────────────────────────────────
@@ -109,14 +115,78 @@ function updatePreview() {
   }
 
   // ── State-test overrides ─────────────────────────────────────────────
+  // Generated from the same generation-time property helpers as the live
+  // press/toggle CSS (KEYCAP_Y, pressedStatePropsCss, toggledRestStatePropsCss)
+  // so the frozen swatches can never drift from the real thing — this
+  // replaces styles.css's hand-authored third duplicate (issue #13).
   const frameEnabled = state.frameEnabled;
   const bevelInsets = frameEnabled
-    ? `inset 0 1px 0 0 rgba(255, 255, 255, var(--frame-bevel-alpha)),
-    inset 0 -1px 0 0 rgba(0, 0, 0, var(--frame-bevel-alpha-shadow)),
-    inset 1px 0 0 0 rgba(255, 255, 255, var(--frame-bevel-alpha)),
-    inset -1px 0 0 0 rgba(0, 0, 0, var(--frame-bevel-alpha-shadow)),`
+    ? `inset 0 var(--frame-bevel-width) 0 0 rgba(255, 255, 255, var(--frame-bevel-alpha)),
+    inset 0 calc(-1 * var(--frame-bevel-width)) 0 0 rgba(0, 0, 0, var(--frame-bevel-alpha-shadow)),
+    inset var(--frame-bevel-width) 0 0 0 rgba(255, 255, 255, var(--frame-bevel-alpha)),
+    inset calc(-1 * var(--frame-bevel-width)) 0 0 0 rgba(0, 0, 0, var(--frame-bevel-alpha-shadow)),`
     : '';
+
+  // Appends " !important" before every declaration-terminating semicolon.
+  // Safe here because none of these declaration VALUES contain a semicolon.
+  function important(cssProps) {
+    return cssProps.replace(/;/g, ' !important;');
+  }
+
+  // Explicit freeze override — always emitted LAST in each rule below so it
+  // wins over pressedStatePropsCss/toggledRestStatePropsCss's real (non-none)
+  // transition, per U1/U2.
+  const FREEZE = '  transition: none !important;\n  animation: none !important;';
+
   const stateTestCss = `
+/* State-test panel: frozen swatches generated from the same generation-time
+   property helpers as the live press/toggle CSS — see issue #13. */
+.state-resting .btn-face {
+  transform: ${KEYCAP_Y.rest} !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  box-shadow: var(--face-shadow-resting) !important;
+  background-color: var(--face-color) !important;
+${FREEZE}
+}
+.state-resting .btn-wall {
+  transform: ${KEYCAP_Y.rest} !important;
+${FREEZE}
+}
+
+.state-hover .btn-wall {
+  transform: ${KEYCAP_Y.hover} !important;
+${FREEZE}
+}
+.state-hover .btn-face {
+  transform: ${KEYCAP_Y.hover} !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  box-shadow: var(--face-shadow-resting) !important;
+  background-color: var(--face-color) !important;
+${FREEZE}
+}
+
+.state-pressed-max .btn-face {
+${important(pressedStatePropsCss('  '))}
+  padding-top: var(--press-translate) !important;
+${FREEZE}
+}
+.state-pressed-max .btn-wall {
+  transform: ${KEYCAP_Y.pressed} !important;
+${FREEZE}
+}
+
+.state-toggle-point .btn-face {
+${important(toggledRestStatePropsCss('  '))}
+  padding-top: max(0px, var(--toggle-height)) !important;
+${FREEZE}
+}
+.state-toggle-point .btn-wall {
+  transform: ${KEYCAP_Y.toggled} !important;
+${FREEZE}
+}
+
 /* State-test panel: frozen housing shadow for pressed states */
 .btn-housing:has(.state-pressed-max),
 .btn-housing:has(.state-toggle-point) {
@@ -150,7 +220,7 @@ function updatePreview() {
         btn.classList.remove('clicky-press');
       });
       btn.addEventListener('animationend', e => {
-        if (e.animationName === 'clicky-transform-cycle' && !btn.matches(':hover')) {
+        if (e.animationName.startsWith('clicky-transform-cycle') && !btn.matches(':hover')) {
           btn.classList.remove('clicky-press');
         }
       });
@@ -223,8 +293,10 @@ function wireText(id, stateKey) {
 function depRow(rowId, visible) {
   const row = $(rowId);
   if (!row) return;
-  row.style.opacity       = visible ? '1' : '0.4';
-  row.style.pointerEvents = visible ? '' : 'none';
+  // Real .disabled (styled via styles.css's input:disabled/select:disabled
+  // rule, U15b/#27) is now authoritative — no row-level opacity/pointerEvents
+  // toggle needed, avoiding a double-dim stack.
+  row.querySelectorAll('input, select').forEach(el => el.disabled = !visible);
 }
 
 function initControls() {
@@ -289,6 +361,10 @@ function initControls() {
   wireColor('btn-toggle-color', 'toggleColor');
   wireRangeNum('btn-press-darken',      'btn-press-darken-num',      'pressDarken');
   wireRangeNum('btn-face-edge-alpha',   'btn-face-edge-alpha-num',   'faceEdgeAlpha');
+  wireRangeNum('btn-specular-alpha',    'btn-specular-alpha-num',    'specularAlpha');
+  wireRangeNum('btn-light-angle-x',     'btn-light-angle-x-num',     'lightAngleX');
+  wireRangeNum('btn-light-angle-y',     'btn-light-angle-y-num',     'lightAngleY');
+  wireRangeNum('btn-specular-size',     'btn-specular-size-num',     'specularSize');
 
   // Depth (shared geometry for both walls)
   wireRangeNum('btn-press-depth',       'btn-press-depth-num',       'pressDepthRatio');
@@ -346,6 +422,7 @@ function initControls() {
   wireRangeNum('btn-ambient-y-mult',       'btn-ambient-y-mult-num',       'ambientYMult',
     v => parseFloat(v.toFixed(2)));
   wireRangeNum('btn-ambient-press-reduction', 'btn-ambient-press-reduction-num', 'ambientPressReduction');
+  wireRangeNum('btn-contact-intensity', 'btn-contact-intensity-num', 'contactIntensity');
 
   // Interaction
   const toggleHeightRow  = $('toggle-height-row');
@@ -465,6 +542,22 @@ function initControls() {
     previewStage3d.addEventListener('pointercancel', endDrag);
   })();
 
+    // Boot-time depRow sync — the inline style="opacity:0.4;pointer-events:none"
+    // rows in index.html only *look* disabled on first paint; without an
+    // explicit call here they aren't semantically/functionally disabled
+    // (.disabled) until the user first toggles the controlling checkbox.
+    depRow('press-color-row',       state.usePressColor);
+    depRow('toggle-color-row',      state.useToggleColor);
+    depRow('button-wall-color-row', state.useButtonWallColor);
+    depRow('cavity-wall-color-row', state.useCavityWallColor);
+    depRow('icon-color-row',        state.iconUseColor);
+    depRow('frame-width-row',          state.frameEnabled);
+    depRow('frame-color-hi-row',       state.frameEnabled);
+    depRow('frame-color-row',          state.frameEnabled);
+    depRow('frame-color-lo-row',       state.frameEnabled);
+    depRow('frame-bevel-alpha-row',    state.frameEnabled);
+    depRow('frame-bevel-width-row',    state.frameEnabled);
+
 }
 
 
@@ -553,6 +646,91 @@ function syncIconPicker() {
   const nameInput = $('btn-icon-name');
   if (nameInput && nameInput.value !== current) nameInput.value = current;
   depRow('icon-color-row', !!state.iconUseColor);
+}
+
+// ── Material presets (rubber / plastic / metal / glass) ────────
+// Config bundles over existing sliders (item #7 dissent) — pure data, no lib
+// changes. Values are pasted verbatim from the expert-review comment on
+// issue #19 (3D-illusion designer sign-off) — do not invent replacements.
+// Applied via the existing applyStyleConfig()/syncAllControls() round-trip,
+// the same mechanism the saved-style picker uses.
+const MATERIAL_PRESETS = {
+  rubber: {
+    radiusRatio: 30, chromeRadiusRatio: 20, faceColor: '#3f4142', textColor: '#e8e8e8',
+    wallHRatio: 22, pressDepthRatio: 30, pressDarken: 18,
+    insetDepthRatio: 10, insetBlurRatio: 20, insetAlphaTop: 40, insetAlphaBot: 20, faceEdgeAlpha: 5,
+    topHighlight: true, highlightColor: '#ffffff', highlightOpacity: 15, rimHeightRatio: 10,
+    buttonWallShadowAlpha: 60, buttonWallShadowEdgeRatio: 35, buttonWallGradientSpread: 40,
+    cavityWallShadowAlpha: 60, cavityWallShadowEdgeRatio: 35, cavityWallGradientSpread: 40,
+    ambientIntensity: 25, ambientBlurMult: 4.5, ambientYMult: 2.0, ambientPressReduction: 50,
+    frameEnabled: false,
+    duration: 260, pressDuration: 140, easingPreset: 'soft', overshoot: false,
+    specularAlpha: 8, lightAngleX: 50, lightAngleY: 25, specularSize: 70,
+    contactIntensity: 20,
+  },
+  plastic: {
+    radiusRatio: 14, chromeRadiusRatio: 16, faceColor: '#e6e6ea', textColor: '#1a1a1a',
+    wallHRatio: 8, pressDepthRatio: 10, pressDarken: 10,
+    insetDepthRatio: 5, insetBlurRatio: 4, insetAlphaTop: 65, insetAlphaBot: 35, faceEdgeAlpha: 15,
+    topHighlight: true, highlightColor: '#ffffff', highlightOpacity: 35, rimHeightRatio: 6,
+    buttonWallShadowAlpha: 90, buttonWallShadowEdgeRatio: 60, buttonWallGradientSpread: 10,
+    cavityWallShadowAlpha: 90, cavityWallShadowEdgeRatio: 60, cavityWallGradientSpread: 10,
+    ambientIntensity: 20, ambientBlurMult: 2.0, ambientYMult: 1.0, ambientPressReduction: 50,
+    frameEnabled: true, frameWidth: 6, frameBevelAlpha: 50, frameBevelWidth: 1,
+    duration: 90, pressDuration: 50, easingPreset: 'snappy', overshoot: true,
+    specularAlpha: 20, lightAngleX: 50, lightAngleY: 25, specularSize: 40,
+    contactIntensity: 10,
+  },
+  metal: {
+    radiusRatio: 10, chromeRadiusRatio: 14, faceColor: '#b0b8c0', textColor: '#12161a',
+    wallHRatio: 12, pressDepthRatio: 14, pressDarken: 14,
+    insetDepthRatio: 6, insetBlurRatio: 6, insetAlphaTop: 60, insetAlphaBot: 30, faceEdgeAlpha: 10,
+    topHighlight: true, highlightColor: '#eef3f8', highlightOpacity: 25, rimHeightRatio: 6,
+    buttonWallShadowAlpha: 90, buttonWallShadowEdgeRatio: 65, buttonWallGradientSpread: 15,
+    useCavityWallColor: true, cavityWallColor: '#9aa4ad',
+    cavityWallShadowAlpha: 90, cavityWallShadowEdgeRatio: 65, cavityWallGradientSpread: 15,
+    ambientIntensity: 20, ambientBlurMult: 1.5, ambientYMult: 1.0, ambientPressReduction: 50,
+    frameEnabled: true, frameWidth: 20, frameColorHi: '#eef2f6', frameColor: '#9aa4ad', frameColorLo: '#5b6670',
+    frameBevelAlpha: 70, frameBevelWidth: 2,
+    duration: 130, pressDuration: 70, easingPreset: 'black', overshoot: true,
+    specularAlpha: 12, lightAngleX: 40, lightAngleY: 20, specularSize: 30,
+    contactIntensity: 15,
+  },
+  glass: {
+    radiusRatio: 22, chromeRadiusRatio: 18, faceColor: '#eaf6fb', textColor: '#1a2a33',
+    wallHRatio: 14, pressDepthRatio: 16, pressDarken: 8,
+    insetDepthRatio: 8, insetBlurRatio: 14, insetAlphaTop: 20, insetAlphaBot: 10, faceEdgeAlpha: 0,
+    topHighlight: true, highlightColor: '#ffffff', highlightOpacity: 45, rimHeightRatio: 10,
+    buttonWallShadowAlpha: 35, buttonWallShadowEdgeRatio: 20, buttonWallGradientSpread: 55,
+    cavityWallShadowAlpha: 35, cavityWallShadowEdgeRatio: 20, cavityWallGradientSpread: 55,
+    ambientIntensity: 15, ambientBlurMult: 4.0, ambientYMult: 1.75, ambientPressReduction: 50,
+    frameEnabled: true, frameWidth: 8, frameBevelAlpha: 30, frameBevelWidth: 1,
+    duration: 150, pressDuration: 80, easingPreset: 'clear', overshoot: true,
+    specularAlpha: 55, lightAngleX: 45, lightAngleY: 20, specularSize: 80,
+    contactIntensity: 10,
+  },
+};
+
+function renderMaterialPicker() {
+  const toolbar = document.querySelector('.preview-toolbar');
+  const stylePicker = $('style-picker');
+  if (!toolbar || !stylePicker) return;
+  const container = document.createElement('div');
+  // Reuses .toolbar-style-picker's existing select styling — no styles.css
+  // changes needed for this unit (kept in-scope to app.js per the issue).
+  container.className = 'toolbar-style-picker toolbar-material-picker';
+  container.innerHTML = `<select id="material-preset-select" title="Apply a material preset">
+    <option value="" selected disabled>Material…</option>
+    <option value="rubber">Rubber</option>
+    <option value="plastic">Plastic</option>
+    <option value="metal">Metal</option>
+    <option value="glass">Glass</option>
+  </select>`;
+  toolbar.insertBefore(container, stylePicker);
+  container.querySelector('#material-preset-select').addEventListener('change', e => {
+    const preset = MATERIAL_PRESETS[e.target.value];
+    if (preset) applyStyleConfig(preset);
+  });
 }
 
 // ── Style picker ─────────────────────────────────────────────
@@ -673,7 +851,7 @@ function renderStylePicker() {
 
   const exportBtn = `<button id="style-export-btn" title="Export HTML &amp; CSS">Export</button>`;
   if (styles.length === 0) {
-    container.innerHTML = `<button id="style-save-btn" title="Save current button style">+ Save</button>${exportBtn}`;
+    container.innerHTML = `<button id="style-save-btn" title="Save current button style">+ Save</button>${exportBtn}<button id="style-reset-btn" title="Reset button style to defaults">Reset</button>`;
   } else {
     const autoSelect = styles.length === 1;
     container.innerHTML =
@@ -684,6 +862,7 @@ function renderStylePicker() {
       `<button id="style-save-btn" title="Save current style">+</button>` +
       `<button id="style-update-btn" class="style-picker-delete" title="Update selected style"${autoSelect ? '' : ' style="display:none"'}>Save</button>` +
       `${exportBtn}` +
+      `<button id="style-reset-btn" title="Reset button style to defaults">Reset</button>` +
       `<button id="style-delete-btn" class="style-picker-delete" title="Delete selected style">&times;</button>`;
   }
 
@@ -735,6 +914,11 @@ function renderStylePicker() {
     styles.splice(idx, 1);
     saveSavedStyles(styles);
     renderStylePicker();
+  });
+
+  $('style-reset-btn')?.addEventListener('click', () => {
+    if (!confirm('Reset button style to defaults? Your saved styles won\'t be affected.')) return;
+    applyStyleConfig({ ...defaultClickyConfig, ...CONFIGURATOR_DEFAULT });
   });
 
   $('style-export-btn')?.addEventListener('click', () => {
@@ -870,8 +1054,15 @@ function downloadZip(styleName) {
   <title>${styleName || 'Clicky Button'}</title>${iconFontLink}
   <link rel="stylesheet" href="${slug}.css">
 </head>
-<body style="padding:40px;background:#f4f1ed;">
+<!-- ontouchstart="" enables :active on iOS Safari without any JS overhead -->
+<body style="padding:40px;background:#f4f1ed;" ontouchstart="">
 ${htmlSnippet}
+<!-- Optional progressive enhancement — full symmetric press bounce (never
+     required; press/toggle motion above is already pure CSS). Uncomment to
+     enable. Note: ES module scripts fail to load under file:// (CORS) —
+     this only works when the export is served over http(s), not opened by
+     double-clicking the .html file. -->
+<!-- <script type="module" src="./${slug}.enhancer.js"></script> -->
 </body>
 </html>
 `;
@@ -886,6 +1077,7 @@ ${cssSnippet}
   const blob = makeZip([
     { name: `${slug}.html`, content: standaloneHtml },
     { name: `${slug}.css`, content: styles },
+    { name: `${slug}.enhancer.js`, content: clickyEnhancerJs },
   ]);
 
   const url = URL.createObjectURL(blob);
@@ -903,6 +1095,7 @@ function boot() {
   initControls();
   renderIconPicker();
   renderStylePicker();
+  renderMaterialPicker();
   // Reflect the configurator's default state (amber SUBMIT) into every control
   // so the inputs match the preview on first load, then render.
   syncAllControls();

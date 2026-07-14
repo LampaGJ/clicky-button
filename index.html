@@ -152,11 +152,11 @@
             <div class="icon-picker" id="icon-picker"></div>
             <label class="ctrl-row"><span class="ctrl-label">Icon Name</span>
               <input type="text" id="btn-icon-name" value="" class="text-input" placeholder="none — pick above or type"></label>
-            <div class="ctrl-row" id="icon-position-row"><span class="ctrl-label">Position</span>
+            <label class="ctrl-row" id="icon-position-row"><span class="ctrl-label">Position</span>
               <select id="btn-icon-position">
                 <option value="left" selected>Left of text</option>
                 <option value="right">Right of text</option>
-              </select></div>
+              </select></label>
             <label class="ctrl-row"><span class="ctrl-label">Size <em>× text</em></span>
               <input type="range" id="btn-icon-size" min="0.5" max="3" value="1.2" step="0.1">
               <input type="number" id="btn-icon-size-num" min="0.5" max="3" value="1.2" step="0.1" class="num-input"></label>
@@ -179,23 +179,23 @@
               <input type="number" id="btn-count-num" min="1" max="12" value="4" step="1" class="num-input"></label>
             <label class="ctrl-row"><span class="ctrl-label">Labels</span>
               <input type="text" id="btn-labels" value="PLAY,STOP,REC,PAUSE" class="text-input" placeholder="comma-separated"></label>
-            <div class="ctrl-row"><span class="ctrl-label">Direction</span>
+            <label class="ctrl-row"><span class="ctrl-label">Direction</span>
               <select id="grid-direction">
                 <option value="row" selected>Row</option>
                 <option value="column">Column</option>
                 <option value="row-reverse">Row Reverse</option>
                 <option value="column-reverse">Column Reverse</option>
-              </select></div>
-            <div class="ctrl-row"><span class="ctrl-label">Wrap</span>
+              </select></label>
+            <label class="ctrl-row"><span class="ctrl-label">Wrap</span>
               <select id="grid-wrap">
                 <option value="wrap" selected>Wrap</option>
                 <option value="nowrap">No Wrap</option>
                 <option value="wrap-reverse">Wrap Reverse</option>
-              </select></div>
+              </select></label>
             <label class="ctrl-row"><span class="ctrl-label">Gap <em>px</em></span>
               <input type="range" id="grid-gap" min="0" max="40" value="12" step="2">
               <input type="number" id="grid-gap-num" min="0" max="40" value="12" step="2" class="num-input"></label>
-            <div class="ctrl-row"><span class="ctrl-label">Justify</span>
+            <label class="ctrl-row"><span class="ctrl-label">Justify</span>
               <select id="grid-justify">
                 <option value="flex-start">Start</option>
                 <option value="center" selected>Center</option>
@@ -203,14 +203,14 @@
                 <option value="space-between">Space Between</option>
                 <option value="space-around">Space Around</option>
                 <option value="space-evenly">Space Evenly</option>
-              </select></div>
-            <div class="ctrl-row"><span class="ctrl-label">Align</span>
+              </select></label>
+            <label class="ctrl-row"><span class="ctrl-label">Align</span>
               <select id="grid-align">
                 <option value="center" selected>Center</option>
                 <option value="stretch">Stretch</option>
                 <option value="flex-start">Start</option>
                 <option value="flex-end">End</option>
-              </select></div>
+              </select></label>
           </div>
 
         </div><!-- /column 1 -->
@@ -239,6 +239,18 @@
             <label class="ctrl-row"><span class="ctrl-label">Edge Shadow <em>%</em></span>
               <input type="range" id="btn-face-edge-alpha" min="0" max="100" value="0" step="5">
               <input type="number" id="btn-face-edge-alpha-num" min="0" max="100" value="0" step="5" class="num-input"></label>
+            <label class="ctrl-row"><span class="ctrl-label">Specular <em>%</em></span>
+              <input type="range" id="btn-specular-alpha" min="0" max="100" value="0" step="5">
+              <input type="number" id="btn-specular-alpha-num" min="0" max="100" value="0" step="5" class="num-input"></label>
+            <label class="ctrl-row"><span class="ctrl-label">Light X <em>%</em></span>
+              <input type="range" id="btn-light-angle-x" min="0" max="100" value="50" step="5">
+              <input type="number" id="btn-light-angle-x-num" min="0" max="100" value="50" step="5" class="num-input"></label>
+            <label class="ctrl-row"><span class="ctrl-label">Light Y <em>%</em></span>
+              <input type="range" id="btn-light-angle-y" min="0" max="100" value="25" step="5">
+              <input type="number" id="btn-light-angle-y-num" min="0" max="100" value="25" step="5" class="num-input"></label>
+            <label class="ctrl-row"><span class="ctrl-label">Specular Size <em>%</em></span>
+              <input type="range" id="btn-specular-size" min="10" max="100" value="60" step="5">
+              <input type="number" id="btn-specular-size-num" min="10" max="100" value="60" step="5" class="num-input"></label>
           </div>
 
           <!-- Card: Chrome Frame -->
@@ -364,6 +376,9 @@
             <label class="ctrl-row"><span class="ctrl-label">Press Reduction <em>%</em></span>
               <input type="range" id="btn-ambient-press-reduction" min="0" max="100" value="50" step="5">
               <input type="number" id="btn-ambient-press-reduction-num" min="0" max="100" value="50" step="5" class="num-input"></label>
+            <label class="ctrl-row"><span class="ctrl-label">Contact Shadow <em>%</em></span>
+              <input type="range" id="btn-contact-intensity" min="0" max="100" value="0" step="5">
+              <input type="number" id="btn-contact-intensity-num" min="0" max="100" value="0" step="5" class="num-input"></label>
           </div>
 
           <!-- Card: Timing & Easing -->
@@ -375,7 +390,7 @@
             <label class="ctrl-row"><span class="ctrl-label">Press <em>ms</em></span>
               <input type="range" id="btn-press-duration" min="20" max="200" value="80" step="5">
               <input type="number" id="btn-press-duration-num" min="20" max="200" value="80" step="5" class="num-input"></label>
-            <div class="ctrl-row"><span class="ctrl-label">Easing</span>
+            <label class="ctrl-row"><span class="ctrl-label">Easing</span>
               <select id="btn-easing-preset">
                 <optgroup label="Standard">
                   <option value="bouncy" selected>Bouncy (overshoot)</option>
@@ -393,14 +408,14 @@
                   <option value="buckling">Buckling spring (IBM)</option>
                 </optgroup>
                 <option value="custom">Custom</option>
-              </select></div>
+              </select></label>
             <div id="custom-bezier-row" class="ctrl-row custom-bezier" style="display:none">
               <span class="ctrl-label">Cubic-Bezier</span>
               <div class="bezier-inputs">
-                <input type="number" id="bz-x1" value="0.34" min="0" max="1" step="0.01" class="num-input bz-num">
-                <input type="number" id="bz-y1" value="1.56" min="-2" max="3" step="0.01" class="num-input bz-num">
-                <input type="number" id="bz-x2" value="0.64" min="0" max="1" step="0.01" class="num-input bz-num">
-                <input type="number" id="bz-y2" value="1.0" min="-2" max="3" step="0.01" class="num-input bz-num">
+                <input type="number" id="bz-x1" value="0.34" min="0" max="1" step="0.01" class="num-input bz-num" aria-label="Bezier X1">
+                <input type="number" id="bz-y1" value="1.56" min="-2" max="3" step="0.01" class="num-input bz-num" aria-label="Bezier Y1">
+                <input type="number" id="bz-x2" value="0.64" min="0" max="1" step="0.01" class="num-input bz-num" aria-label="Bezier X2">
+                <input type="number" id="bz-y2" value="1.0" min="-2" max="3" step="0.01" class="num-input bz-num" aria-label="Bezier Y2">
               </div></div>
             <label class="ctrl-row"><span class="ctrl-label">Overshoot</span>
               <input type="checkbox" id="btn-overshoot" checked class="toggle-check"></label>
@@ -429,13 +444,13 @@
             <label class="ctrl-row"><span class="ctrl-label">Hover Lift <em>px</em></span>
               <input type="range" id="btn-hover-lift" min="0" max="10" value="2" step="1">
               <input type="number" id="btn-hover-lift-num" min="0" max="10" value="2" step="1" class="num-input"></label>
-            <div class="ctrl-row"><span class="ctrl-label">Focus Style</span>
+            <label class="ctrl-row"><span class="ctrl-label">Focus Style</span>
               <select id="btn-focus-style">
                 <option value="tint" selected>Tint (brighter face)</option>
                 <option value="glow">Glow</option>
                 <option value="outline">Outline</option>
                 <option value="none">None</option>
-              </select></div>
+              </select></label>
             <label class="ctrl-row"><span class="ctrl-label">Focus Color</span>
               <input type="color" id="btn-focus-color" value="#5b8dee"></label>
             <label class="ctrl-row"><span class="ctrl-label">Focus Size <em>px</em></span>
@@ -446,12 +461,12 @@
               <input type="number" id="btn-border-width-num" min="0" max="6" value="0" step="1" class="num-input"></label>
             <label class="ctrl-row"><span class="ctrl-label">Border Color</span>
               <input type="color" id="btn-border-color" value="#444444"></label>
-            <div class="ctrl-row"><span class="ctrl-label">Border Style</span>
+            <label class="ctrl-row"><span class="ctrl-label">Border Style</span>
               <select id="btn-border-style">
                 <option value="solid" selected>Solid</option>
                 <option value="dashed">Dashed</option>
                 <option value="dotted">Dotted</option>
-              </select></div>
+              </select></label>
           </div>
 
         </div><!-- /column 3 -->
