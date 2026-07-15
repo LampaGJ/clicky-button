@@ -111,6 +111,24 @@ export const ELEMENT_ANNOTATIONS = {
       'supply the correct rounded silhouette; painted with the ' +
       'cavity-wall color/gradient vars.',
   },
+  'btn-face::before': {
+    selector: 'btn-face::before',
+    producedBy: 'buildFaceEdgeCss (lib/clicky-button.js)',
+    displayName: 'Face-Edge Bevel (Issue #68)',
+    strategicPurpose:
+      'Epic #56\'s "face-edge" role, the owner-named v1 example of a ' +
+      'boundary-ring overlay — a real, physically-motivated additive ' +
+      'layer distinct from `.btn-face`\'s own flush-gated recess shadow ' +
+      '(#56 §4: "the existing recess inset-shadow stack must stay ' +
+      'owned by .btn-face itself; edge/top are additive overlays ' +
+      'only").',
+    tacticalObjective:
+      'Gated on `bevelStyle: \'beveled\'` (D3); a highlight-top-left/ ' +
+      'shadow-bottom-right inset box-shadow ring reusing the EXISTING ' +
+      '`--frame-bevel-alpha`/`--frame-bevel-alpha-shadow` vars; carries ' +
+      'no transform of its own (inherits KEYCAP_Y/skew for free as a ' +
+      'descendant of the already-transformed `.btn-face`, per #56 §3).',
+  },
   'btn-wall': {
     selector: 'btn-wall',
     producedBy: 'buildButtonWallCss (lib/clicky-button.js)',
@@ -600,11 +618,48 @@ export const CSS_VAR_GROUPS = {
       '`--transform-easing` (computed per getTransformEasing); ' +
       "`--shadow-ease-press`/`--shadow-ease-release` (always 'linear').",
   },
+  'face-tolerance': {
+    vars: ['--face-tolerance'],
+    displayName: 'Face Tolerance Gap Var (Issue #76)',
+    strategicPurpose:
+      'Retires the corner-cusp bug class (issues #54/#55) at its root: ' +
+      'H0/W0 (buildVarMap) have zero width terms tying face/wall width ' +
+      'to anything but frame-width/skew-widen, so a true parallel ' +
+      'horizontal offset — not a position-specific patch — makes ' +
+      'wall-arc/cell-arc crossing geometrically impossible at any ' +
+      'travel position or radius, by construction.',
+    tacticalObjective:
+      'Emitted only when faceTolerance > 0 (D3); insets ' +
+      '`.btn-face`/`.btn-wall` left/right (faceInsetDecl) and reduces ' +
+      'their own per-corner radius by the same amount ' +
+      '(faceRadiusBorderDecl) — horizontal-only, the cavity/`.btn-cell`/' +
+      'all vertical math are untouched.',
+  },
 };
 
 // ── Keyframe groups ────────────────────────────────────────────────────
 // id → { names: [...], producedBy, displayName, strategicPurpose, tacticalObjective }
 export const KEYFRAME_GROUPS = {
+  'glow-channel-cycle': {
+    names: ['clicky-glow-channel-cycle'],
+    producedBy: 'buildClickFaceCss (lib/clicky-button.js)',
+    displayName: 'Lit-Channel Glow Cycle',
+    strategicPurpose:
+      'The inside half of the owner-ruled glow (#53b, epic #56): an ' +
+      'emissive key sinking into its channel must LIGHT the channel walls ' +
+      'it is descending into. Emitted only when a glow is configured ' +
+      '(slotActive), and gated by construction rather than by new logic — ' +
+      'the channel only exists once the visible wall reaches zero, so a key ' +
+      'whose travel stops at flush never lights a channel because it never ' +
+      'enters one.',
+    tacticalObjective:
+      'Animates the cavity ::before background-image between its resting and ' +
+      'pressed glow gradients across the SAME flush-point offsets ' +
+      'clicky-shadow-cycle uses (resolveShadowTiming flushDown/bottom/' +
+      'flushUp) — never a parallel timing source. Both stops carry an ' +
+      'identical gradient type/stop-count so the colour channel interpolates ' +
+      'smoothly instead of flipping at the midpoint.',
+  },
   'click-mode-full-cycle': {
     names: ['clicky-transform-cycle', 'clicky-shadow-cycle', 'clicky-color-cycle'],
     producedBy: 'buildClickFaceCss (lib/clicky-button.js)',

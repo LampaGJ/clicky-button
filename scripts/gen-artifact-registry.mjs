@@ -130,6 +130,7 @@ const REPRESENTATIVE_VAR_CONFIGS = [
   { iconPlacement: 'edge' },
   { frameEnabled: true, frameBevelConic: true },
   { frameEnabled: false },
+  { faceTolerance: 3 },
 ];
 
 async function discoverCssVarKeys(lib) {
@@ -175,10 +176,26 @@ function isExcludedClass(cls) {
   return ELEMENT_EXCLUDE_PATTERNS.some(re => re.test(cls));
 }
 
-async function discoverCavity(lib) {
-  const css = lib.internals.buildGridCss({ ...lib.defaultClickyConfig });
-  return css.includes('.btn-cell::before');
-}
+  // Representative configs for pseudo-element discovery — a pseudo never
+  // appears in an HTML `class="..."` attribute (discoverHtmlClasses can
+  // never find it), so each new `::before`/`::after` producer needs its own
+  // gate config added here, matching the SAME "verify against the live
+  // engine" discipline discoverHtmlClasses/discoverCssVarKeys already use.
+  const PSEUDO_DISCOVERY_CONFIGS = [
+    {},
+    { bevelStyle: 'beveled' },
+  ];
+
+  async function discoverPseudoSelectors(lib) {
+    const found = new Set();
+    for (const cfg of PSEUDO_DISCOVERY_CONFIGS) {
+      const gridCss = lib.internals.buildGridCss({ ...lib.defaultClickyConfig, ...cfg });
+      if (gridCss.includes('.btn-cell::before')) found.add('btn-cell::before');
+      const fullCss = lib.buildClickyCss(cfg);
+      if (fullCss.includes('.btn-face::before')) found.add('btn-face::before');
+    }
+    return found;
+  }
 
 function discoverKeyframeNames(libSource) {
   // Anchored to the START of a (trimmed) line so prose comments that merely
@@ -211,7 +228,7 @@ async function compileManifest() {
 
   const discoveredVars = await discoverCssVarKeys(lib);
   const discoveredClasses = await discoverHtmlClasses(lib);
-  const hasCavity = await discoverCavity(lib);
+  const discoveredPseudoSelectors = await discoverPseudoSelectors(lib);
   const discoveredKeyframes = discoverKeyframeNames(libSource);
 
   // ── config contract ──
@@ -277,7 +294,7 @@ async function compileManifest() {
   for (const [elId, def] of Object.entries(ELEMENT_ANNOTATIONS)) {
     const id = `element:${elId}`;
     const discovered = def.selector.endsWith('::before')
-      ? hasCavity
+      ? discoveredPseudoSelectors.has(def.selector)
       : discoveredClasses.has(def.selector);
     const missingTags = REQUIRED_TAGS.filter(t => !def[t]);
     domElements[id] = {
@@ -296,7 +313,10 @@ async function compileManifest() {
   const orphanedElements = [...discoveredClasses]
     .filter(c => !isExcludedClass(c) && !annotatedSelectors.has(c))
     .sort();
-  if (!annotatedSelectors.has('btn-cell::before') && hasCavity) orphanedElements.push('btn-cell::before');
+  for (const sel of discoveredPseudoSelectors) {
+    if (!annotatedSelectors.has(sel)) orphanedElements.push(sel);
+  }
+  orphanedElements.sort();
 
   // ── keyframe groups (cross-checked against the raw source's @keyframes names) ──
   const groupedKeyframes = new Set();

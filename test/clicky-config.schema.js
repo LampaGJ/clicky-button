@@ -173,6 +173,21 @@ export const ClickyConfigSchema = z.object({
       toggleColor: z.string().optional(),
     }),
   ).default({}),
+
+  // Travelling halo + lit channel (issue #53/#56 v2 element tree). '' = off
+  // (D3) — see lib/clicky-button.js's ClickyConfig typedef for
+  // glowColor/glowIntensity.
+  glowColor: z.string(),
+  glowIntensity: pct0to100,
+
+  // Unclipped focus ring (issue #58). false = off (D3).
+  focusUnclipped: z.boolean(),
+
+  // True beveled face edge (issue #68). 'none' = off (D3).
+  bevelStyle: z.enum(['none', 'beveled']),
+
+  // Face tolerance gap (issue #76). 0 = off (D3).
+  faceTolerance: z.number().min(0),
 });
 
 /** @typedef {import('zod').infer<typeof ClickyConfigSchema>} ClickyConfigParsed */
