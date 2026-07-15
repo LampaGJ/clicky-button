@@ -61,30 +61,79 @@ describe('per-corner radius adjacent-sum clamp (issue #35)', () => {
   });
 });
 
-describe('parallelogram skew geometry (issue #34)', () => {
-  it('default (skewAngle 0) widens the housing by nothing', () => {
+describe('parallelogram skew v2 geometry (issue #40 — housing-level shear, both axes + cross-term)', () => {
+  const tan = deg => Math.tan(deg * Math.PI / 180);
+
+  it('default (both axes 0) widens the housing by nothing on either axis', () => {
     const vars = buildClickyVars({ containerWidth: 180, containerHeight: 88, frameEnabled: false });
-    // frameless ⇒ housing-width === container-width when there's no skew.
+    // frameless ⇒ housing-width === container-width, housing-height ===
+    // container-height, when there's no skew.
     expect(vars['--housing-width']).toBe('180px');
+    expect(vars['--housing-height']).toBe('88px');
   });
 
-  it('non-zero skewAngle widens --housing-width by containerHeight * tan(angle)', () => {
-    const containerWidth = 180, containerHeight = 88, skewAngle = 12;
-    const vars = buildClickyVars({ containerWidth, containerHeight, frameEnabled: false, skewAngle });
-    const expectedWiden = Math.ceil(containerHeight * Math.abs(Math.tan(skewAngle * Math.PI / 180)));
-    expect(vars['--housing-width']).toBe(`${containerWidth + expectedWiden}px`);
+  it('X-only skew widens --housing-width by H0 * tan(x); H0 = containerHeight + frameWidth', () => {
+    const containerWidth = 180, containerHeight = 88, skewXAngle = 12;
+    const vars = buildClickyVars({ containerWidth, containerHeight, frameEnabled: false, skewXAngle });
+    const H0 = containerHeight; // frameless ⇒ fw === 0 ⇒ H0 === containerHeight
+    const expectedWidenX = Math.ceil(H0 * Math.abs(tan(skewXAngle)));
+    expect(vars['--housing-width']).toBe(`${containerWidth + expectedWidenX}px`);
+    // No Y skew ⇒ no height widen.
+    expect(vars['--housing-height']).toBe(`${containerHeight}px`);
   });
 
-  it('skewAngle is hard-clamped to ±18deg in the actual geometry, not just validated', () => {
-    const vars = buildClickyVars({ containerWidth: 180, containerHeight: 88, frameEnabled: false, skewAngle: 60 });
-    const expectedWiden = Math.ceil(88 * Math.abs(Math.tan(18 * Math.PI / 180)));
+  it('Y-only skew widens --housing-height by W0 * tan(y); W0 = containerWidth + 2*frameWidth', () => {
+    const containerWidth = 180, containerHeight = 88, skewYAngle = 6;
+    const vars = buildClickyVars({ containerWidth, containerHeight, frameEnabled: false, skewYAngle });
+    const W0 = containerWidth; // frameless ⇒ fw === 0 ⇒ W0 === containerWidth
+    const expectedWidenY = Math.ceil(W0 * Math.abs(tan(skewYAngle)));
+    expect(vars['--housing-height']).toBe(`${containerHeight + expectedWidenY}px`);
+    // No X skew, but the cross-term (tanX * tanY) is 0 too when tanX === 0,
+    // so no width widen either.
+    expect(vars['--housing-width']).toBe(`${containerWidth}px`);
+  });
+
+  it('combined X+Y skew adds the cross-term (W0 * |tanX * tanY|) to the X widen', () => {
+    const containerWidth = 180, containerHeight = 88, skewXAngle = 8, skewYAngle = 4;
+    const fw = 14; // default frameWidth, frameEnabled default true
+    const vars = buildClickyVars({ containerWidth, containerHeight, skewXAngle, skewYAngle });
+    const W0 = containerWidth + 2 * fw;
+    const H0 = containerHeight + fw;
+    const expectedWidenX = Math.ceil(H0 * Math.abs(tan(skewXAngle)) + W0 * Math.abs(tan(skewXAngle) * tan(skewYAngle)));
+    const expectedWidenY = Math.ceil(W0 * Math.abs(tan(skewYAngle)));
+    expect(vars['--housing-width']).toBe(`${W0 + expectedWidenX}px`);
+    expect(vars['--housing-height']).toBe(`${H0 + expectedWidenY}px`);
+  });
+
+  it('skewXAngle is hard-clamped to ±18deg in the actual geometry, not just validated', () => {
+    const vars = buildClickyVars({ containerWidth: 180, containerHeight: 88, frameEnabled: false, skewXAngle: 60 });
+    const expectedWiden = Math.ceil(88 * Math.abs(tan(18)));
     expect(vars['--housing-width']).toBe(`${180 + expectedWiden}px`);
   });
 
-  it('negative skewAngle widens the housing by the same magnitude as its positive counterpart', () => {
-    const pos = buildClickyVars({ containerWidth: 180, containerHeight: 88, frameEnabled: false, skewAngle: 15 });
-    const neg = buildClickyVars({ containerWidth: 180, containerHeight: 88, frameEnabled: false, skewAngle: -15 });
+  it('skewYAngle is hard-clamped to ±8deg (tighter than X) in the actual geometry, not just validated', () => {
+    const vars = buildClickyVars({ containerWidth: 180, containerHeight: 88, frameEnabled: false, skewYAngle: 60 });
+    const expectedWiden = Math.ceil(180 * Math.abs(tan(8)));
+    expect(vars['--housing-height']).toBe(`${88 + expectedWiden}px`);
+  });
+
+  it('negative skewXAngle widens the housing by the same magnitude as its positive counterpart', () => {
+    const pos = buildClickyVars({ containerWidth: 180, containerHeight: 88, frameEnabled: false, skewXAngle: 15 });
+    const neg = buildClickyVars({ containerWidth: 180, containerHeight: 88, frameEnabled: false, skewXAngle: -15 });
     expect(neg['--housing-width']).toBe(pos['--housing-width']);
+  });
+
+  it('negative skewYAngle widens the housing by the same magnitude as its positive counterpart', () => {
+    const pos = buildClickyVars({ containerWidth: 180, containerHeight: 88, frameEnabled: false, skewYAngle: 6 });
+    const neg = buildClickyVars({ containerWidth: 180, containerHeight: 88, frameEnabled: false, skewYAngle: -6 });
+    expect(neg['--housing-height']).toBe(pos['--housing-height']);
+  });
+
+  it('--skew-widen-y is only emitted when the Y widen is non-zero', () => {
+    const xOnly = buildClickyVars({ containerWidth: 180, containerHeight: 88, skewXAngle: 12 });
+    expect('--skew-widen-y' in xOnly).toBe(false);
+    const withY = buildClickyVars({ containerWidth: 180, containerHeight: 88, skewYAngle: 6 });
+    expect('--skew-widen-y' in withY).toBe(true);
   });
 });
 

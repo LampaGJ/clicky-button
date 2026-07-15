@@ -272,9 +272,13 @@ html, body {
   pointer-events: none;
 }
 
-.preview-panel--3d .preview-stage--3d .btn-housing {
-  transform-style: preserve-3d;
-}
+/* No transform-style: preserve-3d on .btn-housing here (issue #40 cleanup):
+   the spec forces the used transform-style to `flat` on any element with
+   overflow other than `visible`, and .btn-housing has had overflow:hidden
+   both before and after #40 — the rule was already dead. The flat 2D shear
+   (housing skewX/skewY, when active) composes correctly with the ancestor
+   .btn-grid's rotateX/rotateY above; a tilted flat card is the right visual
+   anyway, so there's nothing to fix here for #40. */
 
 /* bg for 3d panel matches main preview */
 .preview-canvas.bg-light   .preview-stage--3d { background: #f0ede8; }

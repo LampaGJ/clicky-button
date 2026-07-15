@@ -5,7 +5,7 @@
   --grid-gap: 12px;
   --grid-justify: center;
   --grid-align: center;
-  --housing-width: 224px;
+  --housing-width: 226px;
   --housing-height: 102px;
   --container-width: 180px;
   --container-height: 88px;
@@ -15,7 +15,8 @@
   --radius-tr: 7px;
   --radius-br: 37px;
   --radius-bl: 7px;
-  --skew-angle: 10deg;
+  --skew-x-angle: 10deg;
+  --skew-y-angle: 0deg;
   --face-color: #c8c0b4;
   --face-pressed: #c8c0b4;
   --face-toggled: #c8c0b4;
@@ -130,6 +131,8 @@
     inset calc(-1 * var(--frame-bevel-width)) 0 0 0 rgba(0, 0, 0, var(--frame-bevel-alpha-shadow)),
     var(--housing-shadow);
   transition: box-shadow var(--duration) var(--shadow-ease-release);
+  transform: skewX(var(--skew-x-angle)) skewY(var(--skew-y-angle));
+  transform-origin: center;
 }
 
 :root .btn-housing:has(.clicky-btn:active),
@@ -145,16 +148,14 @@
 
 :root .btn-cell {
   position: absolute;
-  top: 0;
-  left: var(--frame-width);
-  right: var(--frame-width);
+  top: calc(var(--skew-widen-y, 0px) / 2);
+  left: calc((var(--housing-width) - var(--container-width)) / 2);
+  right: calc((var(--housing-width) - var(--container-width)) / 2);
   height: var(--container-height);
   container-type: size;
   overflow: hidden;
   border-radius: var(--radius-tl) var(--radius-tr) var(--radius-br) var(--radius-bl);
   background: transparent;
-  transform: skewX(var(--skew-angle));
-  transform-origin: center;
 }
 
 :root .btn-cell::before {
@@ -419,5 +420,5 @@ background-color: color-mix(in srgb, #5b8dee 18%, var(--face-color));
 
 :root .btn-label,
 :root .btn-icon {
-  transform: skewX(calc(-1 * var(--skew-angle)));
+  transform: skewY(calc(-1 * var(--skew-y-angle))) skewX(calc(-1 * var(--skew-x-angle)));
 }

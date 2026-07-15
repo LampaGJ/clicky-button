@@ -451,7 +451,8 @@ function initControls() {
   wireRangeNum('btn-radius',        'btn-radius-num',        'radiusRatio');
   wireRadiusCorners();
   wireRangeNum('btn-chrome-radius', 'btn-chrome-radius-num', 'chromeRadiusRatio');
-  wireRangeNum('btn-skew-angle',    'btn-skew-angle-num',    'skewAngle', v => Math.round(v));
+  wireRangeNum('btn-skew-x-angle',  'btn-skew-x-angle-num',  'skewXAngle', v => Math.round(v));
+  wireRangeNum('btn-skew-y-angle',  'btn-skew-y-angle-num',  'skewYAngle', v => Math.round(v));
   wireColor('btn-face-color', 'faceColor');
   wireColor('btn-text-color', 'textColor');
   wireCheckbox('btn-text-wrap', 'textWrap');

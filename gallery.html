@@ -133,7 +133,7 @@
   </style>
 
   <!-- Exactly one <style> element holds the whole generated button
-       stylesheet (all 28 tiles concatenated into one textContent write) —
+       stylesheet (all tiles concatenated into one textContent write) —
        per the stacking-context-debugger's mitigation (b)2 on issue #28. -->
   <style id="gallery-css"></style>
 </head>
@@ -237,12 +237,14 @@
       return key in cfg ? cfg[key] : defaultClickyConfig[key];
     }
 
-    // ── 28-tile variation matrix ───────────────────────────────────
+    // ── Variation matrix ───────────────────────────────────────────
     // Rows 1-6 verbatim from issue #28's illusion-designer comment: one
     // perceptual variable isolated per row (material → shape → size →
     // color/contrast → frame/travel → specular/mode). Row 7 added by
     // issue #38: the wave-3 shape primitives (skew, per-corner radius,
-    // segmented housing, tri-state radio) landed after #28 shipped.
+    // segmented housing, tri-state radio) landed after #28 shipped; its skew
+    // tiles were expanded from one to five by issue #40 (all four directions
+    // + one combined) once the shear moved to the housing level.
     const TILES = [
       // Row 1 — Materials (bg NEUTRAL): four presets, same label/icon.
       { name: 'Rubber', bg: 'NEUTRAL',
@@ -328,14 +330,33 @@
         config: { ...MATERIAL_PRESETS.metal, btnCount: 3, btnLabels: 'PLAY,STOP,REC' },
         axes: [{ label: 'material', literal: 'metal' }, { label: 'count', key: 'btnCount' }, { label: 'icon', literal: 'none (pairs w/ #3)' }] },
 
-      // Row 7 — Wave-3 shape primitives (bg NEUTRAL): skew, per-corner
-      // radius, segmented housing, and tri-state radio (issue #38). The
+      // Row 7 — Wave-3 shape primitives (bg NEUTRAL): skew (both axes, all
+      // four directions + one combined — issue #40), per-corner radius,
+      // segmented housing, and tri-state radio (issue #38). The
       // segmented/radio tiles render via buildClickyGroupHtml, never
       // buildClickyHtml (throws on housingLayout "segmented" — see lib
       // docblock) — buildTileMarkup() below dispatches on housingLayout.
-      { name: 'Parallelogram', bg: 'NEUTRAL',
-        config: { ...MATERIAL_PRESETS.plastic, skewAngle: 12, btnLabels: 'SKEW' },
-        axes: [{ label: 'skewAngle', key: 'skewAngle' }, { label: 'material', literal: 'plastic' }, { label: 'shape', literal: 'parallelogram' }] },
+      //
+      // Skew v2 (issue #40): shear moved from `.btn-cell` to `.btn-housing`,
+      // so the chrome frame/cavity now shears WITH the face — the whole
+      // point of #40. Every skew tile below keeps its preset's frameEnabled:
+      // true (plastic/metal both default it on) specifically so the sheared
+      // housing chrome is visible, not just the face.
+      { name: 'Skew X +12°', bg: 'NEUTRAL',
+        config: { ...MATERIAL_PRESETS.plastic, skewXAngle: 12, btnLabels: 'SKEW X+' },
+        axes: [{ label: 'skewXAngle', key: 'skewXAngle' }, { label: 'frameEnabled', key: 'frameEnabled' }, { label: 'shape', literal: 'parallelogram (+X)' }] },
+      { name: 'Skew X −12°', bg: 'NEUTRAL',
+        config: { ...MATERIAL_PRESETS.plastic, skewXAngle: -12, btnLabels: 'SKEW X-' },
+        axes: [{ label: 'skewXAngle', key: 'skewXAngle' }, { label: 'frameEnabled', key: 'frameEnabled' }, { label: 'shape', literal: 'parallelogram (-X)' }] },
+      { name: 'Skew Y +6°', bg: 'NEUTRAL',
+        config: { ...MATERIAL_PRESETS.metal, skewYAngle: 6, btnLabels: 'SKEW Y+' },
+        axes: [{ label: 'skewYAngle', key: 'skewYAngle' }, { label: 'frameEnabled', key: 'frameEnabled' }, { label: 'shape', literal: 'parallelogram (+Y)' }] },
+      { name: 'Skew Y −6°', bg: 'NEUTRAL',
+        config: { ...MATERIAL_PRESETS.metal, skewYAngle: -6, btnLabels: 'SKEW Y-' },
+        axes: [{ label: 'skewYAngle', key: 'skewYAngle' }, { label: 'frameEnabled', key: 'frameEnabled' }, { label: 'shape', literal: 'parallelogram (-Y)' }] },
+      { name: 'Skew combined X+8/Y+4', bg: 'NEUTRAL',
+        config: { ...MATERIAL_PRESETS.plastic, skewXAngle: 8, skewYAngle: 4, btnLabels: 'COMBO' },
+        axes: [{ label: 'skewXAngle', key: 'skewXAngle' }, { label: 'skewYAngle', key: 'skewYAngle' }, { label: 'shape', literal: 'combined shear' }] },
       { name: 'Asymmetric corners', bg: 'NEUTRAL',
         config: { ...MATERIAL_PRESETS.plastic, radiusCorners: { tl: 0, tr: 50, br: 50, bl: 0 }, btnLabels: 'CORNERS' },
         axes: [{ label: 'radiusCorners', literal: 'sharp-left / pill-right' }, { label: 'material', literal: 'plastic' }, { label: 'shape', literal: 'asymmetric corners' }] },
@@ -407,7 +428,7 @@
         // Per the task contract: never silently drop a tile. If a bundle
         // ever throws, this is where a documented, minimal correction
         // would go (removing/fixing only the offending key) — logged so
-        // it's visible rather than swallowed. All 28 shipped bundles were
+        // it's visible rather than swallowed. All shipped bundles were
         // pre-verified not to hit this path (see verification step).
         console.error(`Tile ${i} (${tile.name}) failed validateClickyConfig:`, err.message);
         corrections.push({ tile: tile.name, error: err.message });

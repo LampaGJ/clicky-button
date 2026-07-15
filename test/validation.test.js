@@ -244,38 +244,72 @@ describe('per-corner radius (issue #35)', () => {
   });
 });
 
-describe('parallelogram skew (issue #34)', () => {
-  it('rejects a non-number skewAngle (generic typeof check)', () => {
-    expect(() => buildClickyCss({ skewAngle: '12' })).toThrowError(/skewAngle/);
+describe('parallelogram skew v2 (issue #40 — housing-level shear, two axes)', () => {
+  it('rejects a non-number skewXAngle / skewYAngle (generic typeof check)', () => {
+    expect(() => buildClickyCss({ skewXAngle: '12' })).toThrowError(/skewXAngle/);
+    expect(() => buildClickyCss({ skewYAngle: '6' })).toThrowError(/skewYAngle/);
   });
 
   it('default output contains no skew-related CSS at all', () => {
     const css = buildClickyCss();
-    expect(css).not.toContain('--skew-angle');
+    expect(css).not.toContain('--skew-x-angle');
+    expect(css).not.toContain('--skew-y-angle');
+    expect(css).not.toContain('--skew-widen-y');
     expect(css).not.toContain('skewX');
+    expect(css).not.toContain('skewY');
   });
 
-  it('non-zero skewAngle emits skewX on .btn-cell, counter-skew on label/icon, and the --skew-angle var', () => {
-    const css = buildClickyCss({ skewAngle: 12 });
-    expect(css).toContain('--skew-angle: 12deg;');
-    expect(css).toContain('transform: skewX(var(--skew-angle));');
-    expect(css).toContain('transform: skewX(calc(-1 * var(--skew-angle)));');
+  it('non-zero skewXAngle emits skewX+skewY on .btn-housing (not .btn-cell), reversed-order counter-skew on label/icon, and both angle vars', () => {
+    const css = buildClickyCss({ skewXAngle: 12 });
+    expect(css).toContain('--skew-x-angle: 12deg;');
+    expect(css).toContain('--skew-y-angle: 0deg;');
+    expect(css).toMatch(/\.btn-housing\s*\{[^}]*transform: skewX\(var\(--skew-x-angle\)\) skewY\(var\(--skew-y-angle\)\);/s);
+    expect(css).not.toMatch(/\.btn-cell\s*\{[^}]*transform: skewX/s);
+    expect(css).toContain('transform: skewY(calc(-1 * var(--skew-y-angle))) skewX(calc(-1 * var(--skew-x-angle)));');
   });
 
-  it('hard-clamps skewAngle to ±18deg even though the runtime validator is typeof-only', () => {
-    const over = buildClickyCss({ skewAngle: 45 });
-    expect(over).toContain('--skew-angle: 18deg;');
-    const under = buildClickyCss({ skewAngle: -45 });
-    expect(under).toContain('--skew-angle: -18deg;');
+  it('non-zero skewYAngle alone also activates the housing shear + counter-skew + emits --skew-widen-y', () => {
+    const css = buildClickyCss({ skewYAngle: 6 });
+    expect(css).toContain('--skew-x-angle: 0deg;');
+    expect(css).toContain('--skew-y-angle: 6deg;');
+    expect(css).toContain('--skew-widen-y:');
+    expect(css).toMatch(/\.btn-housing\s*\{[^}]*transform: skewX\(var\(--skew-x-angle\)\) skewY\(var\(--skew-y-angle\)\);/s);
   });
 
-  it('KEYCAP_Y stays translate-only regardless of skewAngle (issue #12 single-source invariant)', () => {
+  it('active skew switches .btn-cell to housing-relative centering (both left/right and top)', () => {
+    const css = buildClickyCss({ skewXAngle: 12 });
+    expect(css).toMatch(/\.btn-cell\s*\{[^}]*left: calc\(\(var\(--housing-width\) - var\(--container-width\)\) \/ 2\);/s);
+    expect(css).toMatch(/\.btn-cell\s*\{[^}]*top: calc\(var\(--skew-widen-y, 0px\) \/ 2\);/s);
+  });
+
+  it('inactive skew keeps the exact pre-#34 literal .btn-cell insets (byte-identical default — D3)', () => {
+    const css = buildClickyCss();
+    expect(css).toMatch(/\.btn-cell\s*\{\s*position: absolute;\s*top: 0;\s*left: var\(--frame-width\);\s*right: var\(--frame-width\);/);
+  });
+
+  it('hard-clamps skewXAngle to ±18deg and skewYAngle to ±8deg (tighter) even though the runtime validator is typeof-only', () => {
+    const overX = buildClickyCss({ skewXAngle: 45 });
+    expect(overX).toContain('--skew-x-angle: 18deg;');
+    const underX = buildClickyCss({ skewXAngle: -45 });
+    expect(underX).toContain('--skew-x-angle: -18deg;');
+    const overY = buildClickyCss({ skewYAngle: 45 });
+    expect(overY).toContain('--skew-y-angle: 8deg;');
+    const underY = buildClickyCss({ skewYAngle: -45 });
+    expect(underY).toContain('--skew-y-angle: -8deg;');
+  });
+
+  it('KEYCAP_Y stays translate-only regardless of skew (issue #12 single-source invariant)', () => {
     expect(internals.KEYCAP_Y.rest).toBe('translateY(0)');
     expect(internals.KEYCAP_Y.pressed).toBe('translateY(var(--press-translate))');
     expect(internals.KEYCAP_Y.toggled).toBe('translateY(var(--toggle-height))');
-    // Skewed output must not have rewritten these to include skewX.
-    const css = buildClickyCss({ skewAngle: 12, mode: 'toggle' });
-    expect(css).not.toMatch(/translateY\([^)]*\)\s*skewX/);
+    // Skewed output must not have rewritten these to include skewX/skewY.
+    const css = buildClickyCss({ skewXAngle: 12, skewYAngle: 4, mode: 'toggle' });
+    expect(css).not.toMatch(/translateY\([^)]*\)\s*skew[XY]/);
+  });
+
+  it('resolveSkew is the single clamp authority every consumer site reads through', () => {
+    expect(internals.resolveSkew({ skewXAngle: 30, skewYAngle: -30 })).toEqual({ x: 18, y: -8, active: true });
+    expect(internals.resolveSkew({ skewXAngle: 0, skewYAngle: 0 })).toEqual({ x: 0, y: 0, active: false });
   });
 });
 

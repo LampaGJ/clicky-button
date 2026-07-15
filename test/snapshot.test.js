@@ -53,16 +53,21 @@ describe('snapshot: buildClickyCss', () => {
       .toMatchFileSnapshot('__snapshots__/css-radius-corners.css');
   });
 
-  it('parallelogram skew (issue #34)', async () => {
-    await expect(buildClickyCss({ skewAngle: 12 }))
+  it('parallelogram skew v2: X-axis, housing-level shear (issue #34, migrated to #40 — see WORK-STATE/issue #40 for the mechanism move)', async () => {
+    await expect(buildClickyCss({ skewXAngle: 12 }))
       .toMatchFileSnapshot('__snapshots__/css-skew.css');
   });
 
-  it('per-corner radius + skew combined (issues #34 + #35)', async () => {
+  it('per-corner radius + skew combined (issues #34 + #35, migrated to #40)', async () => {
     await expect(buildClickyCss({
       radiusCorners: { tl: 24, tr: 4, br: 24, bl: 4 },
-      skewAngle: 10,
+      skewXAngle: 10,
     })).toMatchFileSnapshot('__snapshots__/css-radius-skew-combined.css');
+  });
+
+  it('parallelogram skew v2: combined X+Y housing shear (issue #40)', async () => {
+    await expect(buildClickyCss({ skewXAngle: 8, skewYAngle: 4 }))
+      .toMatchFileSnapshot('__snapshots__/css-skew-xy-combined.css');
   });
 
   it('conic-gradient corner bevel (issue #18) — non-square default housing, stop angles aspect/radius-correct', async () => {

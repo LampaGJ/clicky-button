@@ -35,10 +35,15 @@ export const ClickyConfigSchema = z.object({
     bl: pct0to100,
   }).nullable(),
   chromeRadiusRatio: pct0to100,
-  // Parallelogram skew (issue #34) — deg; clamp range pinned by expert
-  // commentary on issue #34 (beyond ~18-20° the tan() housing-width term
-  // dominates and adjacent grid buttons start overlapping).
-  skewAngle: z.number().min(-18).max(18),
+  // Parallelogram skew v2 (issue #40, extends #34 to two axes + moves the
+  // shear to `.btn-housing`) — skewXAngle keeps #34's ±18° clamp (beyond
+  // ~18-20° the tan() housing-width term dominates and adjacent grid buttons
+  // start overlapping). skewYAngle is tighter, ±8°, per the issue #40 pin:
+  // its housing-height widen term scales with housing WIDTH (W0), which
+  // grows with segmentCount, so the same angle reserves proportionally more
+  // height on wide/segmented housings than X does.
+  skewXAngle: z.number().min(-18).max(18),
+  skewYAngle: z.number().min(-8).max(8),
   faceColor: hex,
   textColor: hex,
   fontSizeRatio: z.number().min(0),
