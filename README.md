@@ -79,7 +79,30 @@ document.head.appendChild(style);
 document.querySelector('#play').outerHTML = buildClickyHtml({ label: 'PLAY' });
 ```
 
-Public API: `buildClickyCss(config?, opts?)`, `buildClickyHtml({ label, tag, attrs, config? })`, `buildClickyVars(config?)` (the raw CSS custom-property map), and `defaultClickyConfig` (every option with its default). Full config reference: the `@typedef {object} ClickyConfig` block at the top of [`lib/clicky-button.js`](lib/clicky-button.js) — the live, authoritative contract (the earlier design spec is archived at [`claudedocs/past/clicky-button-importable-module-spec.md`](claudedocs/past/clicky-button-importable-module-spec.md)).
+Public API: `buildClickyCss(config?, opts?)`, `buildClickyHtml({ label, tag, attrs, config? })`, `buildClickyGroupHtml(config?, opts?)` (a shared housing across multiple `.btn-cell` children — required, not `buildClickyHtml`, whenever `housingLayout` is `'segmented'`), `buildClickyVars(config?)` (the raw CSS custom-property map), and `defaultClickyConfig` (every option with its default). Full config reference: the `@typedef {object} ClickyConfig` block at the top of [`lib/clicky-button.js`](lib/clicky-button.js) — the live, authoritative contract (the earlier design spec is archived at [`claudedocs/past/clicky-button-importable-module-spec.md`](claudedocs/past/clicky-button-importable-module-spec.md)).
+
+### Use as a package
+
+*(Future — once published. Currently `"private": true` in `package.json`; see [Project layout](#project-layout) to use the module directly from a clone instead.)*
+
+```bash
+npm install clicky-button
+```
+
+```js
+// Generate CSS + HTML programmatically
+import { buildClickyCss, buildClickyHtml, buildClickyGroupHtml, buildClickyVars, defaultClickyConfig } from 'clicky-button';
+
+const css = buildClickyCss({ faceColor: '#c8c0b4', mode: 'click' }, { scope: ':root' });
+const html = buildClickyHtml({ label: 'PLAY' });
+
+// Optional progressive-enhancement script (adds a full symmetric press bounce;
+// never required — press/toggle motion is already pure CSS)
+import { enhanceClickyButtons } from 'clicky-button/enhancer';
+enhanceClickyButtons(document.querySelector('.btn-grid'));
+```
+
+**CSS-var theming contract:** `buildClickyCss` emits a scoped block of `--clicky-*` custom properties (scope selector via `opts.scope`, default `:root`) that `buildClickyHtml`/`buildClickyGroupHtml`'s markup reads at render time — regenerate the CSS block (not the HTML) to retheme already-rendered buttons, or scope multiple configs side-by-side by giving each its own `opts.scope` selector instead of `:root`.
 
 ---
 
