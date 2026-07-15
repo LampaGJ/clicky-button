@@ -14,7 +14,7 @@ Design tactile, skeuomorphic **"clicky" buttons** in the browser — tune every 
 2. **Tweak.** Every control updates the preview instantly. The big preview shows the working buttons; the top strip shows each state frozen side-by-side (resting · hover · pressed · toggled); the right panel shows a 3D view.
 3. **Pick a mode** — *Click* (springs back) or *Toggle* (stays down) — with the toggle top-right of the preview.
 4. **Check it on your background** — flip the preview between *Light / Dark / Neutral*.
-5. **Export.** Hit **Export** to download a `.zip` with a standalone `.html` + `.css` you can drop straight into a page. Hit **+ Save** to keep the current style in the in-app style picker so you can compare variants.
+5. **Export.** Hit **Export** to download a `.zip` with a standalone `.html` + `.css` (plus an optional `.enhancer.js` progressive-enhancement script — never required, since press/toggle motion is pure CSS) you can drop straight into a page. Hit **+ Save** to keep the current style in the in-app style picker so you can compare variants.
 
 The exported CSS is self-contained — the only requirement (`container-type: size` on the button cell, which makes the sizing responsive) is already baked in.
 
@@ -56,7 +56,7 @@ Each has its own color toggle, alpha, edge-darken, and gradient-spread, so you c
 
 ### Option A — drop-in HTML + CSS (no dependencies)
 
-Unzip the **Export** download and reference the CSS:
+Unzip the **Export** download and reference the CSS (the optional `.enhancer.js` file adds a full symmetric press bounce — see the commented-out `<script>` tag in the exported HTML; never required, since press/toggle motion is already pure CSS):
 
 ```html
 <link rel="stylesheet" href="my-button.css">
@@ -79,7 +79,30 @@ document.head.appendChild(style);
 document.querySelector('#play').outerHTML = buildClickyHtml({ label: 'PLAY' });
 ```
 
-Public API: `buildClickyCss(config?, opts?)`, `buildClickyHtml({ label, tag, attrs, config? })`, `buildClickyVars(config?)` (the raw CSS custom-property map), and `defaultClickyConfig` (every option with its default). Full config reference: [`claudedocs/clicky-button-importable-module-spec.md`](claudedocs/clicky-button-importable-module-spec.md).
+Public API: `buildClickyCss(config?, opts?)`, `buildClickyHtml({ label, tag, attrs, config? })`, `buildClickyGroupHtml(config?, opts?)` (a shared housing across multiple `.btn-cell` children — required, not `buildClickyHtml`, whenever `housingLayout` is `'segmented'`), `buildClickyVars(config?)` (the raw CSS custom-property map), and `defaultClickyConfig` (every option with its default). Full config reference: the `@typedef {object} ClickyConfig` block at the top of [`lib/clicky-button.js`](lib/clicky-button.js) — the live, authoritative contract (the earlier design spec is archived at [`claudedocs/past/clicky-button-importable-module-spec.md`](claudedocs/past/clicky-button-importable-module-spec.md)).
+
+### Use as a package
+
+*(Future — once published. Currently `"private": true` in `package.json`; see [Project layout](#project-layout) to use the module directly from a clone instead.)*
+
+```bash
+npm install clicky-button
+```
+
+```js
+// Generate CSS + HTML programmatically
+import { buildClickyCss, buildClickyHtml, buildClickyGroupHtml, buildClickyVars, defaultClickyConfig } from 'clicky-button';
+
+const css = buildClickyCss({ faceColor: '#c8c0b4', mode: 'click' }, { scope: ':root' });
+const html = buildClickyHtml({ label: 'PLAY' });
+
+// Optional progressive-enhancement script (adds a full symmetric press bounce;
+// never required — press/toggle motion is already pure CSS)
+import { enhanceClickyButtons } from 'clicky-button/enhancer';
+enhanceClickyButtons(document.querySelector('.btn-grid'));
+```
+
+**CSS-var theming contract:** `buildClickyCss` emits a scoped block of `--clicky-*` custom properties (scope selector via `opts.scope`, default `:root`) that `buildClickyHtml`/`buildClickyGroupHtml`'s markup reads at render time — regenerate the CSS block (not the HTML) to retheme already-rendered buttons, or scope multiple configs side-by-side by giving each its own `opts.scope` selector instead of `:root`.
 
 ---
 
@@ -104,4 +127,5 @@ python3 -m http.server 8000      # or: npx serve
 | `app.js` | Wires the controls to state, live preview, save/export |
 | `styles.css` | Styling for the generator app itself |
 | `lib/clicky-button.js` | The importable, dependency-free button engine |
+| `gallery.html` | Standalone QA/showcase page: a 24-tile variation matrix generated live from `lib/clicky-button.js` |
 | `claudedocs/` | Config spec & design notes |

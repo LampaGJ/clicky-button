@@ -10,7 +10,7 @@
   --panel-border:    #2a2d31;
   --text-primary:    #e8eaed;
   --text-secondary:  #9aa0a6;
-  --text-tertiary:   #5f6368;
+  --text-tertiary:   #8a9096;
   --accent:          #5b8dee;
   --accent-hover:    #7ba5f3;
   --accent-active:   #4272d4;
@@ -43,6 +43,7 @@ html, body {
   display: grid;
   grid-template-rows: var(--preview-height) 1fr;
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
 }
 
@@ -181,70 +182,6 @@ html, body {
   min-height: 0;
 }
 
-/* State-specific frozen overrides for the state test buttons. The wall mirrors
-   the cap's transform (no padding/shadow — those are cap-only). */
-.state-resting .btn-face {
-  transform: translateY(0) !important;
-  padding-top: 0 !important;
-  padding-bottom: 0 !important;
-  box-shadow: var(--face-shadow-resting) !important;
-  background-color: var(--face-color) !important;
-  transition: none !important;
-  animation: none !important;
-}
-.state-resting .btn-wall {
-  transform: translateY(0) !important;
-  transition: none !important;
-  animation: none !important;
-}
-
-.state-pressed-max .btn-face {
-  transform: translateY(var(--press-translate)) !important;
-  padding-top: var(--press-translate) !important;
-  padding-bottom: 0 !important;
-  box-shadow: var(--face-shadow-pressed) !important;
-  background-color: var(--face-pressed) !important;
-  transition: none !important;
-  animation: none !important;
-}
-.state-pressed-max .btn-wall {
-  transform: translateY(var(--press-translate)) !important;
-  transition: none !important;
-  animation: none !important;
-}
-
-
-.state-toggle-point .btn-face {
-  transform: translateY(var(--toggle-height)) !important;
-  padding-top: max(0px, var(--toggle-height)) !important;
-  padding-bottom: 0 !important;
-  box-shadow: var(--face-shadow-pressed) !important;
-  background-color: var(--face-pressed) !important;
-  transition: none !important;
-  animation: none !important;
-}
-.state-toggle-point .btn-wall {
-  transform: translateY(var(--toggle-height)) !important;
-  transition: none !important;
-  animation: none !important;
-}
-
-/* Hover state — face lifted by --hover-lift (negative Y = upward) */
-.state-hover .btn-wall {
-  transform: translateY(calc(-1 * var(--hover-lift))) !important;
-  transition: none !important;
-  animation: none !important;
-}
-.state-hover .btn-face {
-  transform: translateY(calc(-1 * var(--hover-lift))) !important;
-  padding-top: 0 !important;
-  padding-bottom: 0 !important;
-  box-shadow: var(--face-shadow-resting) !important;
-  background-color: var(--face-color) !important;
-  transition: none !important;
-  animation: none !important;
-}
-
 /* Scale state-test items down to fit the narrow 1/5-width panel.
    zoom collapses the layout box proportionally (baseline across current browsers).
    @supports fallback uses transform + negative margins for older engines. */
@@ -321,6 +258,7 @@ html, body {
   cursor: grab;
   user-select: none;
   -webkit-user-select: none;
+  touch-action: none;
 }
 
 .preview-panel--3d .preview-stage--3d.dragging {
@@ -334,9 +272,13 @@ html, body {
   pointer-events: none;
 }
 
-.preview-panel--3d .preview-stage--3d .btn-housing {
-  transform-style: preserve-3d;
-}
+/* No transform-style: preserve-3d on .btn-housing here (issue #40 cleanup):
+   the spec forces the used transform-style to `flat` on any element with
+   overflow other than `visible`, and .btn-housing has had overflow:hidden
+   both before and after #40 — the rule was already dead. The flat 2D shear
+   (housing skewX/skewY, when active) composes correctly with the ancestor
+   .btn-grid's rotateX/rotateY above; a tilted flat card is the right visual
+   anyway, so there's nothing to fix here for #40. */
 
 /* bg for 3d panel matches main preview */
 .preview-canvas.bg-light   .preview-stage--3d { background: #f0ede8; }
@@ -584,7 +526,7 @@ input[type="range"]:focus-visible::-webkit-slider-thumb {
   border: 1px solid var(--ctrl-border);
   border-radius: var(--radius-sm);
   color: var(--text-primary);
-  font-size: 12px;
+  font-size: 16px;
   font-family: var(--font-mono);
   text-align: right;
   outline: none;
@@ -618,7 +560,7 @@ input[type="color"]::-webkit-color-swatch { border: none; border-radius: 4px; }
   border: 1px solid var(--ctrl-border);
   border-radius: var(--radius-sm);
   color: var(--text-primary);
-  font-size: 12px;
+  font-size: 16px;
   width: 100%;
   outline: none;
   grid-column: 2 / -1;
@@ -634,7 +576,7 @@ select {
   border: 1px solid var(--ctrl-border);
   border-radius: var(--radius-sm);
   color: var(--text-primary);
-  font-size: 12px;
+  font-size: 16px;
   outline: none;
   cursor: pointer;
   grid-column: 2 / -1;
@@ -642,6 +584,13 @@ select {
 }
 
 select:focus { border-color: var(--accent); }
+
+  /* ── Disabled controls ── */
+
+  input:disabled, select:disabled {
+    opacity: var(--disabled-opacity, .4);
+    cursor: not-allowed;
+  }
 
 /* ── Checkbox toggle ── */
 

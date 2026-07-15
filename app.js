@@ -17,15 +17,41 @@ const {
   internals,
   EASING_PRESETS,
 } = await import(__libUrl);
+const { clickyEnhancerJs } = await import(
+  __v ? `./lib/clicky-button-enhancer.js?v=${__v}` : './lib/clicky-button-enhancer.js'
+);
 
 const {
   buildCss,
   buildGridCss,
   buildSingleButtonHtml,
   buildGridHtml,
+  buildSegmentedHousingHtml,
+  slugify,
   getLabels,
   buildFocusVisibleCss,
+  KEYCAP_Y,
+  pressedStatePropsCss,
+  toggledRestStatePropsCss,
 } = internals;
+
+// Segmented housing / tri-state preview (issues #36/#37) — bypasses
+// validateClickyConfig the same way buildGridHtml already does (the
+// generator's `state` carries UI-only keys like previewBg/view3dRotateX that
+// the public, validated buildClickyGroupHtml would reject). Machine `values`
+// for the preview's radio group are derived straight from the resolved
+// labels' slugs so they always line up 1:1; `checked` defaults to the first
+// (tacit) segment.
+function buildGroupPreviewHtml(previewState) {
+  if (previewState.housingLayout !== 'segmented') return buildGridHtml(previewState);
+  const groupLabel = previewState.groupLabel || 'Segmented group';
+  if (previewState.mode === 'radio') {
+    const labels = getLabels(previewState);
+    const values = labels.map(l => slugify(l) || 'value');
+    return buildSegmentedHousingHtml(previewState, { name: 'preview-tristate', values, checked: values[0] }, groupLabel);
+  }
+  return buildSegmentedHousingHtml(previewState, {}, groupLabel);
+}
 
 // ── State ─────────────────────────────────────────────────────
 // Default style the configurator boots with — the "Amber Contact sales today"
@@ -62,6 +88,9 @@ const state = {
   previewBg:    'light',
   view3dRotateX:  50,
   view3dRotateY: -20,
+  // Icon-only accessible name (issue #32) — read by buildGridHtml as
+  // state.iconOnlyAriaLabel and applied to every empty-label cell.
+  iconOnlyAriaLabel: '',
 };
 
 // ── DOM helpers ───────────────────────────────────────────────
@@ -95,10 +124,10 @@ function updatePreview() {
     stateItem('TOGGLE POINT', 'state-toggle-point');
 
   // ── Working preview ───────────────────────────────────────────────────
-  previewStage.innerHTML = buildGridHtml(state);
+  previewStage.innerHTML = buildGroupPreviewHtml(state);
 
   // ── 3D view ───────────────────────────────────────────────────────────
-  previewStage3d.innerHTML = buildGridHtml(state);
+  previewStage3d.innerHTML = buildGroupPreviewHtml(state);
   previewStage3d.style.setProperty('--view3d-rx', `${state.view3dRotateX}deg`);
   previewStage3d.style.setProperty('--view3d-ry', `${state.view3dRotateY}deg`);
 
@@ -108,15 +137,92 @@ function updatePreview() {
     canvas.className = `preview-canvas bg-${state.previewBg}`;
   }
 
+  // ── Icon-only aria-label field (issue #32) ────────────────────────────
+  // Shown only once the Labels field is emptied — that's the point at which
+  // an icon-only button (and its required accessible name) becomes possible.
+  const iconOnlyAriaRow = $('icon-only-aria-row');
+  if (iconOnlyAriaRow) {
+    iconOnlyAriaRow.style.display = state.btnLabels.trim() === '' ? '' : 'none';
+  }
+
   // ── State-test overrides ─────────────────────────────────────────────
+  // Generated from the same generation-time property helpers as the live
+  // press/toggle CSS (KEYCAP_Y, pressedStatePropsCss, toggledRestStatePropsCss)
+  // so the frozen swatches can never drift from the real thing — this
+  // replaces styles.css's hand-authored third duplicate (issue #13).
   const frameEnabled = state.frameEnabled;
-  const bevelInsets = frameEnabled
-    ? `inset 0 1px 0 0 rgba(255, 255, 255, var(--frame-bevel-alpha)),
-    inset 0 -1px 0 0 rgba(0, 0, 0, var(--frame-bevel-alpha-shadow)),
-    inset 1px 0 0 0 rgba(255, 255, 255, var(--frame-bevel-alpha)),
-    inset -1px 0 0 0 rgba(0, 0, 0, var(--frame-bevel-alpha-shadow)),`
+  // Conic-gradient corner bevel (issue #18) — when active, the frame bevel is
+  // painted by the (state-independent) `.btn-housing::after` ring instead of
+  // these box-shadow inset lines, so this frozen-swatch override must drop
+  // them too or the flat edges would double up (straight inset UNDER the
+  // ring, both at --frame-bevel-alpha).
+  const bevelInsets = (frameEnabled && !state.frameBevelConic)
+    ? `inset 0 var(--frame-bevel-width) 0 0 rgba(255, 255, 255, var(--frame-bevel-alpha)),
+    inset 0 calc(-1 * var(--frame-bevel-width)) 0 0 rgba(0, 0, 0, var(--frame-bevel-alpha-shadow)),
+    inset var(--frame-bevel-width) 0 0 0 rgba(255, 255, 255, var(--frame-bevel-alpha)),
+    inset calc(-1 * var(--frame-bevel-width)) 0 0 0 rgba(0, 0, 0, var(--frame-bevel-alpha-shadow)),`
     : '';
+
+  // Appends " !important" before every declaration-terminating semicolon.
+  // Safe here because none of these declaration VALUES contain a semicolon.
+  function important(cssProps) {
+    return cssProps.replace(/;/g, ' !important;');
+  }
+
+  // Explicit freeze override — always emitted LAST in each rule below so it
+  // wins over pressedStatePropsCss/toggledRestStatePropsCss's real (non-none)
+  // transition, per U1/U2.
+  const FREEZE = '  transition: none !important;\n  animation: none !important;';
+
   const stateTestCss = `
+/* State-test panel: frozen swatches generated from the same generation-time
+   property helpers as the live press/toggle CSS — see issue #13. */
+.state-resting .btn-face {
+  transform: ${KEYCAP_Y.rest} !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  box-shadow: var(--face-shadow-resting) !important;
+  background-color: var(--face-color) !important;
+${FREEZE}
+}
+.state-resting .btn-wall {
+  transform: ${KEYCAP_Y.rest} !important;
+${FREEZE}
+}
+
+.state-hover .btn-wall {
+  transform: ${KEYCAP_Y.hover} !important;
+${FREEZE}
+}
+.state-hover .btn-face {
+  transform: ${KEYCAP_Y.hover} !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  box-shadow: var(--face-shadow-resting) !important;
+  background-color: var(--face-color) !important;
+${FREEZE}
+}
+
+.state-pressed-max .btn-face {
+${important(pressedStatePropsCss('  '))}
+  padding-top: var(--press-translate) !important;
+${FREEZE}
+}
+.state-pressed-max .btn-wall {
+  transform: ${KEYCAP_Y.pressed} !important;
+${FREEZE}
+}
+
+.state-toggle-point .btn-face {
+${important(toggledRestStatePropsCss('  '))}
+  padding-top: max(0px, var(--toggle-height)) !important;
+${FREEZE}
+}
+.state-toggle-point .btn-wall {
+  transform: ${KEYCAP_Y.toggled} !important;
+${FREEZE}
+}
+
 /* State-test panel: frozen housing shadow for pressed states */
 .btn-housing:has(.state-pressed-max),
 .btn-housing:has(.state-toggle-point) {
@@ -150,7 +256,7 @@ function updatePreview() {
         btn.classList.remove('clicky-press');
       });
       btn.addEventListener('animationend', e => {
-        if (e.animationName === 'clicky-transform-cycle' && !btn.matches(':hover')) {
+        if (e.animationName.startsWith('clicky-transform-cycle') && !btn.matches(':hover')) {
           btn.classList.remove('clicky-press');
         }
       });
@@ -223,8 +329,73 @@ function wireText(id, stateKey) {
 function depRow(rowId, visible) {
   const row = $(rowId);
   if (!row) return;
-  row.style.opacity       = visible ? '1' : '0.4';
-  row.style.pointerEvents = visible ? '' : 'none';
+  // Real .disabled (styled via styles.css's input:disabled/select:disabled
+  // rule, U15b/#27) is now authoritative — no row-level opacity/pointerEvents
+  // toggle needed, avoiding a double-dim stack.
+  row.querySelectorAll('input, select').forEach(el => el.disabled = !visible);
+}
+
+// ── Per-corner radius (issue #35) ──────────────────────────────
+// state.radiusCorners is null (uniform legacy path, byte-identical default
+// output) until "Per-Corner Radius" is checked. Locked (default) mirrors one
+// corner input to all four — same single-slider UX as today's uniform
+// Button Radius control; unlocking exposes four independent corners.
+const RADIUS_CORNER_KEYS = ['tl', 'tr', 'br', 'bl'];
+
+function currentRadiusCorners() {
+  return state.radiusCorners || RADIUS_CORNER_KEYS.reduce((acc, k) => {
+    acc[k] = state.radiusRatio;
+    return acc;
+  }, {});
+}
+
+function syncRadiusCornerRows() {
+  const active = !!state.radiusCorners;
+  const enableEl = $('btn-radius-per-corner');
+  if (enableEl) enableEl.checked = active;
+  const uniformRow = $('uniform-radius-row');
+  if (uniformRow) uniformRow.style.display = active ? 'none' : '';
+  ['radius-corners-lock-row', 'radius-tl-row', 'radius-tr-row', 'radius-br-row', 'radius-bl-row']
+    .forEach(id => { const row = $(id); if (row) row.style.display = active ? '' : 'none'; });
+  const corners = currentRadiusCorners();
+  RADIUS_CORNER_KEYS.forEach(k => {
+    const range = $(`btn-radius-${k}`), num = $(`btn-radius-${k}-num`);
+    if (range) range.value = corners[k];
+    if (num) num.value = corners[k];
+  });
+}
+
+function wireRadiusCorners() {
+  const enableEl = $('btn-radius-per-corner');
+  if (enableEl) {
+    enableEl.addEventListener('change', () => {
+      state.radiusCorners = enableEl.checked ? currentRadiusCorners() : null;
+      syncRadiusCornerRows();
+      updatePreview();
+    });
+  }
+
+  const lockEl = $('btn-radius-corners-lock');
+  RADIUS_CORNER_KEYS.forEach(k => {
+    const range = $(`btn-radius-${k}`), num = $(`btn-radius-${k}-num`);
+    if (!range || !num) return;
+    const apply = rawVal => {
+      const v = parseFloat(rawVal);
+      if (isNaN(v)) return;
+      if (!state.radiusCorners) state.radiusCorners = currentRadiusCorners();
+      if (lockEl && lockEl.checked) {
+        RADIUS_CORNER_KEYS.forEach(kk => { state.radiusCorners[kk] = v; });
+        syncRadiusCornerRows();
+      } else {
+        state.radiusCorners[k] = v;
+      }
+      updatePreview();
+    };
+    range.addEventListener('input', () => { num.value = range.value; apply(range.value); });
+    num.addEventListener('input',   () => { range.value = num.value;  apply(num.value); });
+  });
+
+  syncRadiusCornerRows();
 }
 
 function initControls() {
@@ -249,15 +420,39 @@ function initControls() {
   wireRangeNum('btn-count',        'btn-count-num',        'btnCount',
     v => Math.round(v));
   wireText('btn-labels', 'btnLabels');
+  wireText('btn-icon-only-aria', 'iconOnlyAriaLabel');
+  $('btn-shape-circle-preset')?.addEventListener('click', () => applyShapePreset('circle'));
+  $('btn-shape-square-preset')?.addEventListener('click', () => applyShapePreset('square'));
   wireSelect('grid-direction', 'gridDirection');
   wireSelect('grid-wrap',      'gridWrap');
   wireRangeNum('grid-gap', 'grid-gap-num', 'gridGap');
   wireSelect('grid-justify', 'gridJustify');
   wireSelect('grid-align',   'gridAlign');
 
+  // Segmented housing (issue #36) — 'segmented' shares one housing across N
+  // flex-child segments; validateClickyConfig rejects it combined with the
+  // default gridWrap 'wrap' (a wrapped segment strip is meaningless), so
+  // switching layouts here force-corrects gridWrap to keep any later export
+  // (buildClickyCss/buildClickyGroupHtml, which DO validate) from throwing.
+  wireSelect('housing-layout', 'housingLayout', on => {
+    const segmented = on === 'segmented';
+    depRow('group-label-row', segmented);
+    depRow('segment-divider-row', segmented);
+    if (segmented && state.gridWrap === 'wrap') {
+      state.gridWrap = 'nowrap';
+      const gw = $('grid-wrap');
+      if (gw) gw.value = 'nowrap';
+    }
+  });
+  wireText('group-label', 'groupLabel');
+  wireRangeNum('segment-divider-width', 'segment-divider-width-num', 'segmentDividerWidth');
+
   // Appearance
   wireRangeNum('btn-radius',        'btn-radius-num',        'radiusRatio');
+  wireRadiusCorners();
   wireRangeNum('btn-chrome-radius', 'btn-chrome-radius-num', 'chromeRadiusRatio');
+  wireRangeNum('btn-skew-x-angle',  'btn-skew-x-angle-num',  'skewXAngle', v => Math.round(v));
+  wireRangeNum('btn-skew-y-angle',  'btn-skew-y-angle-num',  'skewYAngle', v => Math.round(v));
   wireColor('btn-face-color', 'faceColor');
   wireColor('btn-text-color', 'textColor');
   wireCheckbox('btn-text-wrap', 'textWrap');
@@ -268,6 +463,8 @@ function initControls() {
 
   // Icon
   wireSelect('btn-icon-position', 'iconPosition');
+  wireSelect('btn-icon-placement', 'iconPlacement', on => depRow('icon-inset-row', on === 'edge'));
+  wireRangeNum('btn-icon-inset', 'btn-icon-inset-num', 'iconInset');
   wireRangeNum('btn-icon-size', 'btn-icon-size-num', 'iconScale', v => parseFloat(v.toFixed(2)));
   wireRangeNum('btn-icon-gap',  'btn-icon-gap-num',  'iconGap');
   wireCheckbox('btn-icon-use-color', 'iconUseColor', on => depRow('icon-color-row', on));
@@ -281,6 +478,12 @@ function initControls() {
       updatePreview();
     });
   }
+  const iconSvgInput = $('btn-icon-svg');
+  if (iconSvgInput) {
+    iconSvgInput.addEventListener('input', () => {
+      applyIconSvgInput(iconSvgInput.value);
+    });
+  }
 
   // Face
   wireCheckbox('btn-use-press-color', 'usePressColor', on => depRow('press-color-row', on));
@@ -289,6 +492,10 @@ function initControls() {
   wireColor('btn-toggle-color', 'toggleColor');
   wireRangeNum('btn-press-darken',      'btn-press-darken-num',      'pressDarken');
   wireRangeNum('btn-face-edge-alpha',   'btn-face-edge-alpha-num',   'faceEdgeAlpha');
+  wireRangeNum('btn-specular-alpha',    'btn-specular-alpha-num',    'specularAlpha');
+  wireRangeNum('btn-light-angle-x',     'btn-light-angle-x-num',     'lightAngleX');
+  wireRangeNum('btn-light-angle-y',     'btn-light-angle-y-num',     'lightAngleY');
+  wireRangeNum('btn-specular-size',     'btn-specular-size-num',     'specularSize');
 
   // Depth (shared geometry for both walls)
   wireRangeNum('btn-press-depth',       'btn-press-depth-num',       'pressDepthRatio');
@@ -331,6 +538,7 @@ function initControls() {
     depRow('frame-color-lo-row',       on);
     depRow('frame-bevel-alpha-row',    on);
     depRow('frame-bevel-width-row',    on);
+    depRow('frame-bevel-conic-row',    on);
   });
   wireRangeNum('btn-frame-width',       'btn-frame-width-num',       'frameWidth');
   wireColor('btn-frame-color-hi', 'frameColorHi');
@@ -338,6 +546,11 @@ function initControls() {
   wireColor('btn-frame-color-lo', 'frameColorLo');
   wireRangeNum('btn-frame-bevel-alpha', 'btn-frame-bevel-alpha-num', 'frameBevelAlpha');
   wireRangeNum('btn-frame-bevel-width', 'btn-frame-bevel-width-num', 'frameBevelWidth');
+  // Conic-gradient corner bevel (issue #18) — replaces the straight-edge
+  // bevel insets with a `.btn-housing::after` ring whose stops are computed
+  // per-instance against the real chrome radius (see
+  // computeFrameBevelConicStops in lib/clicky-button.js).
+  wireCheckbox('btn-frame-bevel-conic', 'frameBevelConic');
 
   // Ambient shadow
   wireRangeNum('btn-ambient-intensity',    'btn-ambient-intensity-num',    'ambientIntensity');
@@ -346,19 +559,55 @@ function initControls() {
   wireRangeNum('btn-ambient-y-mult',       'btn-ambient-y-mult-num',       'ambientYMult',
     v => parseFloat(v.toFixed(2)));
   wireRangeNum('btn-ambient-press-reduction', 'btn-ambient-press-reduction-num', 'ambientPressReduction');
+  wireRangeNum('btn-contact-intensity', 'btn-contact-intensity-num', 'contactIntensity');
 
   // Interaction
   const toggleHeightRow  = $('toggle-height-row');
   function syncToggleHeightRowVisibility() {
-    const show = state.mode === 'toggle';
+    // mode 'radio' (issue #37) reuses the toggle CSS wholesale — including
+    // --toggle-height — so this row is relevant there too.
+    const show = state.mode === 'toggle' || state.mode === 'radio';
     if (toggleHeightRow) toggleHeightRow.style.display = show ? '' : 'none';
+  }
+  // Tri-state filter preset (issue #37) — generator UI per the critic's
+  // pinned split: appearance (colors, geometry, housingLayout, mode) lives
+  // in config/state and is applied here in ONE shot; per-instance identity
+  // (radio `name`/`values`/`checked`) stays a call-time concern, wired
+  // directly in buildGroupPreviewHtml for the live preview.
+  function applyTriStatePreset() {
+    Object.assign(state, {
+      mode:          'radio',
+      housingLayout: 'segmented',
+      gridWrap:      'nowrap',
+      btnCount:      3,
+      btnLabels:     'Tacit,Include,Exclude',
+      groupLabel:    'Tri-state filter',
+      variants: {
+        include: { toggleColor: '#2e9e4f' },
+        exclude: { toggleColor: '#c0392b' },
+      },
+    });
+    syncAllControls();
+    syncToggleHeightRowVisibility();
+    depRow('group-label-row', true);
+    depRow('segment-divider-row', true);
+    updatePreview();
   }
   document.querySelectorAll('input[name="btn-mode"]').forEach(radio => {
     radio.addEventListener('change', () => {
       if (radio.checked) {
-        state.mode = radio.value;
-        syncToggleHeightRowVisibility();
-        updatePreview();
+        if (radio.value === 'radio') {
+          // Tri-state (issue #37) is built on segmented housing ONLY —
+          // validateClickyConfig rejects mode:'radio' without
+          // housingLayout:'segmented' — so picking this pill applies the
+          // full generator preset (per the critic's "appearance in config"
+          // pattern) rather than leaving an invalid half-configured state.
+          applyTriStatePreset();
+        } else {
+          state.mode = radio.value;
+          syncToggleHeightRowVisibility();
+          updatePreview();
+        }
       }
     });
   });
@@ -465,6 +714,26 @@ function initControls() {
     previewStage3d.addEventListener('pointercancel', endDrag);
   })();
 
+    // Boot-time depRow sync — the inline style="opacity:0.4;pointer-events:none"
+    // rows in index.html only *look* disabled on first paint; without an
+    // explicit call here they aren't semantically/functionally disabled
+    // (.disabled) until the user first toggles the controlling checkbox.
+    depRow('press-color-row',       state.usePressColor);
+    depRow('toggle-color-row',      state.useToggleColor);
+    depRow('button-wall-color-row', state.useButtonWallColor);
+    depRow('cavity-wall-color-row', state.useCavityWallColor);
+    depRow('icon-color-row',        state.iconUseColor);
+    depRow('icon-inset-row',        state.iconPlacement === 'edge');
+    depRow('frame-width-row',          state.frameEnabled);
+    depRow('frame-color-hi-row',       state.frameEnabled);
+    depRow('frame-color-row',          state.frameEnabled);
+    depRow('frame-color-lo-row',       state.frameEnabled);
+    depRow('frame-bevel-alpha-row',    state.frameEnabled);
+    depRow('frame-bevel-width-row',    state.frameEnabled);
+    depRow('frame-bevel-conic-row',    state.frameEnabled);
+    depRow('group-label-row',          state.housingLayout === 'segmented');
+    depRow('segment-divider-row',      state.housingLayout === 'segmented');
+
 }
 
 
@@ -542,6 +811,74 @@ function renderIconPicker() {
   syncIconPicker();
 }
 
+// ── Inline SVG icon intake (issue #31) ─────────────────────────
+// Sanitize-on-intake, in the GENERATOR — never at render/export time. The
+// clean string is what gets stored in state.iconSvg; lib/clicky-button.js
+// embeds it verbatim and does zero sanitization of its own (see the trust
+// model on the ClickyConfig typedef). DOMPurify is vendored locally
+// (assets/purify.min.js, loaded via a plain <script> in index.html) — no
+// CDN hot-link, so the page keeps a fully offline-capable asset story.
+function sanitizeAndNormalizeSvg(raw) {
+  if (typeof DOMPurify === 'undefined') return ''; // purify.min.js failed to load
+  const clean = DOMPurify.sanitize(raw, {
+    USE_PROFILES: { svg: true, svgFilters: true },
+    FORBID_TAGS: ['script', 'foreignObject', 'use', 'animate', 'set', 'animateTransform'],
+    FORBID_ATTR: ['href', 'xlink:href'], // blocks external refs so the zero-network claim holds
+  });
+  const trimmed = (clean || '').trim();
+  if (!/^<svg[\s>]/i.test(trimmed)) return '';
+
+  const doc = new DOMParser().parseFromString(trimmed, 'image/svg+xml');
+  if (doc.querySelector('parsererror')) return '';
+  const svgEl = doc.documentElement;
+  if (!svgEl || svgEl.nodeName.toLowerCase() !== 'svg') return '';
+
+  // Require a viewBox — synthesize from width/height if given, else reject
+  // (sizing is CSS-owned; without either there's no coordinate system).
+  if (!svgEl.hasAttribute('viewBox')) {
+    const w = parseFloat(svgEl.getAttribute('width'));
+    const h = parseFloat(svgEl.getAttribute('height'));
+    if (w > 0 && h > 0) {
+      svgEl.setAttribute('viewBox', `0 0 ${w} ${h}`);
+    } else {
+      return '';
+    }
+  }
+  // Strip root width/height so CSS (1em sizing, see buildIconSvgCss) owns it.
+  svgEl.removeAttribute('width');
+  svgEl.removeAttribute('height');
+  // Root fill normalization — a presentation ATTRIBUTE, not CSS. A CSS rule
+  // (`.btn-icon-svg svg { fill: currentColor }`) would beat every inner
+  // element's own explicit fill and flatten multicolor icons to one color;
+  // setting the attribute only on the ROOT, only when absent, lets currentColor
+  // cascade through SVG's normal fill inheritance without clobbering anything.
+  if (!svgEl.hasAttribute('fill')) {
+    svgEl.setAttribute('fill', 'currentColor');
+  }
+  return new XMLSerializer().serializeToString(svgEl);
+}
+
+function applyIconSvgInput(rawValue) {
+  const errorRow = $('icon-svg-error-row');
+  const raw = (rawValue || '').trim();
+  if (!raw) {
+    state.iconSvg = '';
+    if (errorRow) errorRow.style.display = 'none';
+    updatePreview();
+    return;
+  }
+  const normalized = sanitizeAndNormalizeSvg(raw);
+  if (!normalized) {
+    state.iconSvg = '';
+    if (errorRow) errorRow.style.display = '';
+    updatePreview();
+    return;
+  }
+  if (errorRow) errorRow.style.display = 'none';
+  state.iconSvg = normalized;
+  updatePreview();
+}
+
 function syncIconPicker() {
   const container = $('icon-picker');
   const current = (state.iconName || '').trim();
@@ -553,6 +890,110 @@ function syncIconPicker() {
   const nameInput = $('btn-icon-name');
   if (nameInput && nameInput.value !== current) nameInput.value = current;
   depRow('icon-color-row', !!state.iconUseColor);
+}
+
+// ── Material presets (rubber / plastic / metal / glass) ────────
+// Config bundles over existing sliders (item #7 dissent) — pure data, no lib
+// changes. Values are pasted verbatim from the expert-review comment on
+// issue #19 (3D-illusion designer sign-off) — do not invent replacements.
+// Applied via the existing applyStyleConfig()/syncAllControls() round-trip,
+// the same mechanism the saved-style picker uses.
+const MATERIAL_PRESETS = {
+  rubber: {
+    radiusRatio: 30, chromeRadiusRatio: 20, faceColor: '#3f4142', textColor: '#e8e8e8',
+    wallHRatio: 22, pressDepthRatio: 30, pressDarken: 18,
+    insetDepthRatio: 10, insetBlurRatio: 20, insetAlphaTop: 40, insetAlphaBot: 20, faceEdgeAlpha: 5,
+    topHighlight: true, highlightColor: '#ffffff', highlightOpacity: 15, rimHeightRatio: 10,
+    buttonWallShadowAlpha: 60, buttonWallShadowEdgeRatio: 35, buttonWallGradientSpread: 40,
+    cavityWallShadowAlpha: 60, cavityWallShadowEdgeRatio: 35, cavityWallGradientSpread: 40,
+    ambientIntensity: 25, ambientBlurMult: 4.5, ambientYMult: 2.0, ambientPressReduction: 50,
+    frameEnabled: false,
+    duration: 260, pressDuration: 140, easingPreset: 'soft', overshoot: false,
+    specularAlpha: 8, lightAngleX: 50, lightAngleY: 25, specularSize: 70,
+    contactIntensity: 20,
+  },
+  plastic: {
+    radiusRatio: 14, chromeRadiusRatio: 16, faceColor: '#e6e6ea', textColor: '#1a1a1a',
+    wallHRatio: 8, pressDepthRatio: 10, pressDarken: 10,
+    insetDepthRatio: 5, insetBlurRatio: 4, insetAlphaTop: 65, insetAlphaBot: 35, faceEdgeAlpha: 15,
+    topHighlight: true, highlightColor: '#ffffff', highlightOpacity: 35, rimHeightRatio: 6,
+    buttonWallShadowAlpha: 90, buttonWallShadowEdgeRatio: 60, buttonWallGradientSpread: 10,
+    cavityWallShadowAlpha: 90, cavityWallShadowEdgeRatio: 60, cavityWallGradientSpread: 10,
+    ambientIntensity: 20, ambientBlurMult: 2.0, ambientYMult: 1.0, ambientPressReduction: 50,
+    frameEnabled: true, frameWidth: 6, frameBevelAlpha: 50, frameBevelWidth: 1,
+    duration: 90, pressDuration: 50, easingPreset: 'snappy', overshoot: true,
+    specularAlpha: 20, lightAngleX: 50, lightAngleY: 25, specularSize: 40,
+    contactIntensity: 10,
+  },
+  metal: {
+    radiusRatio: 10, chromeRadiusRatio: 14, faceColor: '#b0b8c0', textColor: '#12161a',
+    wallHRatio: 12, pressDepthRatio: 14, pressDarken: 14,
+    insetDepthRatio: 6, insetBlurRatio: 6, insetAlphaTop: 60, insetAlphaBot: 30, faceEdgeAlpha: 10,
+    topHighlight: true, highlightColor: '#eef3f8', highlightOpacity: 25, rimHeightRatio: 6,
+    buttonWallShadowAlpha: 90, buttonWallShadowEdgeRatio: 65, buttonWallGradientSpread: 15,
+    useCavityWallColor: true, cavityWallColor: '#9aa4ad',
+    cavityWallShadowAlpha: 90, cavityWallShadowEdgeRatio: 65, cavityWallGradientSpread: 15,
+    ambientIntensity: 20, ambientBlurMult: 1.5, ambientYMult: 1.0, ambientPressReduction: 50,
+    frameEnabled: true, frameWidth: 20, frameColorHi: '#eef2f6', frameColor: '#9aa4ad', frameColorLo: '#5b6670',
+    frameBevelAlpha: 70, frameBevelWidth: 2,
+    duration: 130, pressDuration: 70, easingPreset: 'black', overshoot: true,
+    specularAlpha: 12, lightAngleX: 40, lightAngleY: 20, specularSize: 30,
+    contactIntensity: 15,
+  },
+  glass: {
+    radiusRatio: 22, chromeRadiusRatio: 18, faceColor: '#eaf6fb', textColor: '#1a2a33',
+    wallHRatio: 14, pressDepthRatio: 16, pressDarken: 8,
+    insetDepthRatio: 8, insetBlurRatio: 14, insetAlphaTop: 20, insetAlphaBot: 10, faceEdgeAlpha: 0,
+    topHighlight: true, highlightColor: '#ffffff', highlightOpacity: 45, rimHeightRatio: 10,
+    buttonWallShadowAlpha: 35, buttonWallShadowEdgeRatio: 20, buttonWallGradientSpread: 55,
+    cavityWallShadowAlpha: 35, cavityWallShadowEdgeRatio: 20, cavityWallGradientSpread: 55,
+    ambientIntensity: 15, ambientBlurMult: 4.0, ambientYMult: 1.75, ambientPressReduction: 50,
+    frameEnabled: true, frameWidth: 8, frameBevelAlpha: 30, frameBevelWidth: 1,
+    duration: 150, pressDuration: 80, easingPreset: 'clear', overshoot: true,
+    specularAlpha: 55, lightAngleX: 45, lightAngleY: 20, specularSize: 80,
+    contactIntensity: 10,
+  },
+};
+
+// ── Square / circle quick-preset (issue #32) ───────────────────
+// No new CSS mechanism needed — buildVarMap already clamps radius via
+// maxRadiusPx = min(width/2, faceH/2, height/2). Equal width/height +
+// radiusRatio: 100 produces a true circle for free; a lower radiusRatio at
+// the same dimensions gives a rounded square. Good defaults for icon-only
+// buttons in particular.
+const SHAPE_PRESETS = {
+  circle: { containerWidth: 64, containerHeight: 64, radiusRatio: 100 },
+  square: { containerWidth: 64, containerHeight: 64, radiusRatio: 16 },
+};
+
+function applyShapePreset(name) {
+  const preset = SHAPE_PRESETS[name];
+  if (!preset) return;
+  Object.assign(state, preset);
+  syncAllControls();
+  updatePreview();
+}
+
+function renderMaterialPicker() {
+  const toolbar = document.querySelector('.preview-toolbar');
+  const stylePicker = $('style-picker');
+  if (!toolbar || !stylePicker) return;
+  const container = document.createElement('div');
+  // Reuses .toolbar-style-picker's existing select styling — no styles.css
+  // changes needed for this unit (kept in-scope to app.js per the issue).
+  container.className = 'toolbar-style-picker toolbar-material-picker';
+  container.innerHTML = `<select id="material-preset-select" title="Apply a material preset">
+    <option value="" selected disabled>Material…</option>
+    <option value="rubber">Rubber</option>
+    <option value="plastic">Plastic</option>
+    <option value="metal">Metal</option>
+    <option value="glass">Glass</option>
+  </select>`;
+  toolbar.insertBefore(container, stylePicker);
+  container.querySelector('#material-preset-select').addEventListener('change', e => {
+    const preset = MATERIAL_PRESETS[e.target.value];
+    if (preset) applyStyleConfig(preset);
+  });
 }
 
 // ── Style picker ─────────────────────────────────────────────
@@ -663,7 +1104,14 @@ function syncAllControls() {
               : id === 'bz-x2' ? 'bzX2' : 'bzY2';
     if (el) el.value = state[key];
   });
+  const iconSvgEl = $('btn-icon-svg');
+  if (iconSvgEl) iconSvgEl.value = state.iconSvg || '';
+  const iconSvgErrorRow = $('icon-svg-error-row');
+  if (iconSvgErrorRow) iconSvgErrorRow.style.display = 'none';
   syncIconPicker();
+  // Per-corner radius (issue #35) — not in controlRegistry (radiusCorners is
+  // an object, not a scalar the generic range/checkbox sync above can read).
+  syncRadiusCornerRows();
 }
 
 function renderStylePicker() {
@@ -673,7 +1121,7 @@ function renderStylePicker() {
 
   const exportBtn = `<button id="style-export-btn" title="Export HTML &amp; CSS">Export</button>`;
   if (styles.length === 0) {
-    container.innerHTML = `<button id="style-save-btn" title="Save current button style">+ Save</button>${exportBtn}`;
+    container.innerHTML = `<button id="style-save-btn" title="Save current button style">+ Save</button>${exportBtn}<button id="style-reset-btn" title="Reset button style to defaults">Reset</button>`;
   } else {
     const autoSelect = styles.length === 1;
     container.innerHTML =
@@ -684,6 +1132,7 @@ function renderStylePicker() {
       `<button id="style-save-btn" title="Save current style">+</button>` +
       `<button id="style-update-btn" class="style-picker-delete" title="Update selected style"${autoSelect ? '' : ' style="display:none"'}>Save</button>` +
       `${exportBtn}` +
+      `<button id="style-reset-btn" title="Reset button style to defaults">Reset</button>` +
       `<button id="style-delete-btn" class="style-picker-delete" title="Delete selected style">&times;</button>`;
   }
 
@@ -735,6 +1184,11 @@ function renderStylePicker() {
     styles.splice(idx, 1);
     saveSavedStyles(styles);
     renderStylePicker();
+  });
+
+  $('style-reset-btn')?.addEventListener('click', () => {
+    if (!confirm('Reset button style to defaults? Your saved styles won\'t be affected.')) return;
+    applyStyleConfig({ ...defaultClickyConfig, ...CONFIGURATOR_DEFAULT });
   });
 
   $('style-export-btn')?.addEventListener('click', () => {
@@ -854,10 +1308,23 @@ function slugifyFilename(name) {
 
 function downloadZip(styleName) {
   const cssSnippet = buildCss(state, ':root');
-  const htmlSnippet = buildGridHtml(state);
+  // Segmented housing (issue #36) — must match what the live preview already
+  // renders (buildGroupPreviewHtml), or an export taken while housingLayout
+  // is 'segmented' would silently ship the old N-separate-housing markup.
+  const htmlSnippet = buildGroupPreviewHtml(state);
   const slug = slugifyFilename(styleName);
-  // Exported buttons that use an icon need the Material Symbols Rounded webfont.
-  const iconFontLink = (state.iconName || '').trim()
+  // Exported buttons that use a ligature icon need the Material Symbols
+  // Rounded webfont — gated on "any LIGATURE icon anywhere": the base
+  // iconName OR any per-button variant's iconName (issue #29), but only when
+  // iconSvg is empty — non-empty iconSvg wins over iconName everywhere
+  // (issue #31), so no button ever actually renders a ligature in that case,
+  // and an SVG-only export should ship with no font link at all.
+  const hasIconSvg = !!(state.iconSvg || '').trim();
+  const anyLigatureIcon = !hasIconSvg && (
+    !!(state.iconName || '').trim() ||
+    Object.values(state.variants || {}).some(v => !!(v && v.iconName || '').trim())
+  );
+  const iconFontLink = anyLigatureIcon
     ? `\n  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0..1,0&display=block">`
     : '';
 
@@ -870,8 +1337,15 @@ function downloadZip(styleName) {
   <title>${styleName || 'Clicky Button'}</title>${iconFontLink}
   <link rel="stylesheet" href="${slug}.css">
 </head>
-<body style="padding:40px;background:#f4f1ed;">
+<!-- ontouchstart="" enables :active on iOS Safari without any JS overhead -->
+<body style="padding:40px;background:#f4f1ed;" ontouchstart="">
 ${htmlSnippet}
+<!-- Optional progressive enhancement — full symmetric press bounce (never
+     required; press/toggle motion above is already pure CSS). Uncomment to
+     enable. Note: ES module scripts fail to load under file:// (CORS) —
+     this only works when the export is served over http(s), not opened by
+     double-clicking the .html file. -->
+<!-- <script type="module" src="./${slug}.enhancer.js"></script> -->
 </body>
 </html>
 `;
@@ -886,6 +1360,7 @@ ${cssSnippet}
   const blob = makeZip([
     { name: `${slug}.html`, content: standaloneHtml },
     { name: `${slug}.css`, content: styles },
+    { name: `${slug}.enhancer.js`, content: clickyEnhancerJs },
   ]);
 
   const url = URL.createObjectURL(blob);
@@ -903,6 +1378,7 @@ function boot() {
   initControls();
   renderIconPicker();
   renderStylePicker();
+  renderMaterialPicker();
   // Reflect the configurator's default state (amber SUBMIT) into every control
   // so the inputs match the preview on first load, then render.
   syncAllControls();

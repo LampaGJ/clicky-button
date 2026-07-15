@@ -1,11 +1,18 @@
 ---
 type: spec
-status: active
+status: superseded
 related:
-  - ../app.js
-  - ../index.html
-  - ../styles.css
+  - ../lib/clicky-button.js
 ---
+
+> **Superseded.** This spec predates several waves of red-team remediation (real `opts.scope`
+> scoping, non-hex color hardening, container-query `@supports` fallbacks, the realism pack, and
+> config validation). The live, authoritative contract for `ClickyConfig` is now the
+> `@typedef {object} ClickyConfig` block at the top of `lib/clicky-button.js` — read that first.
+> This document is kept for historical/design-rationale context only and is not maintained; it also
+> documented a `channelHeight` property that never existed in the real config (removed below where it
+> appeared as a ghost entry, but do not trust any other value in this file without cross-checking the
+> typedef).
 
 # Spec — Turn Clicky Button Generator into an Importable ES Module
 
@@ -229,7 +236,6 @@ generator's Tweakpane panels:
  * @property {string} highlightColor    — hex
  * @property {number} highlightOpacity  — %
  * @property {number} rimHeightRatio    — %
- * @property {number} channelHeight     — px
  * @property {boolean} usePressColor
  * @property {string} pressColor        — hex
  *

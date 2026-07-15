@@ -1,0 +1,48 @@
+{
+  "name": "clicky-button",
+  "version": "0.1.0",
+  "description": "Design tactile, skeuomorphic \"clicky\" buttons in the browser — tune every detail with live sliders, watch them press and toggle in 2D and 3D, then export drop-in HTML + CSS or generate them programmatically from a dependency-free ES module.",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./lib/clicky-button.js",
+    "./enhancer": "./lib/clicky-button-enhancer.js"
+  },
+  "files": [
+    "lib/",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "button",
+    "css",
+    "skeuomorphic",
+    "keycap",
+    "ui",
+    "generator",
+    "css-in-js",
+    "no-dependencies"
+  ],
+  "homepage": "https://github.com/LampaGJ/clicky-button#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LampaGJ/clicky-button.git"
+  },
+  "bugs": {
+    "url": "https://github.com/LampaGJ/clicky-button/issues"
+  },
+  "license": "MIT",
+  "author": "Graham Lampa",
+  "engines": {
+    "node": "^20.0.0 || ^22.0.0 || >=24.0.0"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "dompurify": "^3.4.12",
+    "vitest": "^4.1.10",
+    "zod": "^4.4.3"
+  }
+}
