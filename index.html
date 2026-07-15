@@ -63,6 +63,10 @@
             <input type="radio" name="btn-mode" id="mode-toggle" value="toggle">
             <span>Toggle</span>
           </label>
+          <label class="toggle-pill" title="Tri-state radio group on a segmented housing (issue #37) — applies a preset: 3 segments, tacit/include/exclude">
+            <input type="radio" name="btn-mode" id="mode-radio" value="radio">
+            <span>Tri-State</span>
+          </label>
         </div>
       </div>
 
@@ -122,12 +126,34 @@
             <label class="ctrl-row"><span class="ctrl-label">Height <em>px</em></span>
               <input type="range" id="container-height" min="32" max="200" value="88" step="2">
               <input type="number" id="container-height-num" min="32" max="200" value="88" step="2" class="num-input"></label>
-            <label class="ctrl-row"><span class="ctrl-label">Button Radius <em>%</em></span>
+            <label class="ctrl-row" id="uniform-radius-row"><span class="ctrl-label">Button Radius <em>%</em></span>
               <input type="range" id="btn-radius" min="0" max="50" value="8" step="1">
               <input type="number" id="btn-radius-num" min="0" max="50" value="8" step="1" class="num-input"></label>
+            <label class="ctrl-row"><span class="ctrl-label">Per-Corner Radius</span>
+              <input type="checkbox" id="btn-radius-per-corner" class="toggle-check"></label>
+            <!-- Per-corner radius (issue #35) — hidden until "Per-Corner Radius" is
+                 checked; radiusCorners stays null (uniform legacy path, byte-
+                 identical default output) until then. -->
+            <label class="ctrl-row" id="radius-corners-lock-row" style="display:none"><span class="ctrl-label">Lock Corners</span>
+              <input type="checkbox" id="btn-radius-corners-lock" class="toggle-check" checked></label>
+            <label class="ctrl-row" id="radius-tl-row" style="display:none"><span class="ctrl-label">Top-Left <em>%</em></span>
+              <input type="range" id="btn-radius-tl" min="0" max="50" value="8" step="1">
+              <input type="number" id="btn-radius-tl-num" min="0" max="50" value="8" step="1" class="num-input"></label>
+            <label class="ctrl-row" id="radius-tr-row" style="display:none"><span class="ctrl-label">Top-Right <em>%</em></span>
+              <input type="range" id="btn-radius-tr" min="0" max="50" value="8" step="1">
+              <input type="number" id="btn-radius-tr-num" min="0" max="50" value="8" step="1" class="num-input"></label>
+            <label class="ctrl-row" id="radius-br-row" style="display:none"><span class="ctrl-label">Bottom-Right <em>%</em></span>
+              <input type="range" id="btn-radius-br" min="0" max="50" value="8" step="1">
+              <input type="number" id="btn-radius-br-num" min="0" max="50" value="8" step="1" class="num-input"></label>
+            <label class="ctrl-row" id="radius-bl-row" style="display:none"><span class="ctrl-label">Bottom-Left <em>%</em></span>
+              <input type="range" id="btn-radius-bl" min="0" max="50" value="8" step="1">
+              <input type="number" id="btn-radius-bl-num" min="0" max="50" value="8" step="1" class="num-input"></label>
             <label class="ctrl-row"><span class="ctrl-label">Chrome Radius <em>%</em></span>
               <input type="range" id="btn-chrome-radius" min="0" max="50" value="12" step="1">
               <input type="number" id="btn-chrome-radius-num" min="0" max="50" value="12" step="1" class="num-input"></label>
+            <label class="ctrl-row"><span class="ctrl-label">Skew <em>deg</em></span>
+              <input type="range" id="btn-skew-angle" min="-18" max="18" value="0" step="1">
+              <input type="number" id="btn-skew-angle-num" min="-18" max="18" value="0" step="1" class="num-input"></label>
             <div class="ctrl-row"><span class="ctrl-label">Quick Preset</span>
               <button type="button" id="btn-shape-circle-preset" title="64×64, fully rounded — good for icon-only buttons">Circle</button>
               <button type="button" id="btn-shape-square-preset" title="64×64, lightly rounded — good for icon-only buttons">Square</button>
@@ -237,6 +263,16 @@
                 <option value="flex-start">Start</option>
                 <option value="flex-end">End</option>
               </select></label>
+            <label class="ctrl-row"><span class="ctrl-label">Housing Layout</span>
+              <select id="housing-layout">
+                <option value="separate" selected>Separate</option>
+                <option value="segmented">Segmented</option>
+              </select></label>
+            <label class="ctrl-row" id="group-label-row" style="display:none"><span class="ctrl-label">Group Label <em>aria</em></span>
+              <input type="text" id="group-label" class="text-input" placeholder="accessible name for the segment group"></label>
+            <label class="ctrl-row" id="segment-divider-row" style="display:none"><span class="ctrl-label">Divider Width <em>px</em></span>
+              <input type="range" id="segment-divider-width" min="0" max="12" value="2" step="1">
+              <input type="number" id="segment-divider-width-num" min="0" max="12" value="2" step="1" class="num-input"></label>
           </div>
 
         </div><!-- /column 1 -->

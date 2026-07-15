@@ -26,12 +26,32 @@ const {
   buildGridCss,
   buildSingleButtonHtml,
   buildGridHtml,
+  buildSegmentedHousingHtml,
+  slugify,
   getLabels,
   buildFocusVisibleCss,
   KEYCAP_Y,
   pressedStatePropsCss,
   toggledRestStatePropsCss,
 } = internals;
+
+// Segmented housing / tri-state preview (issues #36/#37) — bypasses
+// validateClickyConfig the same way buildGridHtml already does (the
+// generator's `state` carries UI-only keys like previewBg/view3dRotateX that
+// the public, validated buildClickyGroupHtml would reject). Machine `values`
+// for the preview's radio group are derived straight from the resolved
+// labels' slugs so they always line up 1:1; `checked` defaults to the first
+// (tacit) segment.
+function buildGroupPreviewHtml(previewState) {
+  if (previewState.housingLayout !== 'segmented') return buildGridHtml(previewState);
+  const groupLabel = previewState.groupLabel || 'Segmented group';
+  if (previewState.mode === 'radio') {
+    const labels = getLabels(previewState);
+    const values = labels.map(l => slugify(l) || 'value');
+    return buildSegmentedHousingHtml(previewState, { name: 'preview-tristate', values, checked: values[0] }, groupLabel);
+  }
+  return buildSegmentedHousingHtml(previewState, {}, groupLabel);
+}
 
 // ── State ─────────────────────────────────────────────────────
 // Default style the configurator boots with — the "Amber Contact sales today"
@@ -104,10 +124,10 @@ function updatePreview() {
     stateItem('TOGGLE POINT', 'state-toggle-point');
 
   // ── Working preview ───────────────────────────────────────────────────
-  previewStage.innerHTML = buildGridHtml(state);
+  previewStage.innerHTML = buildGroupPreviewHtml(state);
 
   // ── 3D view ───────────────────────────────────────────────────────────
-  previewStage3d.innerHTML = buildGridHtml(state);
+  previewStage3d.innerHTML = buildGroupPreviewHtml(state);
   previewStage3d.style.setProperty('--view3d-rx', `${state.view3dRotateX}deg`);
   previewStage3d.style.setProperty('--view3d-ry', `${state.view3dRotateY}deg`);
 
@@ -310,6 +330,69 @@ function depRow(rowId, visible) {
   row.querySelectorAll('input, select').forEach(el => el.disabled = !visible);
 }
 
+// ── Per-corner radius (issue #35) ──────────────────────────────
+// state.radiusCorners is null (uniform legacy path, byte-identical default
+// output) until "Per-Corner Radius" is checked. Locked (default) mirrors one
+// corner input to all four — same single-slider UX as today's uniform
+// Button Radius control; unlocking exposes four independent corners.
+const RADIUS_CORNER_KEYS = ['tl', 'tr', 'br', 'bl'];
+
+function currentRadiusCorners() {
+  return state.radiusCorners || RADIUS_CORNER_KEYS.reduce((acc, k) => {
+    acc[k] = state.radiusRatio;
+    return acc;
+  }, {});
+}
+
+function syncRadiusCornerRows() {
+  const active = !!state.radiusCorners;
+  const enableEl = $('btn-radius-per-corner');
+  if (enableEl) enableEl.checked = active;
+  const uniformRow = $('uniform-radius-row');
+  if (uniformRow) uniformRow.style.display = active ? 'none' : '';
+  ['radius-corners-lock-row', 'radius-tl-row', 'radius-tr-row', 'radius-br-row', 'radius-bl-row']
+    .forEach(id => { const row = $(id); if (row) row.style.display = active ? '' : 'none'; });
+  const corners = currentRadiusCorners();
+  RADIUS_CORNER_KEYS.forEach(k => {
+    const range = $(`btn-radius-${k}`), num = $(`btn-radius-${k}-num`);
+    if (range) range.value = corners[k];
+    if (num) num.value = corners[k];
+  });
+}
+
+function wireRadiusCorners() {
+  const enableEl = $('btn-radius-per-corner');
+  if (enableEl) {
+    enableEl.addEventListener('change', () => {
+      state.radiusCorners = enableEl.checked ? currentRadiusCorners() : null;
+      syncRadiusCornerRows();
+      updatePreview();
+    });
+  }
+
+  const lockEl = $('btn-radius-corners-lock');
+  RADIUS_CORNER_KEYS.forEach(k => {
+    const range = $(`btn-radius-${k}`), num = $(`btn-radius-${k}-num`);
+    if (!range || !num) return;
+    const apply = rawVal => {
+      const v = parseFloat(rawVal);
+      if (isNaN(v)) return;
+      if (!state.radiusCorners) state.radiusCorners = currentRadiusCorners();
+      if (lockEl && lockEl.checked) {
+        RADIUS_CORNER_KEYS.forEach(kk => { state.radiusCorners[kk] = v; });
+        syncRadiusCornerRows();
+      } else {
+        state.radiusCorners[k] = v;
+      }
+      updatePreview();
+    };
+    range.addEventListener('input', () => { num.value = range.value; apply(range.value); });
+    num.addEventListener('input',   () => { range.value = num.value;  apply(num.value); });
+  });
+
+  syncRadiusCornerRows();
+}
+
 function initControls() {
   const speedEl    = $('master-speed');
   const speedRead  = $('master-speed-readout');
@@ -341,9 +424,29 @@ function initControls() {
   wireSelect('grid-justify', 'gridJustify');
   wireSelect('grid-align',   'gridAlign');
 
+  // Segmented housing (issue #36) — 'segmented' shares one housing across N
+  // flex-child segments; validateClickyConfig rejects it combined with the
+  // default gridWrap 'wrap' (a wrapped segment strip is meaningless), so
+  // switching layouts here force-corrects gridWrap to keep any later export
+  // (buildClickyCss/buildClickyGroupHtml, which DO validate) from throwing.
+  wireSelect('housing-layout', 'housingLayout', on => {
+    const segmented = on === 'segmented';
+    depRow('group-label-row', segmented);
+    depRow('segment-divider-row', segmented);
+    if (segmented && state.gridWrap === 'wrap') {
+      state.gridWrap = 'nowrap';
+      const gw = $('grid-wrap');
+      if (gw) gw.value = 'nowrap';
+    }
+  });
+  wireText('group-label', 'groupLabel');
+  wireRangeNum('segment-divider-width', 'segment-divider-width-num', 'segmentDividerWidth');
+
   // Appearance
   wireRangeNum('btn-radius',        'btn-radius-num',        'radiusRatio');
+  wireRadiusCorners();
   wireRangeNum('btn-chrome-radius', 'btn-chrome-radius-num', 'chromeRadiusRatio');
+  wireRangeNum('btn-skew-angle',    'btn-skew-angle-num',    'skewAngle', v => Math.round(v));
   wireColor('btn-face-color', 'faceColor');
   wireColor('btn-text-color', 'textColor');
   wireCheckbox('btn-text-wrap', 'textWrap');
@@ -449,15 +552,50 @@ function initControls() {
   // Interaction
   const toggleHeightRow  = $('toggle-height-row');
   function syncToggleHeightRowVisibility() {
-    const show = state.mode === 'toggle';
+    // mode 'radio' (issue #37) reuses the toggle CSS wholesale — including
+    // --toggle-height — so this row is relevant there too.
+    const show = state.mode === 'toggle' || state.mode === 'radio';
     if (toggleHeightRow) toggleHeightRow.style.display = show ? '' : 'none';
+  }
+  // Tri-state filter preset (issue #37) — generator UI per the critic's
+  // pinned split: appearance (colors, geometry, housingLayout, mode) lives
+  // in config/state and is applied here in ONE shot; per-instance identity
+  // (radio `name`/`values`/`checked`) stays a call-time concern, wired
+  // directly in buildGroupPreviewHtml for the live preview.
+  function applyTriStatePreset() {
+    Object.assign(state, {
+      mode:          'radio',
+      housingLayout: 'segmented',
+      gridWrap:      'nowrap',
+      btnCount:      3,
+      btnLabels:     'Tacit,Include,Exclude',
+      groupLabel:    'Tri-state filter',
+      variants: {
+        include: { toggleColor: '#2e9e4f' },
+        exclude: { toggleColor: '#c0392b' },
+      },
+    });
+    syncAllControls();
+    syncToggleHeightRowVisibility();
+    depRow('group-label-row', true);
+    depRow('segment-divider-row', true);
+    updatePreview();
   }
   document.querySelectorAll('input[name="btn-mode"]').forEach(radio => {
     radio.addEventListener('change', () => {
       if (radio.checked) {
-        state.mode = radio.value;
-        syncToggleHeightRowVisibility();
-        updatePreview();
+        if (radio.value === 'radio') {
+          // Tri-state (issue #37) is built on segmented housing ONLY —
+          // validateClickyConfig rejects mode:'radio' without
+          // housingLayout:'segmented' — so picking this pill applies the
+          // full generator preset (per the critic's "appearance in config"
+          // pattern) rather than leaving an invalid half-configured state.
+          applyTriStatePreset();
+        } else {
+          state.mode = radio.value;
+          syncToggleHeightRowVisibility();
+          updatePreview();
+        }
       }
     });
   });
@@ -580,6 +718,8 @@ function initControls() {
     depRow('frame-color-lo-row',       state.frameEnabled);
     depRow('frame-bevel-alpha-row',    state.frameEnabled);
     depRow('frame-bevel-width-row',    state.frameEnabled);
+    depRow('group-label-row',          state.housingLayout === 'segmented');
+    depRow('segment-divider-row',      state.housingLayout === 'segmented');
 
 }
 
@@ -956,6 +1096,9 @@ function syncAllControls() {
   const iconSvgErrorRow = $('icon-svg-error-row');
   if (iconSvgErrorRow) iconSvgErrorRow.style.display = 'none';
   syncIconPicker();
+  // Per-corner radius (issue #35) — not in controlRegistry (radiusCorners is
+  // an object, not a scalar the generic range/checkbox sync above can read).
+  syncRadiusCornerRows();
 }
 
 function renderStylePicker() {
@@ -1152,7 +1295,10 @@ function slugifyFilename(name) {
 
 function downloadZip(styleName) {
   const cssSnippet = buildCss(state, ':root');
-  const htmlSnippet = buildGridHtml(state);
+  // Segmented housing (issue #36) — must match what the live preview already
+  // renders (buildGroupPreviewHtml), or an export taken while housingLayout
+  // is 'segmented' would silently ship the old N-separate-housing markup.
+  const htmlSnippet = buildGroupPreviewHtml(state);
   const slug = slugifyFilename(styleName);
   // Exported buttons that use a ligature icon need the Material Symbols
   // Rounded webfont — gated on "any LIGATURE icon anywhere": the base

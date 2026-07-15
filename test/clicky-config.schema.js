@@ -20,9 +20,25 @@ export const ClickyConfigSchema = z.object({
   gridJustify: z.enum(['center', 'flex-start', 'flex-end', 'space-between', 'space-around']),
   gridAlign: z.enum(['center', 'flex-start', 'flex-end', 'stretch']),
 
+  // Segmented housing (issue #36) / tri-state radio group (issue #37)
+  housingLayout: z.enum(['separate', 'segmented']),
+  segmentDividerWidth: z.number().min(0),
+  groupLabel: z.string(),
+
   // Shape & typography
   radiusRatio: pct0to100,
+  // Per-corner radius override (issue #35) — null = uniform radiusRatio path.
+  radiusCorners: z.strictObject({
+    tl: pct0to100,
+    tr: pct0to100,
+    br: pct0to100,
+    bl: pct0to100,
+  }).nullable(),
   chromeRadiusRatio: pct0to100,
+  // Parallelogram skew (issue #34) — deg; clamp range pinned by expert
+  // commentary on issue #34 (beyond ~18-20° the tan() housing-width term
+  // dominates and adjacent grid buttons start overlapping).
+  skewAngle: z.number().min(-18).max(18),
   faceColor: hex,
   textColor: hex,
   fontSizeRatio: z.number().min(0),
@@ -81,7 +97,7 @@ export const ClickyConfigSchema = z.object({
   frameBevelWidth: z.number().min(0),
 
   // Mode & timing
-  mode: z.enum(['click', 'toggle']),
+  mode: z.enum(['click', 'toggle', 'radio']),
   speedFactor: z.number().min(-2).max(0), // log10 multiplier
   duration: z.number().min(0),
   pressDuration: z.number().min(0),
@@ -144,6 +160,8 @@ export const ClickyConfigSchema = z.object({
       textColor: z.string().optional(),
       iconName:  z.string().optional(),
       iconColor: z.string().optional(),
+      // Per-segment tri-state latch accent (issue #37).
+      toggleColor: z.string().optional(),
     }),
   ).default({}),
 });
