@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { buildClickyVars, internals } from '../lib/clicky-button.js';
 
-const { clampRadiusCorners } = internals;
+const { clampRadiusCorners, computeFrameBevelConicStops } = internals;
 
 describe('per-corner radius adjacent-sum clamp (issue #35)', () => {
   it('leaves corners untouched when no edge sum exceeds the box', () => {
@@ -85,5 +85,75 @@ describe('parallelogram skew geometry (issue #34)', () => {
     const pos = buildClickyVars({ containerWidth: 180, containerHeight: 88, frameEnabled: false, skewAngle: 15 });
     const neg = buildClickyVars({ containerWidth: 180, containerHeight: 88, frameEnabled: false, skewAngle: -15 });
     expect(neg['--housing-width']).toBe(pos['--housing-width']);
+  });
+});
+
+describe('conic-gradient corner bevel stop math (issue #18)', () => {
+  it('square housing, small radius: transitions land symmetrically around 45deg/225deg', () => {
+    const { trStart, trEnd, blStart, blEnd } = computeFrameBevelConicStops(200, 200, 5);
+    expect(trStart).toBeLessThan(45);
+    expect(trEnd).toBeGreaterThan(45);
+    expect((trStart + trEnd) / 2).toBeCloseTo(45, 6);
+    expect(blStart).toBeCloseTo(trStart + 180, 9);
+    expect(blEnd).toBeCloseTo(trEnd + 180, 9);
+  });
+
+  it('zero chrome radius collapses the ramp to a single hard-cut angle (parity with the old straight-edge seam)', () => {
+    const stops = computeFrameBevelConicStops(200, 200, 0);
+    expect(stops.trStart).toBe(45);
+    expect(stops.trEnd).toBe(45);
+    expect(stops.blStart).toBe(225);
+    expect(stops.blEnd).toBe(225);
+  });
+
+  it('radius equal to the smaller half-dimension (stadium/pill shape) widens the ramp to the full quadrant', () => {
+    // 200x100 housing, r = 50 = half the height: the right "edge" run is
+    // fully consumed by rounding, so the top-right ramp spans the entire
+    // 0-90deg quadrant with no flat black run in between.
+    const stops = computeFrameBevelConicStops(200, 100, 50);
+    expect(stops.trStart).toBeCloseTo(45, 6);
+    expect(stops.trEnd).toBeCloseTo(90, 6);
+  });
+
+  it('non-square housing: ramp is NOT centered on 45deg (the exact bug #18 exists to fix)', () => {
+    // Wide housing (w=104,h=51 half-extents) skews the ramp toward the
+    // narrower (height) axis — asserting it's provably NOT the naive
+    // fixed-degree placement a square-only implementation would hardcode.
+    const stops = computeFrameBevelConicStops(208, 102, 25);
+    const mid = (stops.trStart + stops.trEnd) / 2;
+    expect(mid).not.toBeCloseTo(45, 0);
+    expect(stops.trStart).toBeLessThan(stops.trEnd);
+  });
+
+  it('stop order is always ascending and stays within its quadrant (valid conic-gradient stop list)', () => {
+    for (const [w, h, r] of [[400, 80, 10], [80, 400, 10], [150, 150, 0], [150, 150, 75], [321, 97, 33]]) {
+      const { trStart, trEnd, blStart, blEnd } = computeFrameBevelConicStops(w, h, r);
+      expect(trStart).toBeGreaterThanOrEqual(0);
+      expect(trStart).toBeLessThanOrEqual(trEnd);
+      expect(trEnd).toBeLessThanOrEqual(90);
+      expect(blStart).toBeGreaterThanOrEqual(180);
+      expect(blStart).toBeLessThanOrEqual(blEnd);
+      expect(blEnd).toBeLessThanOrEqual(270);
+    }
+  });
+
+  it('buildClickyVars only emits --frame-bevel-conic-* vars when frameBevelConic is true (byte-stable default — D3)', () => {
+    const off = buildClickyVars();
+    expect('--frame-bevel-conic-tr-start' in off).toBe(false);
+    expect('--frame-bevel-conic-tr-end' in off).toBe(false);
+    expect('--frame-bevel-conic-bl-start' in off).toBe(false);
+    expect('--frame-bevel-conic-bl-end' in off).toBe(false);
+
+    const on = buildClickyVars({ frameBevelConic: true });
+    const expected = computeFrameBevelConicStops(
+      parseFloat(on['--housing-width']),
+      parseFloat(on['--housing-height']),
+      parseFloat(on['--radius-bot']),
+    );
+    expect(parseFloat(on['--frame-bevel-conic-tr-start'])).toBeCloseTo(expected.trStart, 1);
+    expect(parseFloat(on['--frame-bevel-conic-tr-end'])).toBeCloseTo(expected.trEnd, 1);
+    expect(parseFloat(on['--frame-bevel-conic-bl-start'])).toBeCloseTo(expected.blStart, 1);
+    expect(parseFloat(on['--frame-bevel-conic-bl-end'])).toBeCloseTo(expected.blEnd, 1);
+    expect(on['--frame-bevel-conic-tr-start'].endsWith('deg')).toBe(true);
   });
 });

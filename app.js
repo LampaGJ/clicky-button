@@ -151,7 +151,12 @@ function updatePreview() {
   // so the frozen swatches can never drift from the real thing — this
   // replaces styles.css's hand-authored third duplicate (issue #13).
   const frameEnabled = state.frameEnabled;
-  const bevelInsets = frameEnabled
+  // Conic-gradient corner bevel (issue #18) — when active, the frame bevel is
+  // painted by the (state-independent) `.btn-housing::after` ring instead of
+  // these box-shadow inset lines, so this frozen-swatch override must drop
+  // them too or the flat edges would double up (straight inset UNDER the
+  // ring, both at --frame-bevel-alpha).
+  const bevelInsets = (frameEnabled && !state.frameBevelConic)
     ? `inset 0 var(--frame-bevel-width) 0 0 rgba(255, 255, 255, var(--frame-bevel-alpha)),
     inset 0 calc(-1 * var(--frame-bevel-width)) 0 0 rgba(0, 0, 0, var(--frame-bevel-alpha-shadow)),
     inset var(--frame-bevel-width) 0 0 0 rgba(255, 255, 255, var(--frame-bevel-alpha)),
@@ -532,6 +537,7 @@ function initControls() {
     depRow('frame-color-lo-row',       on);
     depRow('frame-bevel-alpha-row',    on);
     depRow('frame-bevel-width-row',    on);
+    depRow('frame-bevel-conic-row',    on);
   });
   wireRangeNum('btn-frame-width',       'btn-frame-width-num',       'frameWidth');
   wireColor('btn-frame-color-hi', 'frameColorHi');
@@ -539,6 +545,11 @@ function initControls() {
   wireColor('btn-frame-color-lo', 'frameColorLo');
   wireRangeNum('btn-frame-bevel-alpha', 'btn-frame-bevel-alpha-num', 'frameBevelAlpha');
   wireRangeNum('btn-frame-bevel-width', 'btn-frame-bevel-width-num', 'frameBevelWidth');
+  // Conic-gradient corner bevel (issue #18) — replaces the straight-edge
+  // bevel insets with a `.btn-housing::after` ring whose stops are computed
+  // per-instance against the real chrome radius (see
+  // computeFrameBevelConicStops in lib/clicky-button.js).
+  wireCheckbox('btn-frame-bevel-conic', 'frameBevelConic');
 
   // Ambient shadow
   wireRangeNum('btn-ambient-intensity',    'btn-ambient-intensity-num',    'ambientIntensity');
@@ -718,6 +729,7 @@ function initControls() {
     depRow('frame-color-lo-row',       state.frameEnabled);
     depRow('frame-bevel-alpha-row',    state.frameEnabled);
     depRow('frame-bevel-width-row',    state.frameEnabled);
+    depRow('frame-bevel-conic-row',    state.frameEnabled);
     depRow('group-label-row',          state.housingLayout === 'segmented');
     depRow('segment-divider-row',      state.housingLayout === 'segmented');
 

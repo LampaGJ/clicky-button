@@ -64,6 +64,11 @@ describe('snapshot: buildClickyCss', () => {
       skewAngle: 10,
     })).toMatchFileSnapshot('__snapshots__/css-radius-skew-combined.css');
   });
+
+  it('conic-gradient corner bevel (issue #18) — non-square default housing, stop angles aspect/radius-correct', async () => {
+    await expect(buildClickyCss({ frameBevelConic: true }))
+      .toMatchFileSnapshot('__snapshots__/css-frame-bevel-conic.css');
+  });
 });
 
 describe('snapshot: buildClickyHtml', () => {

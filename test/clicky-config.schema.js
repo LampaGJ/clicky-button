@@ -95,6 +95,10 @@ export const ClickyConfigSchema = z.object({
   frameColorLo: hex,
   frameBevelAlpha: pct0to100,
   frameBevelWidth: z.number().min(0),
+  // Conic-gradient corner bevel (issue #18) — false (default) keeps the
+  // straight-edge box-shadow insets; true swaps in the aspect/radius-correct
+  // conic-gradient ring (see computeFrameBevelConicStops).
+  frameBevelConic: z.boolean(),
 
   // Mode & timing
   mode: z.enum(['click', 'toggle', 'radio']),
