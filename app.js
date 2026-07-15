@@ -223,12 +223,18 @@ ${FREEZE}
 ${FREEZE}
 }
 
-/* State-test panel: frozen housing shadow for pressed states */
+/* State-test panel: frozen housing shadow for pressed states. Must mirror the
+   lib's framed-vs-frameless split (issue #54): a frameless housing renders its
+   ambient as filter: drop-shadow (a box-shadow would be clipped out of its own
+   transparent box, leaving a bright hole the pressed key uncovers). Overriding
+   box-shadow here regardless would paint BOTH shadows and reinstate the hole. */
 .btn-housing:has(.state-pressed-max),
 .btn-housing:has(.state-toggle-point) {
-  box-shadow:
+${state.frameEnabled
+  ? `  box-shadow:
     ${bevelInsets}
-    var(--housing-shadow-pressed) !important;
+    var(--housing-shadow-pressed) !important;`
+  : `  filter: var(--housing-drop-shadow-pressed) !important;`}
   transition: none !important;
 }`;
 
