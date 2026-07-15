@@ -6,7 +6,7 @@
   --grid-justify: center;
   --grid-align: center;
   --housing-width: 225px;
-  --housing-height: 117px;
+  --housing-height: 121px;
   --container-width: 180px;
   --container-height: 88px;
   --radius: 14px;
@@ -65,6 +65,7 @@
   --press-translate: 14px;
   --toggle-height: 7px;
   --frame-width: 14px;
+  --resting-chrome-floor: 4px;
   --frame-color: #b8bcc0;
   --frame-color-hi: #e8e8ec;
   --frame-color-lo: #8c9094;
@@ -147,7 +148,7 @@
 
 :root .btn-cell {
   position: absolute;
-  top: calc(max(0px, calc(var(--frame-width) - var(--wall-h))) + var(--skew-widen-y, 0px) / 2);
+  top: calc(max(var(--resting-chrome-floor), calc(var(--frame-width) - var(--wall-h))) + var(--skew-widen-y, 0px) / 2);
   left: calc((var(--housing-width) - var(--container-width)) / 2);
   right: calc((var(--housing-width) - var(--container-width)) / 2);
   height: var(--container-height);

@@ -97,6 +97,11 @@ export const ClickyConfigSchema = z.object({
   // Chrome bevel frame
   frameEnabled: z.boolean(),
   frameWidth: z.number().min(0),
+  // Resting-chrome tangency floor (issue #90) — keeps restingChromeAbove
+  // (buildGridCss) strictly off the corner-tangency singularity at
+  // cellTop === 0. > 0 (default 25) is load-bearing; 0 reproduces the
+  // #89/#90 wedge.
+  restingChromeFloorRatio: pct0to100,
   frameColorHi: hex,
   frameColor: hex,
   frameColorLo: hex,

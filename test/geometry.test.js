@@ -96,9 +96,12 @@ describe('parallelogram skew v2 geometry (issue #40 — housing-level shear, bot
   it('combined X+Y skew adds the cross-term (W0 * |tanX * tanY|) to the X widen', () => {
     const containerWidth = 180, containerHeight = 88, skewXAngle = 8, skewYAngle = 4;
     const fw = 14; // default frameWidth, frameEnabled default true
+    const wallH = 14; // default wallHRatio (16%) of containerHeight 88
+    // Resting-chrome tangency floor (issue #90) — see buildVarMap's H0 comment.
+    const restingChromeFloor = Math.round(fw * 25 / 100); // default restingChromeFloorRatio
     const vars = buildClickyVars({ containerWidth, containerHeight, skewXAngle, skewYAngle });
     const W0 = containerWidth + 2 * fw;
-    const H0 = containerHeight + fw;
+    const H0 = Math.max(fw, wallH + restingChromeFloor) + (containerHeight - wallH) + fw;
     const expectedWidenX = Math.ceil(H0 * Math.abs(tan(skewXAngle)) + W0 * Math.abs(tan(skewXAngle) * tan(skewYAngle)));
     const expectedWidenY = Math.ceil(W0 * Math.abs(tan(skewYAngle)));
     expect(vars['--housing-width']).toBe(`${W0 + expectedWidenX}px`);
@@ -210,9 +213,14 @@ describe('conic-gradient corner bevel stop math (issue #18)', () => {
 describe('equal ring + flush-gated reveal (owner invariants)', () => {
   const px = s => parseFloat(s);
 
-  // The ring is judged around the CHANNEL with the key pressed flush — not
-  // around the resting key, which stands proud and covers the top chrome.
-  it('ring is equal top and bottom at the flush position, for every wall/frame combination', () => {
+  // Issue #90 VOIDS the pre-#90 "ring is exactly equal top and bottom at
+  // flush" invariant on owner's explicit directive: an exactly-equal ring
+  // requires cellTop === 0 whenever wallH >= frameWidth, which is precisely
+  // the corner-tangency singularity that read as a hard wedge/seam (issues
+  // #89/#90). The bottom ring (never touched by the floor) still lands
+  // exactly on frameWidth; the top ring is now `max(floor + wallH,
+  // frameWidth)` — equal to the old invariant only when the floor is 0.
+  it('bottom ring stays exactly frame width at flush; top ring is floored above it (issue #90 supersedes the old equal-ring invariant)', () => {
     const cases = [
       { label: 'wall === frame',   cfg: {} },
       { label: 'shallow wall',     cfg: { wallHRatio: 4 } },
@@ -223,28 +231,46 @@ describe('equal ring + flush-gated reveal (owner invariants)', () => {
       const v = buildClickyVars(cfg);
       const fw = px(v['--frame-width']);
       const wallH = px(v['--wall-h']);
+      const floor = px(v['--resting-chrome-floor']);
       const faceH = px(v['--container-height']) - wallH;
       const H = px(v['--housing-height']);
-      const cellTop = Math.max(0, fw - wallH);           // .btn-cell top
+      const cellTop = Math.max(floor, fw - wallH);       // .btn-cell top (issue #90 floor)
       const faceTopAtFlush = cellTop + wallH;            // descended one wall height
       const topRing = faceTopAtFlush;
       const botRing = H - (faceTopAtFlush + faceH);
-      expect(topRing, `${label}: top ring`).toBeCloseTo(botRing, 5);
-      expect(topRing, `${label}: ring === frame width`).toBeCloseTo(fw, 5);
+      expect(botRing, `${label}: bottom ring === frame width`).toBeCloseTo(fw, 5);
+      expect(topRing, `${label}: top ring === max(floor + wallH, frame width)`)
+        .toBeCloseTo(Math.max(floor + wallH, fw), 5);
     }
   });
 
   // A wall deeper than the frame rises higher than the plate's ring; it must
-  // still never be clipped by the housing (cell top floors at 0).
+  // still never be clipped by the housing (cell top floors at
+  // --resting-chrome-floor, issue #90 — never 0, and never negative).
   it('a proud key never clips: the cell never starts above the housing', () => {
     for (const wallHRatio of [4, 16, 30, 40]) {
       const v = buildClickyVars({ wallHRatio });
       const fw = px(v['--frame-width']);
       const wallH = px(v['--wall-h']);
-      expect(Math.max(0, fw - wallH)).toBeGreaterThanOrEqual(0);
+      const floor = px(v['--resting-chrome-floor']);
+      expect(Math.max(floor, fw - wallH)).toBeGreaterThanOrEqual(floor);
       // Housing always accommodates the whole keycap plus the bottom ring.
       const H = px(v['--housing-height']);
-      expect(H).toBeGreaterThanOrEqual(Math.max(0, fw - wallH) + px(v['--container-height']));
+      expect(H).toBeGreaterThanOrEqual(Math.max(floor, fw - wallH) + px(v['--container-height']));
+    }
+  });
+
+  // Issue #90 — the floor must be strictly positive by default so rest never
+  // lands exactly on the cellTop === 0 corner-tangency singularity.
+  it('resting-chrome floor is strictly positive by default, keeping cellTop off the corner-tangency singularity', () => {
+    for (const wallHRatio of [4, 16, 30, 40]) {
+      const v = buildClickyVars({ wallHRatio });
+      const fw = px(v['--frame-width']);
+      const wallH = px(v['--wall-h']);
+      const floor = px(v['--resting-chrome-floor']);
+      expect(floor).toBeGreaterThan(0);
+      const cellTop = Math.max(floor, fw - wallH);
+      expect(cellTop).not.toBeCloseTo(0, 5);
     }
   });
 
@@ -297,12 +323,13 @@ describe('deep-wall exception (wall deeper than the frame ring)', () => {
     const v = buildClickyVars({ wallHRatio: 40, frameWidth: 10 });   // wall 35 > fw 10
     const fw = px(v['--frame-width']);
     const wallH = px(v['--wall-h']);
+    const floor = px(v['--resting-chrome-floor']);                  // issue #90
     const faceH = px(v['--container-height']) - wallH;
     const H = px(v['--housing-height']);
     expect(wallH).toBeGreaterThan(fw);
-    expect(H).toBe(Math.max(fw, wallH) + faceH + fw);
-    const cellTop = Math.max(0, fw - wallH);
-    expect(cellTop).toBe(0);                                          // no clipping
+    expect(H).toBe(Math.max(fw, wallH + floor) + faceH + fw);
+    const cellTop = Math.max(floor, fw - wallH);
+    expect(cellTop).toBe(floor);                                      // floored, never 0 (issue #90)
     const faceTopAtFlush = cellTop + wallH;
     expect(H - (faceTopAtFlush + faceH)).toBeCloseTo(fw, 5);          // bottom ring === fw
   });

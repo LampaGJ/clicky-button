@@ -276,16 +276,18 @@ describe('parallelogram skew v2 (issue #40 — housing-level shear, two axes)', 
     expect(css).toMatch(/\.btn-housing\s*\{[^}]*transform: skewX\(var\(--skew-x-angle\)\) skewY\(var\(--skew-y-angle\)\);/s);
   });
 
-  it('active skew switches .btn-cell to housing-relative centering horizontally, and keeps the equal-ring top inset', () => {
+  it('active skew switches .btn-cell to housing-relative centering horizontally, and keeps the resting-chrome-floored top inset (issue #90)', () => {
     const css = buildClickyCss({ skewXAngle: 12 });
     expect(css).toMatch(/\.btn-cell\s*\{[^}]*left: calc\(\(var\(--housing-width\) - var\(--container-width\)\) \/ 2\);/s);
-    // Equal-ring top inset, plus the skew's own height reservation.
-    expect(css).toMatch(/\.btn-cell\s*\{[^}]*top: calc\(max\(0px, calc\(var\(--frame-width\) - var\(--wall-h\)\)\) \+ var\(--skew-widen-y, 0px\) \/ 2\);/s);
+    // Floored top inset (issue #90 — max(0,...) replaced with the
+    // resting-chrome-floor var so rest never lands on the corner-tangency
+    // singularity), plus the skew's own height reservation.
+    expect(css).toMatch(/\.btn-cell\s*\{[^}]*top: calc\(max\(var\(--resting-chrome-floor\), calc\(var\(--frame-width\) - var\(--wall-h\)\)\) \+ var\(--skew-widen-y, 0px\) \/ 2\);/s);
   });
 
-  it('.btn-cell top is the chrome left visible above the RESTING face — floored at 0 so a proud key never clips', () => {
+  it('.btn-cell top is the chrome left visible above the RESTING face — floored above 0 (issue #90) so rest never lands on the corner-tangency singularity', () => {
     const css = buildClickyCss();
-    expect(css).toMatch(/\.btn-cell\s*\{\s*position: absolute;\s*top: max\(0px, calc\(var\(--frame-width\) - var\(--wall-h\)\)\);\s*left: var\(--frame-width\);\s*right: var\(--frame-width\);/);
+    expect(css).toMatch(/\.btn-cell\s*\{\s*position: absolute;\s*top: max\(var\(--resting-chrome-floor\), calc\(var\(--frame-width\) - var\(--wall-h\)\)\);\s*left: var\(--frame-width\);\s*right: var\(--frame-width\);/);
   });
 
   it('hard-clamps skewXAngle to ±18deg and skewYAngle to ±8deg (tighter) even though the runtime validator is typeof-only', () => {

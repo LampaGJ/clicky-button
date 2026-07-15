@@ -683,6 +683,28 @@ export const CSS_VAR_GROUPS = {
       '(faceRadiusBorderDecl) — horizontal-only, the cavity/`.btn-cell`/' +
       'all vertical math are untouched.',
   },
+  'resting-chrome-floor': {
+    vars: ['--resting-chrome-floor'],
+    displayName: 'Resting-Chrome Tangency Floor (Issue #90)',
+    strategicPurpose:
+      'Retires the corner-WEDGE bug class (issues #89/#90, the vertical ' +
+      'sibling of #76\'s horizontal cusp fix) at its root: the cap\'s ' +
+      'circular top corner and the housing\'s circular corner are ' +
+      'internally tangent — the chrome ring pinches to a single point ' +
+      'and reads as a hard seam — whenever cellTop lands exactly on 0 or ' +
+      '2×frameWidth. The pre-#90 formula (`max(0, frameWidth - wallH)`) ' +
+      'landed exactly on the cellTop === 0 singularity for any config ' +
+      'where wallH >= frameWidth, including the library\'s own default. ' +
+      'A strictly-positive floor keeps the resting state off that point ' +
+      'by construction, not by tuning any one preset\'s numbers.',
+    tacticalObjective:
+      'Always emitted (no D3 gate — issue #90 explicitly authorizes a ' +
+      'default-rendering change); `Math.round(frameWidth * ' +
+      'restingChromeFloorRatio / 100)`, consumed by buildGridCss\'s ' +
+      'restingChromeAbove (`.btn-cell`\'s `top`) and buildVarMap\'s H0 ' +
+      '(housing height reservation) so the housing stays tall enough for ' +
+      'the floored offset.',
+  },
 };
 
 // ── Keyframe groups ────────────────────────────────────────────────────
