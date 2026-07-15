@@ -355,12 +355,16 @@ background-color: color-mix(in srgb, #5b8dee 18%, var(--face-color));
   position: absolute;
   left: 0;
   right: 0;
-  /* Copy of the cap (same height + radius) shifted down by the wall band. The
-     extra hover-lift overshoots the clipped cell bottom at rest, then pulls
-     flush on hover so the rising key never exposes a strip of cavity. */
-  top: calc(var(--wall-h) + var(--hover-lift));
-  height: calc(100% - var(--wall-h));
-  border-radius: var(--radius);
+  /* True extrusion of the cap, not a congruent copy: a square-topped slab
+     that starts below the cap's corner arcs (max(wall-h, radius)) so its
+     straight sides fill the corner waist a shifted copy would leave, rounded
+     only at the bottom. The square top stays hidden behind the opaque cap
+     (both share every transform). The extra hover-lift overshoots the clipped
+     cell bottom at rest, then pulls flush on hover so the rising key never
+     exposes a strip of cavity. */
+  top: calc(max(var(--wall-h), var(--radius)) + var(--hover-lift));
+  height: calc(100% - max(var(--wall-h), var(--radius)));
+  border-radius: 0 0 var(--radius) var(--radius);
   background-color: var(--button-wall-color);
   background-image: linear-gradient(
     to right,
