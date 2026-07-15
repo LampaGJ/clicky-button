@@ -223,12 +223,18 @@ ${FREEZE}
 ${FREEZE}
 }
 
-/* State-test panel: frozen housing shadow for pressed states */
+/* State-test panel: frozen housing shadow for pressed states. Must mirror the
+   lib's framed-vs-frameless split (issue #54): a frameless housing renders its
+   ambient as filter: drop-shadow (a box-shadow would be clipped out of its own
+   transparent box, leaving a bright hole the pressed key uncovers). Overriding
+   box-shadow here regardless would paint BOTH shadows and reinstate the hole. */
 .btn-housing:has(.state-pressed-max),
 .btn-housing:has(.state-toggle-point) {
-  box-shadow:
+${state.frameEnabled
+  ? `  box-shadow:
     ${bevelInsets}
-    var(--housing-shadow-pressed) !important;
+    var(--housing-shadow-pressed) !important;`
+  : `  filter: var(--housing-drop-shadow-pressed) !important;`}
   transition: none !important;
 }`;
 
@@ -1306,6 +1312,21 @@ function slugifyFilename(name) {
     .replace(/^-+|-+$/g, '') || 'clicky-button';
 }
 
+/**
+ * @displayName Export Bundle Assembler
+ * @strategicPurpose The generator's whole reason for existing outside the
+ *   live preview (README "Generate a button in 30 seconds" step 5) —
+ *   turning the currently-configured button into a standalone,
+ *   dependency-free drop-in a consumer can unzip straight into any page,
+ *   matching exactly what the live preview and gallery.html already
+ *   render.
+ * @tacticalObjective Builds the CSS (buildCss), the HTML
+ *   (buildGroupPreviewHtml, matching whatever housingLayout is currently
+ *   configured), and the standalone enhancer script (clickyEnhancerJs),
+ *   names them from the style name, and zips all three (`<slug>.html` /
+ *   `<slug>.css` / `<slug>.enhancer.js`) via the dependency-free makeZip
+ *   writer for browser download.
+ */
 function downloadZip(styleName) {
   const cssSnippet = buildCss(state, ':root');
   // Segmented housing (issue #36) — must match what the live preview already

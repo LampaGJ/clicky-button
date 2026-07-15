@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildClickyVars, internals } from '../lib/clicky-button.js';
+import { buildClickyVars, buildClickyCss, internals } from '../lib/clicky-button.js';
 
 const { clampRadiusCorners, computeFrameBevelConicStops } = internals;
 
@@ -204,5 +204,106 @@ describe('conic-gradient corner bevel stop math (issue #18)', () => {
     expect(parseFloat(on['--frame-bevel-conic-bl-start'])).toBeCloseTo(expected.blStart, 1);
     expect(parseFloat(on['--frame-bevel-conic-bl-end'])).toBeCloseTo(expected.blEnd, 1);
     expect(on['--frame-bevel-conic-tr-start'].endsWith('deg')).toBe(true);
+  });
+});
+
+describe('equal ring + flush-gated reveal (owner invariants)', () => {
+  const px = s => parseFloat(s);
+
+  // The ring is judged around the CHANNEL with the key pressed flush — not
+  // around the resting key, which stands proud and covers the top chrome.
+  it('ring is equal top and bottom at the flush position, for every wall/frame combination', () => {
+    const cases = [
+      { label: 'wall === frame',   cfg: {} },
+      { label: 'shallow wall',     cfg: { wallHRatio: 4 } },
+      { label: 'thick frame',      cfg: { frameWidth: 30 } },
+      { label: 'tall button',      cfg: { containerHeight: 200, frameWidth: 40 } },
+    ];
+    for (const { label, cfg } of cases) {
+      const v = buildClickyVars(cfg);
+      const fw = px(v['--frame-width']);
+      const wallH = px(v['--wall-h']);
+      const faceH = px(v['--container-height']) - wallH;
+      const H = px(v['--housing-height']);
+      const cellTop = Math.max(0, fw - wallH);           // .btn-cell top
+      const faceTopAtFlush = cellTop + wallH;            // descended one wall height
+      const topRing = faceTopAtFlush;
+      const botRing = H - (faceTopAtFlush + faceH);
+      expect(topRing, `${label}: top ring`).toBeCloseTo(botRing, 5);
+      expect(topRing, `${label}: ring === frame width`).toBeCloseTo(fw, 5);
+    }
+  });
+
+  // A wall deeper than the frame rises higher than the plate's ring; it must
+  // still never be clipped by the housing (cell top floors at 0).
+  it('a proud key never clips: the cell never starts above the housing', () => {
+    for (const wallHRatio of [4, 16, 30, 40]) {
+      const v = buildClickyVars({ wallHRatio });
+      const fw = px(v['--frame-width']);
+      const wallH = px(v['--wall-h']);
+      expect(Math.max(0, fw - wallH)).toBeGreaterThanOrEqual(0);
+      // Housing always accommodates the whole keycap plus the bottom ring.
+      const H = px(v['--housing-height']);
+      expect(H).toBeGreaterThanOrEqual(Math.max(0, fw - wallH) + px(v['--container-height']));
+    }
+  });
+
+  // The recess may not exist until the key's own wall is fully swallowed.
+  it('recess shadow is gated on flush: it waits out the descent, then ramps', () => {
+    // Press twice the wall ⇒ flush at exactly half the travel.
+    const v = buildClickyVars({ wallHRatio: 16, pressDepthRatio: 32 });
+    expect(v['--shadow-flush-frac']).toBe('0.500');
+    expect(v['--shadow-press-delay']).toContain('0.500');
+    // Deep frameless key: wall swallowed only in the last eighth of travel.
+    const deep = buildClickyVars({ wallHRatio: 40, pressDepthRatio: 45, frameEnabled: false });
+    expect(deep['--shadow-flush-frac']).toBe('0.875');
+  });
+
+  it('a key that stops at flush is never recessed — pressed shadow === resting shadow', () => {
+    // press depth === wall height ⇒ the face never goes below the plate.
+    const v = buildClickyVars({ wallHRatio: 16, pressDepthRatio: 16 });
+    expect(v['--shadow-flush-frac']).toBe('1.000');
+    expect(v['--face-shadow-pressed']).toBe(v['--face-shadow-resting']);
+  });
+
+  it('cavity top sits one wall-height below the resting face, so nothing leaks in before flush', () => {
+    const css = buildClickyCss();
+    expect(css).toMatch(/\.btn-cell::before\s*\{[^}]*top: var\(--wall-h\);/s);
+    expect(css).not.toMatch(/\.btn-cell::before\s*\{[^}]*top: var\(--frame-width\);/s);
+  });
+
+  it('shadow keyframes hold resting until flush and clear it on the way back up', () => {
+    const css = buildClickyCss({ wallHRatio: 16, pressDepthRatio: 32 });
+    const kf = css.match(/@keyframes clicky-shadow-cycle[^{]*\{[\s\S]*?\n\}/)[0];
+    const [, flushDown] = kf.match(/0%, ([\d.]+)% \{ box-shadow: var\(--face-shadow-resting\)/);
+    const [, bottom]    = kf.match(/([\d.]+)%\s+\{ box-shadow: var\(--face-shadow-pressed\)/);
+    const [, flushUp]   = kf.match(/([\d.]+)%, 100% \{ box-shadow: var\(--face-shadow-resting\)/);
+    expect(parseFloat(flushDown)).toBeGreaterThan(0);
+    expect(parseFloat(flushDown)).toBeLessThan(parseFloat(bottom));
+    expect(parseFloat(flushUp)).toBeGreaterThan(parseFloat(bottom));
+    // Asymmetric by construction: the wait going down != the wait coming up.
+    expect(parseFloat(bottom) - parseFloat(flushDown))
+      .not.toBeCloseTo(parseFloat(flushUp) - parseFloat(bottom), 1);
+  });
+});
+
+describe('deep-wall exception (wall deeper than the frame ring)', () => {
+  const px = s => parseFloat(s);
+
+  // A key whose wall exceeds the frame width rises higher than the plate's
+  // ring, so it cannot sit inside an even fw ring — the honest projection is
+  // a top ring of wallH. Documented, and still never clipped.
+  it('keeps the bottom ring at frame width and never clips the taller key', () => {
+    const v = buildClickyVars({ wallHRatio: 40, frameWidth: 10 });   // wall 35 > fw 10
+    const fw = px(v['--frame-width']);
+    const wallH = px(v['--wall-h']);
+    const faceH = px(v['--container-height']) - wallH;
+    const H = px(v['--housing-height']);
+    expect(wallH).toBeGreaterThan(fw);
+    expect(H).toBe(Math.max(fw, wallH) + faceH + fw);
+    const cellTop = Math.max(0, fw - wallH);
+    expect(cellTop).toBe(0);                                          // no clipping
+    const faceTopAtFlush = cellTop + wallH;
+    expect(H - (faceTopAtFlush + faceH)).toBeCloseTo(fw, 5);          // bottom ring === fw
   });
 });

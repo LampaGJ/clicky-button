@@ -276,15 +276,16 @@ describe('parallelogram skew v2 (issue #40 — housing-level shear, two axes)', 
     expect(css).toMatch(/\.btn-housing\s*\{[^}]*transform: skewX\(var\(--skew-x-angle\)\) skewY\(var\(--skew-y-angle\)\);/s);
   });
 
-  it('active skew switches .btn-cell to housing-relative centering (both left/right and top)', () => {
+  it('active skew switches .btn-cell to housing-relative centering horizontally, and keeps the equal-ring top inset', () => {
     const css = buildClickyCss({ skewXAngle: 12 });
     expect(css).toMatch(/\.btn-cell\s*\{[^}]*left: calc\(\(var\(--housing-width\) - var\(--container-width\)\) \/ 2\);/s);
-    expect(css).toMatch(/\.btn-cell\s*\{[^}]*top: calc\(var\(--skew-widen-y, 0px\) \/ 2\);/s);
+    // Equal-ring top inset, plus the skew's own height reservation.
+    expect(css).toMatch(/\.btn-cell\s*\{[^}]*top: calc\(max\(0px, calc\(var\(--frame-width\) - var\(--wall-h\)\)\) \+ var\(--skew-widen-y, 0px\) \/ 2\);/s);
   });
 
-  it('inactive skew keeps the exact pre-#34 literal .btn-cell insets (byte-identical default — D3)', () => {
+  it('.btn-cell top is the chrome left visible above the RESTING face — floored at 0 so a proud key never clips', () => {
     const css = buildClickyCss();
-    expect(css).toMatch(/\.btn-cell\s*\{\s*position: absolute;\s*top: 0;\s*left: var\(--frame-width\);\s*right: var\(--frame-width\);/);
+    expect(css).toMatch(/\.btn-cell\s*\{\s*position: absolute;\s*top: max\(0px, calc\(var\(--frame-width\) - var\(--wall-h\)\)\);\s*left: var\(--frame-width\);\s*right: var\(--frame-width\);/);
   });
 
   it('hard-clamps skewXAngle to ±18deg and skewYAngle to ±8deg (tighter) even though the runtime validator is typeof-only', () => {
