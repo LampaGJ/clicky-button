@@ -149,7 +149,7 @@
   height: var(--container-height);
   container-type: size;
   overflow: hidden;
-  border-radius: max(0px, calc(var(--radius-bot) - max(0px, calc(var(--frame-width) - var(--wall-h))))) max(0px, calc(var(--radius-bot) - max(0px, calc(var(--frame-width) - var(--wall-h))))) var(--radius) var(--radius);
+  border-radius: var(--radius);
   background: transparent;
 }
 
