@@ -54,8 +54,8 @@
     inset 0 7px 4px 0 rgba(255, 255, 255, 0.300),
     inset 0 -1px 0 0 rgba(0, 0, 0, 0.000);
   --face-shadow-pressed: inset 0 0 0 0 transparent,
-    inset 0 7px 11px 0 rgba(0, 0, 0, 0.550),
-    inset 0 -4px 7px 0 rgba(0, 0, 0, 0.280),
+    inset 0 0 0 0 rgba(0, 0, 0, 0.550),
+    inset 0 0 0 0 rgba(0, 0, 0, 0.280),
     inset 0 7px 4px 0 rgba(255, 255, 255, 0.300),
     inset 0 -1px 0 0 rgba(0, 0, 0, 0.000);
   --wall-h: 14px;
@@ -70,8 +70,10 @@
   --frame-bevel-width: 1px;
   --duration: 160ms;
   --press-duration: 80ms;
-  --shadow-anim-delay-frac: 0.450;
-  --shadow-anim-frac: 0.100;
+  --shadow-flush-frac: 1.000;
+  --shadow-press-delay: calc(var(--press-duration) * 1.000);
+  --shadow-press-dur: calc(var(--press-duration) * 0.000);
+  --shadow-release-dur: calc(var(--duration) * 0.000);
   --color-anim-delay-frac: 0.000;
   --color-anim-frac: 1.000;
   --transform-easing: cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -88,8 +90,8 @@
     inset 0 8cqb 4cqb 0 rgba(255, 255, 255, 0.300),
     inset 0 -1px 0 0 rgba(0, 0, 0, 0.000);
       --face-shadow-pressed: inset 0 0 0 0 transparent,
-    inset 0 8cqb 12cqb 0 rgba(0, 0, 0, 0.550),
-    inset 0 -4cqb 8cqb 0 rgba(0, 0, 0, 0.280),
+    inset 0 0 0 0 rgba(0, 0, 0, 0.550),
+    inset 0 0 0 0 rgba(0, 0, 0, 0.280),
     inset 0 8cqb 4cqb 0 rgba(255, 255, 255, 0.300),
     inset 0 -1px 0 0 rgba(0, 0, 0, 0.000);
     }
@@ -140,7 +142,7 @@
 
 :root .btn-cell {
   position: absolute;
-  top: 0;
+  top: max(0px, calc(var(--frame-width) - var(--wall-h)));
   left: var(--frame-width);
   right: var(--frame-width);
   height: var(--container-height);
@@ -153,9 +155,17 @@
 :root .btn-cell::before {
   content: '';
   position: absolute;
-  /* Slight 1px inflation on the visible edges prevents sub-pixel anti-alias
+  /* The cavity's top edge sits exactly where the face lands when it goes
+     FLUSH — one wall-height below the resting face. Until the key has sunk
+     that far its own wall band still fills the gap, so nothing of the recess
+     may show; only once the visible wall reaches zero does the cavity start
+     to be revealed from its top edge. (Pinning this to --frame-width instead
+     leaked the recess in from the first pixel of travel on any key whose wall
+     is deeper than its frame — most visibly on frameless deep-travel keys,
+     where fw is 0.)
+     Slight 1px inflation on the visible edges prevents sub-pixel anti-alias
      gaps where the dark wall corner meets the bright chrome surround. */
-  top: var(--frame-width);
+  top: var(--wall-h);
   left: -1px;
   right: -1px;
   bottom: -1px;
@@ -247,8 +257,8 @@
     var(--face-shadow-pressed);
   background-color: var(--face-pressed);
   transition:
-    transform var(--press-duration) var(--shadow-ease-press),
-    box-shadow var(--press-duration) var(--shadow-ease-press),
+    transform var(--press-duration) var(--transform-easing),
+    box-shadow var(--shadow-press-dur) var(--shadow-ease-press) var(--shadow-press-delay),
     background-color var(--press-duration) var(--shadow-ease-press);
 }
 
@@ -275,30 +285,35 @@
    applies the pressed property values for as long as :active is true. */
 
 @keyframes clicky-transform-cycle-217lh5 {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(var(--press-translate)); }
+  0%, 100%   { transform: translateY(0); }
+  33.33% { transform: translateY(var(--press-translate)); }
 }
 
+/* The recess shadow holds its resting value until the face goes FLUSH
+   (33.33% of the cycle), ramps only while the face is below the
+   plate, and is gone again the moment it clears on the way up
+   (33.33%). Those two windows are different lengths — which is why
+   the offsets carry the timing here rather than one centred delay. */
 @keyframes clicky-shadow-cycle-217lh5 {
+  /* press depth never carries the face below flush ⇒ never recessed */
   0%, 100% { box-shadow: var(--face-shadow-resting); }
-  50%      { box-shadow: var(--face-shadow-pressed); }
 }
 
 @keyframes clicky-color-cycle-217lh5 {
-  0%, 100% { background-color: var(--face-color); }
-  50%      { background-color: var(--face-pressed); }
+  0%, 100%   { background-color: var(--face-color); }
+  33.33% { background-color: var(--face-pressed); }
 }
 
 :root .clicky-btn.clicky-press .btn-face {
   animation-name: clicky-transform-cycle-217lh5, clicky-shadow-cycle-217lh5, clicky-color-cycle-217lh5;
   animation-duration:
     calc(var(--press-duration) + var(--duration)),
-    calc((var(--press-duration) + var(--duration)) * var(--shadow-anim-frac)),
+    calc(var(--press-duration) + var(--duration)),
     calc((var(--press-duration) + var(--duration)) * var(--color-anim-frac));
   animation-timing-function: linear, linear, linear;
   animation-delay:
     0s,
-    calc((var(--press-duration) + var(--duration)) * var(--shadow-anim-delay-frac)),
+    0s,
     calc((var(--press-duration) + var(--duration)) * var(--color-anim-delay-frac));
   animation-fill-mode: forwards, forwards, forwards;
 }
