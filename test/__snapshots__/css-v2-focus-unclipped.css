@@ -194,77 +194,22 @@
   pointer-events: none;
 }
 
-/* Toggle mode — hidden checkbox + visible face */
-:root .clicky-toggle {
+/* Click mode */
+:root .clicky-btn {
   position: absolute;
   inset: 0;
-  display: block;
+  padding: 0;
+  border: none;
+  background: transparent;
   cursor: pointer;
+  outline: none;
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
 }
 
-:root .clicky-toggle input[type="checkbox"] {
-  position: absolute;
-  width: 1px; height: 1px;
-  padding: 0; margin: -1px;
-  overflow: hidden;
-  clip: rect(0,0,0,0);
-  white-space: nowrap;
-  border: 0;
-}
+:root .clicky-btn:focus-visible { outline: none; }
 
-@keyframes toggle-press-on-217lh5 {
-  0%   {
-    transform: translateY(0);
-    box-shadow: var(--face-shadow-resting);
-    background-color: var(--face-color);
-  }
-  50%  {
-    transform: translateY(var(--press-translate));
-    box-shadow: var(--face-shadow-pressed);
-    background-color: var(--face-pressed);
-  }
-  100% {
-    transform: translateY(var(--toggle-height));
-    box-shadow: var(--face-shadow-pressed);
-    background-color: var(--face-toggled);
-  }
-}
-
-@keyframes toggle-press-off-217lh5 {
-  0%   {
-    transform: translateY(var(--toggle-height));
-    box-shadow: var(--face-shadow-pressed);
-    background-color: var(--face-toggled);
-  }
-  50%  {
-    transform: translateY(var(--press-translate));
-    box-shadow: var(--face-shadow-pressed);
-    background-color: var(--face-pressed);
-  }
-  100% {
-    transform: translateY(0);
-    box-shadow: var(--face-shadow-resting);
-    background-color: var(--face-color);
-  }
-}
-
-/* Transform-only counterparts of the toggle keyframes, for the wall — it tracks
-   the cap's position without touching the cap's box-shadow / background-color. */
-@keyframes toggle-xform-on-217lh5 {
-  0%   { transform: translateY(0); }
-  50%  { transform: translateY(var(--press-translate)); }
-  100% { transform: translateY(var(--toggle-height)); }
-}
-
-@keyframes toggle-xform-off-217lh5 {
-  0%   { transform: translateY(var(--toggle-height)); }
-  50%  { transform: translateY(var(--press-translate)); }
-  100% { transform: translateY(0); }
-}
-
-:root .clicky-toggle .btn-face {
+:root .clicky-btn .btn-face {
   position: absolute;
   top: 0;
   left: 0;
@@ -304,123 +249,124 @@
     background-color var(--duration) var(--shadow-ease-release);
 }
 
-/* Uncheck-direction (release) transition — same selector text as the base
-   rule above; must stay AFTER it in source order so this real duration/
-   easing wins over sharedFaceCssProps' hardcoded 100ms transform transition. */
-:root .clicky-toggle .btn-face {
-  transition: transform var(--duration) var(--transform-easing), box-shadow var(--shadow-release-dur) var(--shadow-ease-release) 0s, background-color var(--duration) var(--shadow-ease-release);
-}
-
-:root .clicky-toggle .btn-wall {
-  transition: transform var(--duration) var(--transform-easing);
-}
-
 @media (hover: hover) {
-  :root .clicky-toggle:hover:not(:has(input:checked)) .btn-face,
-  :root .clicky-toggle:hover:not(:has(input:checked)) .btn-wall {
+  :root .clicky-btn:hover:not(:active):not(.clicky-press) .btn-face,
+  :root .clicky-btn:hover:not(:active):not(.clicky-press) .btn-wall {
     transform: translateY(calc(-1 * var(--hover-lift)));
   }
 }
 
-:root .clicky-toggle:has(input:checked) .btn-face,
-:root .clicky-toggle input:checked ~ .btn-face {
-  transform: translateY(var(--toggle-height));
+:root .clicky-btn:active .btn-face {
+  transform: translateY(var(--press-translate));
   box-shadow:
     var(--face-shadow-pressed);
-  background-color: var(--face-toggled);
-  transition: transform var(--press-duration) var(--transform-easing), box-shadow var(--shadow-press-dur) var(--shadow-ease-press) var(--shadow-press-delay), background-color var(--press-duration) var(--shadow-ease-press);
+  background-color: var(--face-pressed);
+  transition:
+    transform var(--press-duration) var(--transform-easing),
+    box-shadow var(--shadow-press-dur) var(--shadow-ease-press) var(--shadow-press-delay),
+    background-color var(--press-duration) var(--shadow-ease-press);
 }
 
-/* Wall rest position when toggled on — transform only. */
-:root .clicky-toggle:has(input:checked) .btn-wall,
-:root .clicky-toggle input:checked ~ .btn-wall {
-  transform: translateY(var(--toggle-height));
-  transition: transform var(--press-duration) var(--transform-easing);
+:root .clicky-btn:active .btn-wall {
+  transform: translateY(var(--press-translate));
+  transition: transform var(--press-duration) var(--shadow-ease-press);
 }
 
-:root .clicky-toggle.toggle-did-interact:has(input:checked) .btn-face,
-:root .clicky-toggle.toggle-did-interact input:checked ~ .btn-face {
-  transition: none;
-  animation: toggle-press-on-217lh5 calc(var(--press-duration) + var(--duration)) linear forwards;
+/* Full press cycle — runs resting → pressed → resting on every click.
+   Triggered by adding .clicky-press class via JS on pointerdown:
+     btn.addEventListener('pointerdown', () => {
+       btn.classList.remove('clicky-press');
+       void btn.offsetWidth;
+       btn.classList.add('clicky-press');
+     });
+     btn.addEventListener('animationend', e => {
+       if (e.animationName.startsWith('clicky-transform-cycle-217lh5'))
+         btn.classList.remove('clicky-press');
+     });
+   The animation runs to completion regardless of click duration. Holding the
+   button does NOT keep it pressed — the animation always completes its cycle
+   and returns to resting. Plain, JS-free holds (keyboard Space, a static tap)
+   are handled instead by the .clicky-btn:active .btn-face rule above, which
+   applies the pressed property values for as long as :active is true. */
+
+@keyframes clicky-transform-cycle-217lh5 {
+  0%, 100%   { transform: translateY(0); }
+  33.33% { transform: translateY(var(--press-translate)); }
 }
 
-:root .clicky-toggle.toggle-did-interact:not(:has(input:checked)) .btn-face {
-  transition: none;
-  animation: toggle-press-off-217lh5 calc(var(--press-duration) + var(--duration)) linear forwards;
+/* The recess shadow holds its resting value until the face goes FLUSH
+   (33.33% of the cycle), ramps only while the face is below the
+   plate, and is gone again the moment it clears on the way up
+   (33.33%). Those two windows are different lengths — which is why
+   the offsets carry the timing here rather than one centred delay. */
+@keyframes clicky-shadow-cycle-217lh5 {
+  /* press depth never carries the face below flush ⇒ never recessed */
+  0%, 100% { box-shadow: var(--face-shadow-resting); }
 }
 
-:root .clicky-toggle.toggle-did-interact input:not(:checked) ~ .btn-face {
-  transition: none;
-  animation: toggle-press-off-217lh5 calc(var(--press-duration) + var(--duration)) linear forwards;
+@keyframes clicky-color-cycle-217lh5 {
+  0%, 100%   { background-color: var(--face-color); }
+  33.33% { background-color: var(--face-pressed); }
 }
 
-/* Wall mirrors the cap's transform through the toggle animations. */
-:root .clicky-toggle.toggle-did-interact:has(input:checked) .btn-wall,
-:root .clicky-toggle.toggle-did-interact input:checked ~ .btn-wall {
-  transition: none;
-  animation: toggle-xform-on-217lh5 calc(var(--press-duration) + var(--duration)) linear forwards;
+:root .clicky-btn.clicky-press .btn-face {
+  animation-name: clicky-transform-cycle-217lh5, clicky-shadow-cycle-217lh5, clicky-color-cycle-217lh5;
+  animation-duration:
+    calc(var(--press-duration) + var(--duration)),
+    calc(var(--press-duration) + var(--duration)),
+    calc((var(--press-duration) + var(--duration)) * var(--color-anim-frac));
+  animation-timing-function: linear, linear, linear;
+  animation-delay:
+    0s,
+    0s,
+    calc((var(--press-duration) + var(--duration)) * var(--color-anim-delay-frac));
+  animation-fill-mode: forwards, forwards, forwards;
 }
 
-:root .clicky-toggle.toggle-did-interact:not(:has(input:checked)) .btn-wall,
-:root .clicky-toggle.toggle-did-interact input:not(:checked) ~ .btn-wall {
-  transition: none;
-  animation: toggle-xform-off-217lh5 calc(var(--press-duration) + var(--duration)) linear forwards;
+/* The wall mirrors only the cap's transform (reusing the transform-only
+   keyframe), so it stays glued to the cap through the press cycle. */
+:root .clicky-btn.clicky-press .btn-wall {
+  animation: clicky-transform-cycle-217lh5 calc(var(--press-duration) + var(--duration)) linear forwards;
 }
 
-/* Icon press-darken (realism pack #7d) — mirrors the click-mode rules above.
-   The static pseudo-class path covers held/settled states; the parallel
-   toggle-icon-color-on/off keyframes cover the JS-driven .toggle-did-interact
-   animation, since a parent's animated background-color does not cascade
-   into a child element's color (animation-name is per-element). */
-@keyframes toggle-icon-color-on {
-  0%   { color: var(--icon-color); }
-  50%  { color: var(--icon-color-pressed); }
-  100% { color: var(--icon-color-pressed); }
+/* Icon press-darken (realism pack #7d) — the icon participates in the same
+   darken effect as the face. Two paths must both be covered: the pseudo-class
+   path (:active / :has(input:checked)) for held presses, AND a parallel
+   keyframe animation for the JS-driven full press cycle — a parent's animated
+   background-color does not cascade into a child element's color, so .btn-icon
+   needs its own animation-name list (animation-name is per-element). */
+@keyframes clicky-icon-color-cycle {
+  0%, 100% { color: var(--icon-color); }
+  50%      { color: var(--icon-color-pressed); }
 }
 
-@keyframes toggle-icon-color-off {
-  0%   { color: var(--icon-color-pressed); }
-  50%  { color: var(--icon-color-pressed); }
-  100% { color: var(--icon-color); }
-}
-
-:root .clicky-toggle:has(input:checked) .btn-icon,
-:root .clicky-toggle input:checked ~ .btn-face .btn-icon {
+:root .clicky-btn:active .btn-icon {
   color: var(--icon-color-pressed);
   transition: color var(--press-duration) var(--shadow-ease-press);
 }
 
-:root .clicky-toggle.toggle-did-interact:has(input:checked) .btn-icon,
-:root .clicky-toggle.toggle-did-interact input:checked ~ .btn-face .btn-icon {
-  animation: toggle-icon-color-on calc(var(--press-duration) + var(--duration)) linear forwards;
+:root .clicky-btn.clicky-press .btn-icon {
+  animation-name: clicky-icon-color-cycle;
+  animation-duration: calc((var(--press-duration) + var(--duration)) * var(--color-anim-frac));
+  animation-timing-function: linear;
+  animation-delay: calc((var(--press-duration) + var(--duration)) * var(--color-anim-delay-frac));
+  animation-fill-mode: forwards;
 }
 
-:root .clicky-toggle.toggle-did-interact:not(:has(input:checked)) .btn-icon,
-:root .clicky-toggle.toggle-did-interact input:not(:checked) ~ .btn-face .btn-icon {
-  animation: toggle-icon-color-off calc(var(--press-duration) + var(--duration)) linear forwards;
-}
-
-:root .clicky-toggle input:focus-visible ~ .btn-face {
+:root .btn-housing:has(.clicky-btn:focus-visible) {
     background-color: #b4b7be;
 background-color: color-mix(in srgb, #5b8dee 18%, var(--face-color));
   }
 
 @media (prefers-reduced-motion: reduce) {
-  :root .clicky-toggle .btn-face,
-  :root .clicky-toggle:has(input:checked) .btn-face,
-  :root .clicky-toggle input:checked ~ .btn-face { transition: none; animation: none; }
-  :root .clicky-toggle.toggle-did-interact:has(input:checked) .btn-face,
-  :root .clicky-toggle.toggle-did-interact input:checked ~ .btn-face { animation: none; }
-  :root .clicky-toggle.toggle-did-interact:not(:has(input:checked)) .btn-face,
-  :root .clicky-toggle.toggle-did-interact input:not(:checked) ~ .btn-face { animation: none; }
-  :root .clicky-toggle .btn-wall,
-  :root .clicky-toggle:has(input:checked) .btn-wall,
-  :root .clicky-toggle input:checked ~ .btn-wall,
-  :root .clicky-toggle.toggle-did-interact .btn-wall { transition: none; animation: none; }
-  :root .clicky-toggle .btn-icon,
-  :root .clicky-toggle:has(input:checked) .btn-icon,
-  :root .clicky-toggle input:checked ~ .btn-face .btn-icon,
-  :root .clicky-toggle.toggle-did-interact .btn-icon { transition: none; animation: none; }
+  :root .clicky-btn .btn-face,
+  :root .clicky-btn:active .btn-face,
+  :root .clicky-btn.clicky-press .btn-face,
+  :root .clicky-btn .btn-wall,
+  :root .clicky-btn.clicky-press .btn-wall,
+  :root .clicky-btn .btn-icon,
+  :root .clicky-btn:active .btn-icon,
+  :root .clicky-btn.clicky-press .btn-icon { transition: none; animation: none; }
 }
 
 

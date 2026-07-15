@@ -78,6 +78,8 @@ export const ClickyConfigSchema = z.object({
   highlightOpacity: pct0to100,
   rimHeightRatio: pct0to100,
   faceEdgeAlpha: pct0to100,
+  // Independent rim light (issue #74). false = off (D3).
+  rimIndependent: z.boolean(),
 
   // Press/toggle face color + darken
   usePressColor: z.boolean(),
@@ -159,6 +161,8 @@ export const ClickyConfigSchema = z.object({
   lightAngleX: pct0to100,
   lightAngleY: pct0to100,
   specularSize: pct0to100,
+  // Independent specular layer (issue #73). false = off (D3).
+  specularIndependent: z.boolean(),
   contactIntensity: pct0to100,
 
   // Per-button variants (issue #29) — v1: color + icon family only.
@@ -173,6 +177,21 @@ export const ClickyConfigSchema = z.object({
       toggleColor: z.string().optional(),
     }),
   ).default({}),
+
+  // Travelling halo + lit channel (issue #53/#56 v2 element tree). '' = off
+  // (D3) — see lib/clicky-button.js's ClickyConfig typedef for
+  // glowColor/glowIntensity.
+  glowColor: z.string(),
+  glowIntensity: pct0to100,
+
+  // Unclipped focus ring (issue #58). false = off (D3).
+  focusUnclipped: z.boolean(),
+
+  // True beveled face edge (issue #68). 'none' = off (D3).
+  bevelStyle: z.enum(['none', 'beveled']),
+
+  // Face tolerance gap (issue #76). 0 = off (D3).
+  faceTolerance: z.number().min(0),
 });
 
 /** @typedef {import('zod').infer<typeof ClickyConfigSchema>} ClickyConfigParsed */

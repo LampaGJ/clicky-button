@@ -84,3 +84,96 @@ describe('conic-gradient corner bevel (issue #18)', () => {
     expect(ringBlock).toContain('border-radius: var(--radius-bot);');
   });
 });
+
+// Root fixes for the v2 element tree's "reflected light must not dim on
+// press" defect (epic #56 §5: #73/#74 both IN v1). Both effects currently
+// share an element with `.btn-face`'s own press-darkened background-color/
+// box-shadow — a real highlight cannot dim because the key moved. These
+// tests would FAIL against the pre-#73/#74 implementation: the gate simply
+// didn't exist, so the gradient/rim were unconditionally baked into the
+// shared, co-animating rule whenever specularAlpha/the highlight were in
+// use — there was no way to observe them living anywhere else.
+describe('independent specular & rim light (issues #73/#74)', () => {
+  // `.btn-face`'s resting rule appears more than once in the source text
+  // (":root .clicky-btn .btn-face {" / ":active" / ".clicky-press" /
+  // ":focus-visible" variants) — anchor on the exact resting-state opening
+  // line (sharedFaceCssProps' output, the one with the animating
+  // background-color) and slice to its closing brace.
+  function extractRule(css, openLine) {
+    const start = css.indexOf(openLine);
+    expect(start, `expected to find "${openLine}" in the generated CSS`).toBeGreaterThanOrEqual(0);
+    const end = css.indexOf('\n}', start);
+    return css.slice(start, end);
+  }
+
+  it('#73 default (specularIndependent: false) still inlines the hotspot on .btn-face itself — documents the shared-element behavior being fixed', () => {
+    const css = buildClickyCss({ specularAlpha: 40 });
+    const faceRule = extractRule(css, ':root .clicky-btn .btn-face {');
+    expect(faceRule).toContain('radial-gradient(circle at var(--light-x) var(--light-y)');
+    expect(faceRule).toContain('background-blend-mode: soft-light');
+    // Same rule that also carries the press-darkened background-color.
+    expect(faceRule).toContain('background-color: var(--face-color);');
+  });
+
+  it('#73 specularIndependent moves the hotspot OFF .btn-face (which still press-darkens) and onto its own .btn-face::after layer', () => {
+    const css = buildClickyCss({ specularIndependent: true, specularAlpha: 40 });
+
+    const faceRule = extractRule(css, ':root .clicky-btn .btn-face {');
+    expect(faceRule).not.toContain('radial-gradient');
+    expect(faceRule).not.toContain('background-blend-mode');
+    // .btn-face's own background-color still press-darkens — untouched.
+    expect(faceRule).toContain('background-color: var(--face-color);');
+
+    expect(css).toContain('.btn-face::after {');
+    const afterRule = extractRule(css, ':root .btn-face::after {');
+    expect(afterRule).toContain('radial-gradient(circle at var(--light-x) var(--light-y)');
+    // The whole point: this layer never reads the press/toggle-darkened
+    // face colors, so it can never dim because the key moved.
+    expect(afterRule).not.toContain('--face-pressed');
+    expect(afterRule).not.toContain('--face-toggled');
+    expect(afterRule).not.toContain('background-blend-mode');
+  });
+
+  it('#73 specularIndependent with specularAlpha at 0 emits neither the inline gradient nor the overlay (nothing to show)', () => {
+    const css = buildClickyCss({ specularIndependent: true });
+    expect(css).not.toContain('.btn-face::after');
+    expect(css).not.toContain('radial-gradient');
+  });
+
+  it('#74 default (rimIndependent: false) still bakes the rim into the shared, press-co-animated box-shadow stack — documents the behavior being fixed', () => {
+    const vars = buildClickyVars({});
+    // L3, the rim highlight, present unconditionally in BOTH the resting
+    // and pressed face-shadow strings — the SAME property whose L1/L2
+    // layers activate (and spatially overlay it) only while pressed.
+    expect(vars['--face-shadow-resting']).toContain('rgba(255, 255, 255, 0.300)');
+    expect(vars['--face-shadow-pressed']).toContain('rgba(255, 255, 255, 0.300)');
+  });
+
+  it('#74 rimIndependent neutralizes the shared-stack rim and hosts a standalone --rim-shadow on .btn-face::before instead', () => {
+    const vars = buildClickyVars({ rimIndependent: true });
+    // Neutralized (L0's transparent placeholder), not merely duplicated —
+    // otherwise the old, still-dimming copy would remain visible alongside
+    // the new independent one.
+    expect(vars['--face-shadow-resting']).not.toContain('rgba(255, 255, 255');
+    expect(vars['--face-shadow-pressed']).not.toContain('rgba(255, 255, 255');
+    expect(vars['--rim-shadow']).toContain('rgba(255, 255, 255, 0.300)');
+    // Identical geometry either way — moving it changes WHERE it lives,
+    // never the highlight itself.
+    expect(vars['--rim-shadow']).toContain('inset 0');
+
+    const css = buildClickyCss({ rimIndependent: true });
+    expect(css).toContain('.btn-face::before {');
+    const beforeRule = extractRule(css, ':root .btn-face::before {');
+    expect(beforeRule).toContain('var(--rim-shadow)');
+  });
+
+  it('#68 + #74 together: the bevel and the independent rim share ONE box-shadow property on .btn-face::before, never two competing rules', () => {
+    const css = buildClickyCss({ bevelStyle: 'beveled', rimIndependent: true });
+    const matches = [...css.matchAll(/:root \.btn-face::before \{/g)];
+    expect(matches.length).toBe(1);
+    const beforeRule = extractRule(css, ':root .btn-face::before {');
+    expect(beforeRule).toContain('rgba(255, 255, 255, var(--frame-bevel-alpha))');
+    expect(beforeRule).toContain('rgba(0, 0, 0, var(--frame-bevel-alpha-shadow))');
+    expect(beforeRule).toContain('var(--rim-shadow)');
+  });
+});

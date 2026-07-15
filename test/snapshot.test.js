@@ -140,3 +140,50 @@ describe('snapshot: tri-state radio (issue #37, slicer-dev-v1 example)', () => {
       .toMatchFileSnapshot('__snapshots__/html-tristate.html');
   });
 });
+
+// v2 element tree (epic #56). Byte-stability pins the DEFAULT output; these pin
+// the ENABLED output, so a future change to any gated layer has to declare
+// itself in a reviewable diff rather than sliding through unnoticed.
+describe('snapshot: v2 element tree (epic #56)', () => {
+  it('CSS: glow — .btn-slot + travelling halo + lit channel (#53)', async () => {
+    await expect(buildClickyCss({ glowColor: '#44aaff', glowIntensity: 70 }))
+      .toMatchFileSnapshot('__snapshots__/css-v2-glow.css');
+  });
+
+  it('HTML: the slot and its halo child exist only when a glow is configured (#53/#67)', async () => {
+    await expect(buildClickyHtml({ label: 'GLOW', config: { glowColor: '#44aaff' } }))
+      .toMatchFileSnapshot('__snapshots__/html-v2-glow.html');
+  });
+
+  it('CSS: unclipped focus ring (#58)', async () => {
+    await expect(buildClickyCss({ focusUnclipped: true }))
+      .toMatchFileSnapshot('__snapshots__/css-v2-focus-unclipped.css');
+  });
+
+  it('CSS: true beveled face edge — .btn-face::before (#68)', async () => {
+    await expect(buildClickyCss({ bevelStyle: 'beveled' }))
+      .toMatchFileSnapshot('__snapshots__/css-v2-bevel.css');
+  });
+
+  it('CSS: face tolerance gap — real clearance inside the cell (#76)', async () => {
+    await expect(buildClickyCss({ faceTolerance: 3 }))
+      .toMatchFileSnapshot('__snapshots__/css-v2-tolerance.css');
+  });
+
+  it('CSS: independent specular layer — .btn-face::after, survives press-darken (#73)', async () => {
+    await expect(buildClickyCss({ specularIndependent: true, specularAlpha: 40 }))
+      .toMatchFileSnapshot('__snapshots__/css-v2-specular-independent.css');
+  });
+
+  it('CSS: independent rim light — .btn-face::before, survives press-darken (#74)', async () => {
+    await expect(buildClickyCss({ rimIndependent: true }))
+      .toMatchFileSnapshot('__snapshots__/css-v2-rim-independent.css');
+  });
+
+  it('CSS: every v2 layer on at once, composed with skew + per-corner radius', async () => {
+    await expect(buildClickyCss({
+      glowColor: '#44aaff', focusUnclipped: true, bevelStyle: 'beveled',
+      faceTolerance: 3, skewXAngle: 8, radiusCorners: { tl: 20, tr: 0, br: 20, bl: 0 },
+    })).toMatchFileSnapshot('__snapshots__/css-v2-all-on.css');
+  });
+});
