@@ -1,0 +1,439 @@
+/* --- Clicky Button --- */
+:root {
+  --grid-direction: row;
+  --grid-wrap: wrap;
+  --grid-gap: 12px;
+  --grid-justify: center;
+  --grid-align: center;
+  --housing-width: 208px;
+  --housing-height: 102px;
+  --container-width: 180px;
+  --container-height: 88px;
+  --radius: 14px;
+  --radius-bot: 25px;
+  --face-color: #c8c0b4;
+  --face-pressed: #c8c0b4;
+  --face-toggled: #c8c0b4;
+  --text-color: #1a1a1a;
+  --font-size: min(14px, 19px);
+  --font-weight: 700;
+  --letter-spacing: 0.08em;
+  --border: none;
+  --focus-color: #5b8dee;
+  --focus-size: 3px;
+  --hover-lift: 2px;
+  --text-wrap: normal;
+  --icon-size: 1.2em;
+  --icon-gap: 8px;
+  --icon-color: currentColor;
+  --icon-fill: 0;
+  --icon-color-pressed: #1a1a1a;
+  --light-x: 50%;
+  --light-y: 25%;
+  --specular-alpha: 0.400;
+  --specular-size: 60%;
+  --button-wall-color: #c8c0b4;
+  --button-wall-shadow-alpha: 0.850;
+  --button-wall-shadow-edge-ratio: 0.500;
+  --button-wall-gradient-lo: 40%;
+  --button-wall-gradient-hi: 60%;
+  --cavity-wall-color: #b8bcc0;
+  --cavity-wall-shadow-alpha: 0.850;
+  --cavity-wall-shadow-edge-ratio: 0.500;
+  --cavity-wall-gradient-lo: 40%;
+  --cavity-wall-gradient-hi: 60%;
+  --ambient-color: rgba(0, 0, 0, 0.250);
+  --ambient-blur: 42px;
+  --ambient-y: 21px;
+  --ambient-spread: 0px;
+  --housing-shadow: 0 21px 42px 0 rgba(0, 0, 0, 0.250);
+  --housing-shadow-pressed: 0 11px 21px 0 rgba(0, 0, 0, 0.125);
+  --face-shadow-resting: inset 0 0 0 0 transparent,
+    inset 0 0 0 0 rgba(0, 0, 0, 0.550),
+    inset 0 0 0 0 rgba(0, 0, 0, 0.280),
+    inset 0 7px 4px 0 rgba(255, 255, 255, 0.300),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.000);
+  --face-shadow-pressed: inset 0 0 0 0 transparent,
+    inset 0 0 0 0 rgba(0, 0, 0, 0.550),
+    inset 0 0 0 0 rgba(0, 0, 0, 0.280),
+    inset 0 7px 4px 0 rgba(255, 255, 255, 0.300),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.000);
+  --wall-h: 14px;
+  --press-translate: 14px;
+  --toggle-height: 7px;
+  --frame-width: 14px;
+  --frame-color: #b8bcc0;
+  --frame-color-hi: #e8e8ec;
+  --frame-color-lo: #8c9094;
+  --frame-bevel-alpha: 0.500;
+  --frame-bevel-alpha-shadow: 0.350;
+  --frame-bevel-width: 1px;
+  --duration: 160ms;
+  --press-duration: 80ms;
+  --shadow-flush-frac: 1.000;
+  --shadow-press-delay: calc(var(--press-duration) * 1.000);
+  --shadow-press-dur: calc(var(--press-duration) * 0.000);
+  --shadow-release-dur: calc(var(--duration) * 0.000);
+  --color-anim-delay-frac: 0.000;
+  --color-anim-frac: 1.000;
+  --transform-easing: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --shadow-ease-press: linear;
+  --shadow-ease-release: linear;
+}
+
+@supports (width: 1cqi) {
+    :root {
+      --font-size: min(8cqi, 22cqb);
+      --face-shadow-resting: inset 0 0 0 0 transparent,
+    inset 0 0 0 0 rgba(0, 0, 0, 0.550),
+    inset 0 0 0 0 rgba(0, 0, 0, 0.280),
+    inset 0 8cqb 4cqb 0 rgba(255, 255, 255, 0.300),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.000);
+      --face-shadow-pressed: inset 0 0 0 0 transparent,
+    inset 0 0 0 0 rgba(0, 0, 0, 0.550),
+    inset 0 0 0 0 rgba(0, 0, 0, 0.280),
+    inset 0 8cqb 4cqb 0 rgba(255, 255, 255, 0.300),
+    inset 0 -1px 0 0 rgba(0, 0, 0, 0.000);
+    }
+  }
+
+/* Grid wrapper */
+:root .btn-grid {
+  display: flex;
+  flex-direction: var(--grid-direction);
+  flex-wrap: var(--grid-wrap);
+  gap: var(--grid-gap);
+  justify-content: var(--grid-justify);
+  align-items: var(--grid-align);
+}
+
+:root .btn-housing {
+  position: relative;
+  width: var(--housing-width);
+  max-width: 100%;
+  height: var(--housing-height);
+  border-radius: var(--radius-bot);
+  overflow: hidden;
+  background: linear-gradient(
+    to bottom,
+    var(--frame-color-hi) 0%,
+    var(--frame-color)    55%,
+    var(--frame-color-lo) 100%
+  );
+  box-shadow:
+    inset 0 var(--frame-bevel-width) 0 0 rgba(255, 255, 255, var(--frame-bevel-alpha)),
+    inset 0 calc(-1 * var(--frame-bevel-width)) 0 0 rgba(0, 0, 0, var(--frame-bevel-alpha-shadow)),
+    inset var(--frame-bevel-width) 0 0 0 rgba(255, 255, 255, var(--frame-bevel-alpha)),
+    inset calc(-1 * var(--frame-bevel-width)) 0 0 0 rgba(0, 0, 0, var(--frame-bevel-alpha-shadow)),
+    var(--housing-shadow);
+  transition: box-shadow var(--duration) var(--shadow-ease-release);
+}
+
+:root .btn-housing:has(.clicky-btn:active),
+:root .btn-housing:has(.clicky-toggle input:checked) {
+  box-shadow:
+    inset 0 var(--frame-bevel-width) 0 0 rgba(255, 255, 255, var(--frame-bevel-alpha)),
+    inset 0 calc(-1 * var(--frame-bevel-width)) 0 0 rgba(0, 0, 0, var(--frame-bevel-alpha-shadow)),
+    inset var(--frame-bevel-width) 0 0 0 rgba(255, 255, 255, var(--frame-bevel-alpha)),
+    inset calc(-1 * var(--frame-bevel-width)) 0 0 0 rgba(0, 0, 0, var(--frame-bevel-alpha-shadow)),
+    var(--housing-shadow-pressed);
+  transition: box-shadow var(--press-duration) var(--shadow-ease-press);
+}
+
+:root .btn-cell {
+  position: absolute;
+  top: max(0px, calc(var(--frame-width) - var(--wall-h)));
+  left: var(--frame-width);
+  right: var(--frame-width);
+  height: var(--container-height);
+  container-type: size;
+  overflow: hidden;
+  border-radius: max(0px, calc(var(--radius-bot) - max(0px, calc(var(--frame-width) - var(--wall-h))))) max(0px, calc(var(--radius-bot) - max(0px, calc(var(--frame-width) - var(--wall-h))))) var(--radius) var(--radius);
+  background: transparent;
+}
+
+:root .btn-cell::before {
+  content: '';
+  position: absolute;
+  /* The cavity's top edge sits exactly where the face lands when it goes
+     FLUSH — one wall-height below the resting face. Until the key has sunk
+     that far its own wall band still fills the gap, so nothing of the recess
+     may show; only once the visible wall reaches zero does the cavity start
+     to be revealed from its top edge. (Pinning this to --frame-width instead
+     leaked the recess in from the first pixel of travel on any key whose wall
+     is deeper than its frame — most visibly on frameless deep-travel keys,
+     where fw is 0.)
+     Slight 1px inflation on the visible edges prevents sub-pixel anti-alias
+     gaps where the dark wall corner meets the bright chrome surround. */
+  top: var(--wall-h);
+  left: -1px;
+  right: -1px;
+  bottom: -1px;
+  /* Square-topped, exactly like .btn-wall (which needed the same correction):
+     the cavity's top edge is the channel's straight edge, not a corner. Giving
+     it a full radius here drew a THIRD arc inside the cell's own clip arc, so
+     the revealed recess band terminated in a sharp cusp at the top corners.
+     The cell's clip supplies the outer curve; the face supplies the inner one. */
+  border-radius: 0 0 var(--radius) var(--radius);
+  /* Cavity wall — the static inside of the housing slot, revealed above the
+     key as it presses down. Base defaults to the chrome frame color; the
+     cavity-alpha dark gradient is multiplied on top for the recessed edge
+     shadow. Flip useCavityWallColor to set an independent cavity color. (The
+     moving button-side wall is its own separate element, .btn-wall — see
+     buildButtonWallCss — not a drop-shadow of the cap; it carries its own
+     independent L-R gradient from its own button-wall vars.) */
+  background-color: var(--cavity-wall-color);
+  background-image: linear-gradient(
+    to right,
+    rgba(0, 0, 0, var(--cavity-wall-shadow-alpha))                                                0%,
+    rgba(0, 0, 0, calc(var(--cavity-wall-shadow-alpha) * var(--cavity-wall-shadow-edge-ratio))) var(--cavity-wall-gradient-lo),
+    rgba(0, 0, 0, calc(var(--cavity-wall-shadow-alpha) * var(--cavity-wall-shadow-edge-ratio))) var(--cavity-wall-gradient-hi),
+    rgba(0, 0, 0, var(--cavity-wall-shadow-alpha))                                              100%
+  );
+  background-blend-mode: multiply;
+  pointer-events: none;
+}
+
+/* Click mode */
+:root .clicky-btn {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+:root .clicky-btn:focus-visible { outline: none; }
+
+:root .clicky-btn .btn-face {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: calc(100% - var(--wall-h));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--icon-gap);
+  border-radius: var(--radius);
+  background-color: var(--face-color);
+  color: var(--text-color);
+  font-size: var(--font-size);
+  font-weight: var(--font-weight);
+  letter-spacing: var(--letter-spacing);
+  text-indent: var(--letter-spacing);
+  font-family: inherit;
+  border: var(--border);
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  text-align: center;
+  white-space: var(--text-wrap);
+  text-wrap: balance;
+  overflow-wrap: normal;
+  word-break: normal;
+  overflow: hidden;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-inline: calc(var(--radius) * 0.5);
+  box-shadow:
+    var(--face-shadow-resting);
+  transition:
+    transform 100ms ease-out,
+    box-shadow var(--duration) var(--shadow-ease-release),
+    background-color var(--duration) var(--shadow-ease-release);
+}
+
+@media (hover: hover) {
+  :root .clicky-btn:hover:not(:active):not(.clicky-press) .btn-face,
+  :root .clicky-btn:hover:not(:active):not(.clicky-press) .btn-wall {
+    transform: translateY(calc(-1 * var(--hover-lift)));
+  }
+}
+
+:root .clicky-btn:active .btn-face {
+  transform: translateY(var(--press-translate));
+  box-shadow:
+    var(--face-shadow-pressed);
+  background-color: var(--face-pressed);
+  transition:
+    transform var(--press-duration) var(--transform-easing),
+    box-shadow var(--shadow-press-dur) var(--shadow-ease-press) var(--shadow-press-delay),
+    background-color var(--press-duration) var(--shadow-ease-press);
+}
+
+:root .clicky-btn:active .btn-wall {
+  transform: translateY(var(--press-translate));
+  transition: transform var(--press-duration) var(--shadow-ease-press);
+}
+
+/* Full press cycle — runs resting → pressed → resting on every click.
+   Triggered by adding .clicky-press class via JS on pointerdown:
+     btn.addEventListener('pointerdown', () => {
+       btn.classList.remove('clicky-press');
+       void btn.offsetWidth;
+       btn.classList.add('clicky-press');
+     });
+     btn.addEventListener('animationend', e => {
+       if (e.animationName.startsWith('clicky-transform-cycle-217lh5'))
+         btn.classList.remove('clicky-press');
+     });
+   The animation runs to completion regardless of click duration. Holding the
+   button does NOT keep it pressed — the animation always completes its cycle
+   and returns to resting. Plain, JS-free holds (keyboard Space, a static tap)
+   are handled instead by the .clicky-btn:active .btn-face rule above, which
+   applies the pressed property values for as long as :active is true. */
+
+@keyframes clicky-transform-cycle-217lh5 {
+  0%, 100%   { transform: translateY(0); }
+  33.33% { transform: translateY(var(--press-translate)); }
+}
+
+/* The recess shadow holds its resting value until the face goes FLUSH
+   (33.33% of the cycle), ramps only while the face is below the
+   plate, and is gone again the moment it clears on the way up
+   (33.33%). Those two windows are different lengths — which is why
+   the offsets carry the timing here rather than one centred delay. */
+@keyframes clicky-shadow-cycle-217lh5 {
+  /* press depth never carries the face below flush ⇒ never recessed */
+  0%, 100% { box-shadow: var(--face-shadow-resting); }
+}
+
+@keyframes clicky-color-cycle-217lh5 {
+  0%, 100%   { background-color: var(--face-color); }
+  33.33% { background-color: var(--face-pressed); }
+}
+
+:root .clicky-btn.clicky-press .btn-face {
+  animation-name: clicky-transform-cycle-217lh5, clicky-shadow-cycle-217lh5, clicky-color-cycle-217lh5;
+  animation-duration:
+    calc(var(--press-duration) + var(--duration)),
+    calc(var(--press-duration) + var(--duration)),
+    calc((var(--press-duration) + var(--duration)) * var(--color-anim-frac));
+  animation-timing-function: linear, linear, linear;
+  animation-delay:
+    0s,
+    0s,
+    calc((var(--press-duration) + var(--duration)) * var(--color-anim-delay-frac));
+  animation-fill-mode: forwards, forwards, forwards;
+}
+
+/* The wall mirrors only the cap's transform (reusing the transform-only
+   keyframe), so it stays glued to the cap through the press cycle. */
+:root .clicky-btn.clicky-press .btn-wall {
+  animation: clicky-transform-cycle-217lh5 calc(var(--press-duration) + var(--duration)) linear forwards;
+}
+
+/* Icon press-darken (realism pack #7d) — the icon participates in the same
+   darken effect as the face. Two paths must both be covered: the pseudo-class
+   path (:active / :has(input:checked)) for held presses, AND a parallel
+   keyframe animation for the JS-driven full press cycle — a parent's animated
+   background-color does not cascade into a child element's color, so .btn-icon
+   needs its own animation-name list (animation-name is per-element). */
+@keyframes clicky-icon-color-cycle {
+  0%, 100% { color: var(--icon-color); }
+  50%      { color: var(--icon-color-pressed); }
+}
+
+:root .clicky-btn:active .btn-icon {
+  color: var(--icon-color-pressed);
+  transition: color var(--press-duration) var(--shadow-ease-press);
+}
+
+:root .clicky-btn.clicky-press .btn-icon {
+  animation-name: clicky-icon-color-cycle;
+  animation-duration: calc((var(--press-duration) + var(--duration)) * var(--color-anim-frac));
+  animation-timing-function: linear;
+  animation-delay: calc((var(--press-duration) + var(--duration)) * var(--color-anim-delay-frac));
+  animation-fill-mode: forwards;
+}
+
+:root .clicky-btn:focus-visible .btn-face {
+    background-color: #b4b7be;
+background-color: color-mix(in srgb, #5b8dee 18%, var(--face-color));
+  }
+
+@media (prefers-reduced-motion: reduce) {
+  :root .clicky-btn .btn-face,
+  :root .clicky-btn:active .btn-face,
+  :root .clicky-btn.clicky-press .btn-face,
+  :root .clicky-btn .btn-wall,
+  :root .clicky-btn.clicky-press .btn-wall,
+  :root .clicky-btn .btn-icon,
+  :root .clicky-btn:active .btn-icon,
+  :root .clicky-btn.clicky-press .btn-icon { transition: none; animation: none; }
+}
+
+
+/* Button wall — moving side of the keycap, behind the cap. */
+:root .btn-wall {
+  position: absolute;
+  left: 0;
+  right: 0;
+  /* True extrusion of the cap, not a congruent copy: a square-topped slab
+     that starts below the cap's corner arcs (max(wall-h, radius)) so its
+     straight sides fill the corner waist a shifted copy would leave, rounded
+     only at the bottom. The square top stays hidden behind the opaque cap
+     (both share every transform). The extra hover-lift overshoots the clipped
+     cell bottom at rest, then pulls flush on hover so the rising key never
+     exposes a strip of cavity. */
+  top: calc(max(var(--wall-h), var(--radius)) + var(--hover-lift));
+  height: calc(100% - max(var(--wall-h), var(--radius)));
+  border-radius: 0 0 var(--radius) var(--radius);
+  background-color: var(--button-wall-color);
+  background-image: linear-gradient(
+    to right,
+    rgba(0, 0, 0, var(--button-wall-shadow-alpha))                                                  0%,
+    rgba(0, 0, 0, calc(var(--button-wall-shadow-alpha) * var(--button-wall-shadow-edge-ratio))) var(--button-wall-gradient-lo),
+    rgba(0, 0, 0, calc(var(--button-wall-shadow-alpha) * var(--button-wall-shadow-edge-ratio))) var(--button-wall-gradient-hi),
+    rgba(0, 0, 0, var(--button-wall-shadow-alpha))                                                100%
+  );
+  background-blend-mode: multiply;
+  pointer-events: none;
+  transition: transform 100ms ease-out;
+}
+
+/* Button label — wraps the face text so it stays clipped to the cap. */
+:root .btn-label {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: inherit;
+}
+
+/* Button icon — a Material Symbols glyph rendered as a ligature beside the
+   label. Self-contained font declaration so exported buttons need only the
+   Material Symbols Rounded font <link> (added to exported HTML when an icon is
+   in use). FILL is driven by --icon-fill (0 outline, 1 solid). */
+:root .btn-icon {
+  flex: 0 0 auto;
+  font-family: 'Material Symbols Rounded';
+  font-weight: normal;
+  font-style: normal;
+  font-size: var(--icon-size);
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  color: var(--icon-color);
+  -webkit-font-smoothing: antialiased;
+  font-variation-settings: 'FILL' var(--icon-fill), 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  transition: color var(--duration) var(--shadow-ease-release);
+}
+
+:root .btn-face::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background-image: radial-gradient(circle at var(--light-x) var(--light-y), rgba(255, 255, 255, var(--specular-alpha)) 0%, transparent var(--specular-size));
+    pointer-events: none;
+  }

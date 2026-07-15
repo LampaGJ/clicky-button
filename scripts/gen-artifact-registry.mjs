@@ -131,6 +131,9 @@ const REPRESENTATIVE_VAR_CONFIGS = [
   { frameEnabled: true, frameBevelConic: true },
   { frameEnabled: false },
   { faceTolerance: 3 },
+  // Independent rim light (issue #74) — --rim-shadow only exists once
+  // rimIndependent is on (D3).
+  { rimIndependent: true },
 ];
 
 async function discoverCssVarKeys(lib) {
@@ -184,6 +187,13 @@ function isExcludedClass(cls) {
   const PSEUDO_DISCOVERY_CONFIGS = [
     {},
     { bevelStyle: 'beveled' },
+    // Independent rim light (issue #74) — also hosted on `.btn-face::before`,
+    // alongside (or instead of) the bevel above.
+    { rimIndependent: true },
+    // Independent specular layer (issue #73) — hosted on `.btn-face::after`;
+    // needs specularAlpha > 0 (the default, so no extra override needed) to
+    // actually emit the rule.
+    { specularIndependent: true },
   ];
 
   async function discoverPseudoSelectors(lib) {
@@ -193,6 +203,7 @@ function isExcludedClass(cls) {
       if (gridCss.includes('.btn-cell::before')) found.add('btn-cell::before');
       const fullCss = lib.buildClickyCss(cfg);
       if (fullCss.includes('.btn-face::before')) found.add('btn-face::before');
+      if (fullCss.includes('.btn-face::after')) found.add('btn-face::after');
     }
     return found;
   }

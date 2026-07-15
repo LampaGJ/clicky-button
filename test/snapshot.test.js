@@ -170,6 +170,16 @@ describe('snapshot: v2 element tree (epic #56)', () => {
       .toMatchFileSnapshot('__snapshots__/css-v2-tolerance.css');
   });
 
+  it('CSS: independent specular layer — .btn-face::after, survives press-darken (#73)', async () => {
+    await expect(buildClickyCss({ specularIndependent: true, specularAlpha: 40 }))
+      .toMatchFileSnapshot('__snapshots__/css-v2-specular-independent.css');
+  });
+
+  it('CSS: independent rim light — .btn-face::before, survives press-darken (#74)', async () => {
+    await expect(buildClickyCss({ rimIndependent: true }))
+      .toMatchFileSnapshot('__snapshots__/css-v2-rim-independent.css');
+  });
+
   it('CSS: every v2 layer on at once, composed with skew + per-corner radius', async () => {
     await expect(buildClickyCss({
       glowColor: '#44aaff', focusUnclipped: true, bevelStyle: 'beveled',
