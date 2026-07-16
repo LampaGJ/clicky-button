@@ -199,11 +199,12 @@
   left: -1px;
   right: -1px;
   bottom: -1px;
-  /* Square-topped, exactly like .btn-wall (which needed the same correction):
-     the cavity's top edge is the channel's straight edge, not a corner. Giving
-     it a full radius here drew a THIRD arc inside the cell's own clip arc, so
-     the revealed recess band terminated in a sharp cusp at the top corners.
-     The cell's clip supplies the outer curve; the face supplies the inner one. */
+  /* Fully rounded, matching the cell/cap radius so the three are concentric.
+     A square top ('0 0 R R') used to be needed to avoid a resting cusp when the
+     cavity radius did NOT match the cell's; after the equal-ring/floor work the
+     radii coincide, so the round cavity nests cleanly — and the square top was
+     itself causing a dark wedge at the top corners mid-press, where its square
+     corner poked behind the round cap as the channel opened (issue #90). */
   border-radius: var(--radius-tl) var(--radius-tr) var(--radius-br) var(--radius-bl);
   /* Cavity wall — the static inside of the housing slot, revealed above the
      key as it presses down. Base defaults to the chrome frame color; the
