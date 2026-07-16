@@ -204,7 +204,7 @@
      it a full radius here drew a THIRD arc inside the cell's own clip arc, so
      the revealed recess band terminated in a sharp cusp at the top corners.
      The cell's clip supplies the outer curve; the face supplies the inner one. */
-  border-radius: 0 0 var(--radius-br) var(--radius-bl);
+  border-radius: var(--radius-tl) var(--radius-tr) var(--radius-br) var(--radius-bl);
   /* Cavity wall — the static inside of the housing slot, revealed above the
      key as it presses down. Base defaults to the chrome frame color; the
      cavity-alpha dark gradient is multiplied on top for the recessed edge

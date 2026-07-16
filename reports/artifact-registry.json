@@ -72,7 +72,7 @@
     "api:buildClickyCss": {
       "id": "api:buildClickyCss",
       "sourceFile": "lib/clicky-button.js",
-      "sourceLine": 3224,
+      "sourceLine": 3231,
       "displayName": "CSS Bundle Builder (Public API)",
       "strategicPurpose": "The single entry point that turns a ClickyConfig into the complete, self-contained stylesheet a page needs to render and animate a clicky button — the \"Option B\" runtime-generation path the README documents alongside the static export.",
       "tacticalObjective": "Validates config, merges it over defaultClickyConfig, and returns the full CSS string (var block + `@supports` cq-unit override + every scoped rule) for the given scope selector.",
@@ -82,7 +82,7 @@
     "api:buildClickyGroupHtml": {
       "id": "api:buildClickyGroupHtml",
       "sourceFile": "lib/clicky-button.js",
-      "sourceLine": 3354,
+      "sourceLine": 3361,
       "displayName": "Button-Group HTML Builder (Public API)",
       "strategicPurpose": "Issue #36/#37's promoted public entry point for rendering MULTIPLE buttons that must agree on layout — either N independent housings (default) or N segments sharing one housing — so gallery.html and any consumer no longer hand-assembles the grid the way gallery.html used to before this existed.",
       "tacticalObjective": "Delegates to buildGridHtml for the 'separate' layout or buildSegmentedHousingHtml for 'segmented' (click/toggle/radio), enforcing the identity args (`name`/`values`/`checked`) a radio group needs at call time rather than in config.",
@@ -92,7 +92,7 @@
     "api:buildClickyHtml": {
       "id": "api:buildClickyHtml",
       "sourceFile": "lib/clicky-button.js",
-      "sourceLine": 3254,
+      "sourceLine": 3261,
       "displayName": "Single-Button HTML Builder (Public API)",
       "strategicPurpose": "The markup half of the \"Option B\" runtime-generation path — stamps one button's housing→cell→face DOM tree so a consumer never hand-writes the class list buildClickyCss's selectors expect.",
       "tacticalObjective": "Validates config, resolves the label slug and icon markup, and returns one `.btn-housing` tree in click or toggle mode; throws for `housingLayout: 'segmented'` (use buildClickyGroupHtml) and for an empty label with no aria-label.",
@@ -102,7 +102,7 @@
     "api:buildClickyVars": {
       "id": "api:buildClickyVars",
       "sourceFile": "lib/clicky-button.js",
-      "sourceLine": 3387,
+      "sourceLine": 3394,
       "displayName": "CSS Custom-Property Map Accessor (Public API)",
       "strategicPurpose": "The lower-level escape hatch onto buildVarMap's output for a consumer that wants the raw `--*` values without a full stylesheet — e.g. to drive an external animation library off the same numbers the CSS itself uses.",
       "tacticalObjective": "Validates config, merges it over defaultClickyConfig, and returns the flat `Record<string,string>` buildVarMap produces.",
@@ -152,7 +152,7 @@
     "api:internals": {
       "id": "api:internals",
       "sourceFile": "lib/clicky-button.js",
-      "sourceLine": 3410,
+      "sourceLine": 3417,
       "displayName": "Internals Escape Hatch (Public API)",
       "strategicPurpose": "The generator UI (app.js) and advanced consumers need direct access to individual builder functions (e.g. to preview one CSS fragment, or drive per-state shadow computation in the 3D view) without re-implementing them — exporting them under one namespace keeps that access explicit and auditable instead of consumers reaching into unexported closures.",
       "tacticalObjective": "Re-exports every internal builder/helper function (buildVarMap, buildGridCss, buildButtonWallCss, resolveSkew, deriveFaceColorFamily, scopeCssBlock, validateClickyConfig, etc.) under one object, for advanced consumers and the generator UI — not part of the stable versioned contract the way the top-level exports are.",
@@ -769,7 +769,7 @@
       "buildClickFaceCss": {
         "id": "builder:buildClickFaceCss",
         "sourceFile": "lib/clicky-button.js",
-        "sourceLine": 2458,
+        "sourceLine": 2465,
         "displayName": "Click-Mode Face Rule + Keyframe Emitter",
         "strategicPurpose": "Click mode's whole interaction model — a spring that always completes its cycle once triggered, holds only while :active — lives here, split into three independently-timed CSS properties (transform/shadow/color) per the issue #12/#16 pattern, so a future edit to one property's timing can never silently desync another's.",
         "tacticalObjective": "Emits `.clicky-btn` (and its `:hover`/`:active`/`:focus-visible` states) plus the clicky-transform-cycle, clicky-shadow-cycle, clicky-color-cycle, and clicky-icon-color-cycle keyframes used by the JS-driven full press-and-release bounce.",
@@ -789,7 +789,7 @@
       "buildToggleFaceCss": {
         "id": "builder:buildToggleFaceCss",
         "sourceFile": "lib/clicky-button.js",
-        "sourceLine": 2645,
+        "sourceLine": 2652,
         "displayName": "Toggle/Radio-Mode Face Rule + Keyframe Emitter",
         "strategicPurpose": "Toggle mode (and radio, built on top of it per issue #37 — `:has(input:checked)` is input-type-agnostic) needs a persistent checked-state read, not just a momentary press, so its rules and keyframes are a parallel but distinct system from click mode's, sharing only the visual language.",
         "tacticalObjective": "Emits `.clicky-toggle` (and its checked/hover/focus states) plus the toggle-press-on, toggle-press-off, toggle-xform-on, toggle-xform-off, toggle-icon-color-on, and toggle-icon-color-off keyframes used by the `.toggle-did-interact` JS-driven bounce.",
@@ -809,7 +809,7 @@
       "sharedFaceCssProps": {
         "id": "builder:sharedFaceCssProps",
         "sourceFile": "lib/clicky-button.js",
-        "sourceLine": 2311,
+        "sourceLine": 2318,
         "displayName": "Shared Button-Face Property Emitter",
         "strategicPurpose": "The cap's resting-state declarations (position, sizing, color, shadow, padding) are identical in click and toggle mode — factoring them into one function is what guarantees the two modes' `.btn-face` can never drift apart on the properties they share.",
         "tacticalObjective": "Emits the shared `.btn-face` declaration block consumed by both buildClickFaceCss and buildToggleFaceCss.",
