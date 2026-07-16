@@ -55,13 +55,14 @@
   --face-shadow-resting: inset 0 0 0 0 transparent,
     inset 0 0 0 0 rgba(0, 0, 0, 0.550),
     inset 0 0 0 0 rgba(0, 0, 0, 0.280),
-    inset 0 7px 4px 0 rgba(255, 255, 255, 0.300),
+    inset 0 0 0 0 transparent,
     inset 0 -1px 0 0 rgba(0, 0, 0, 0.000);
   --face-shadow-pressed: inset 0 0 0 0 transparent,
     inset 0 0 0 0 rgba(0, 0, 0, 0.550),
     inset 0 0 0 0 rgba(0, 0, 0, 0.280),
-    inset 0 7px 4px 0 rgba(255, 255, 255, 0.300),
+    inset 0 0 0 0 transparent,
     inset 0 -1px 0 0 rgba(0, 0, 0, 0.000);
+  --rim-shadow: inset 0 7px 4px 0 rgba(255, 255, 255, 0.300);
   --wall-h: 14px;
   --press-translate: 14px;
   --toggle-height: 7px;
@@ -73,6 +74,10 @@
   --frame-bevel-alpha: 0.500;
   --frame-bevel-alpha-shadow: 0.350;
   --frame-bevel-width: 1px;
+  --frame-bevel-conic-tr-start: 56.14deg;
+  --frame-bevel-conic-tr-end: 74.93deg;
+  --frame-bevel-conic-bl-start: 236.14deg;
+  --frame-bevel-conic-bl-end: 254.93deg;
   --duration: 160ms;
   --press-duration: 80ms;
   --shadow-flush-frac: 1.000;
@@ -92,13 +97,14 @@
       --face-shadow-resting: inset 0 0 0 0 transparent,
     inset 0 0 0 0 rgba(0, 0, 0, 0.550),
     inset 0 0 0 0 rgba(0, 0, 0, 0.280),
-    inset 0 8cqb 4cqb 0 rgba(255, 255, 255, 0.300),
+    inset 0 0 0 0 transparent,
     inset 0 -1px 0 0 rgba(0, 0, 0, 0.000);
       --face-shadow-pressed: inset 0 0 0 0 transparent,
     inset 0 0 0 0 rgba(0, 0, 0, 0.550),
     inset 0 0 0 0 rgba(0, 0, 0, 0.280),
-    inset 0 8cqb 4cqb 0 rgba(255, 255, 255, 0.300),
+    inset 0 0 0 0 transparent,
     inset 0 -1px 0 0 rgba(0, 0, 0, 0.000);
+      --rim-shadow: inset 0 8cqb 4cqb 0 rgba(255, 255, 255, 0.300);
     }
   }
 
@@ -126,21 +132,36 @@
     var(--frame-color-lo) 100%
   );
   box-shadow:
-    inset 0 var(--frame-bevel-width) 0 0 rgba(255, 255, 255, var(--frame-bevel-alpha)),
-    inset 0 calc(-1 * var(--frame-bevel-width)) 0 0 rgba(0, 0, 0, var(--frame-bevel-alpha-shadow)),
-    inset var(--frame-bevel-width) 0 0 0 rgba(255, 255, 255, var(--frame-bevel-alpha)),
-    inset calc(-1 * var(--frame-bevel-width)) 0 0 0 rgba(0, 0, 0, var(--frame-bevel-alpha-shadow)),
+    
     var(--housing-shadow);
   transition: box-shadow var(--duration) var(--shadow-ease-release);
+}
+
+:root .btn-housing::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-bot);
+  padding: var(--frame-bevel-width);
+  background: conic-gradient(
+    from 0deg,
+    rgba(255, 255, 255, var(--frame-bevel-alpha)) 0deg,
+    rgba(255, 255, 255, var(--frame-bevel-alpha)) var(--frame-bevel-conic-tr-start),
+    rgba(0, 0, 0, var(--frame-bevel-alpha-shadow)) var(--frame-bevel-conic-tr-end),
+    rgba(0, 0, 0, var(--frame-bevel-alpha-shadow)) var(--frame-bevel-conic-bl-start),
+    rgba(255, 255, 255, var(--frame-bevel-alpha)) var(--frame-bevel-conic-bl-end),
+    rgba(255, 255, 255, var(--frame-bevel-alpha)) 360deg
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
 }
 
 :root .btn-housing:has(.clicky-btn:active),
 :root .btn-housing:has(.clicky-toggle input:checked) {
   box-shadow:
-    inset 0 var(--frame-bevel-width) 0 0 rgba(255, 255, 255, var(--frame-bevel-alpha)),
-    inset 0 calc(-1 * var(--frame-bevel-width)) 0 0 rgba(0, 0, 0, var(--frame-bevel-alpha-shadow)),
-    inset var(--frame-bevel-width) 0 0 0 rgba(255, 255, 255, var(--frame-bevel-alpha)),
-    inset calc(-1 * var(--frame-bevel-width)) 0 0 0 rgba(0, 0, 0, var(--frame-bevel-alpha-shadow)),
+    
     var(--housing-shadow-pressed);
   transition: box-shadow var(--press-duration) var(--shadow-ease-press);
 }
@@ -359,7 +380,7 @@
   animation-fill-mode: forwards;
 }
 
-:root .clicky-btn:focus-visible .btn-face {
+:root .btn-housing:has(.clicky-btn:focus-visible) {
     background-color: #b4b7be;
 background-color: color-mix(in srgb, #5b8dee 18%, var(--face-color));
   }
@@ -434,3 +455,13 @@ background-color: color-mix(in srgb, #5b8dee 18%, var(--face-color));
   font-variation-settings: 'FILL' var(--icon-fill), 'wght' 400, 'GRAD' 0, 'opsz' 24;
   transition: color var(--duration) var(--shadow-ease-release);
 }
+
+:root .btn-face::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow:
+      var(--rim-shadow);
+    pointer-events: none;
+  }

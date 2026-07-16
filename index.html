@@ -151,6 +151,11 @@
             <label class="ctrl-row"><span class="ctrl-label">Chrome Radius <em>%</em></span>
               <input type="range" id="btn-chrome-radius" min="0" max="50" value="12" step="1">
               <input type="number" id="btn-chrome-radius-num" min="0" max="50" value="12" step="1" class="num-input"></label>
+            <!-- Face tolerance (issue #76) — socket-clearance gap around the cap;
+                 lives beside the other radius/geometry controls in this card. -->
+            <label class="ctrl-row"><span class="ctrl-label">Tolerance <em>px</em></span>
+              <input type="range" id="btn-face-tolerance" min="0" max="8" value="0" step="1">
+              <input type="number" id="btn-face-tolerance-num" min="0" max="8" value="0" step="1" class="num-input"></label>
             <label class="ctrl-row"><span class="ctrl-label">Skew X <em>deg</em></span>
               <input type="range" id="btn-skew-x-angle" min="-18" max="18" value="0" step="1">
               <input type="number" id="btn-skew-x-angle-num" min="-18" max="18" value="0" step="1" class="num-input"></label>
@@ -304,6 +309,13 @@
             <label class="ctrl-row"><span class="ctrl-label">Edge Shadow <em>%</em></span>
               <input type="range" id="btn-face-edge-alpha" min="0" max="100" value="0" step="5">
               <input type="number" id="btn-face-edge-alpha-num" min="0" max="100" value="0" step="5" class="num-input"></label>
+            <!-- True beveled face edge (issue #68) — additive highlight/shadow
+                 ring on .btn-face::before, sharing the frame-bevel alpha vars. -->
+            <label class="ctrl-row"><span class="ctrl-label">Bevel Style</span>
+              <select id="btn-bevel-style">
+                <option value="none" selected>None</option>
+                <option value="beveled">Beveled</option>
+              </select></label>
             <label class="ctrl-row"><span class="ctrl-label">Specular <em>%</em></span>
               <input type="range" id="btn-specular-alpha" min="0" max="100" value="0" step="5">
               <input type="number" id="btn-specular-alpha-num" min="0" max="100" value="0" step="5" class="num-input"></label>
@@ -316,6 +328,10 @@
             <label class="ctrl-row"><span class="ctrl-label">Specular Size <em>%</em></span>
               <input type="range" id="btn-specular-size" min="10" max="100" value="60" step="5">
               <input type="number" id="btn-specular-size-num" min="10" max="100" value="60" step="5" class="num-input"></label>
+            <!-- Independent specular (issue #73) — moves the hotspot onto the
+                 face-top overlay so it stops dimming with the press. -->
+            <label class="ctrl-row"><span class="ctrl-label">Specular indep.</span>
+              <input type="checkbox" id="btn-specular-independent" class="toggle-check"></label>
           </div>
 
           <!-- Card: Chrome Frame -->
@@ -340,6 +356,11 @@
               <input type="number" id="btn-frame-bevel-width-num" min="0" max="6" value="1" step="1" class="num-input"></label>
             <label class="ctrl-row" id="frame-bevel-conic-row"><span class="ctrl-label">Conic Corner Bevel</span>
               <input type="checkbox" id="btn-frame-bevel-conic" class="toggle-check"></label>
+            <!-- Resting-chrome tangency floor (issue #90) — % of frameWidth;
+                 only meaningful while the frame is enabled, like its siblings above. -->
+            <label class="ctrl-row" id="resting-chrome-floor-row"><span class="ctrl-label">Chrome Floor <em>% of frame</em></span>
+              <input type="range" id="btn-resting-chrome-floor" min="0" max="50" value="25" step="1">
+              <input type="number" id="btn-resting-chrome-floor-num" min="0" max="50" value="25" step="1" class="num-input"></label>
           </div>
 
           <!-- Card: Depth -->
@@ -389,6 +410,19 @@
               <input type="number" id="btn-cavity-wall-gradient-spread-num" min="0" max="100" value="20" step="5" class="num-input"></label>
           </div>
 
+          <!-- Card: Glow (issue #53/#56 — travelling halo + lit cavity channel,
+               both driven from the one glowColor/glowIntensity source) -->
+          <div class="ctrl-card">
+            <div class="ctrl-card-header"><span class="material-symbols-rounded">flare</span> Glow</div>
+            <label class="ctrl-row"><span class="ctrl-label">Glow</span>
+              <input type="checkbox" id="btn-glow-enable" class="toggle-check"></label>
+            <label class="ctrl-row" id="glow-color-row" style="opacity:0.4;pointer-events:none"><span class="ctrl-label">Color</span>
+              <input type="color" id="btn-glow-color" value="#ffcc33"></label>
+            <label class="ctrl-row" id="glow-intensity-row" style="opacity:0.4;pointer-events:none"><span class="ctrl-label">Intensity <em>%</em></span>
+              <input type="range" id="btn-glow-intensity" min="0" max="100" value="60" step="5">
+              <input type="number" id="btn-glow-intensity-num" min="0" max="100" value="60" step="5" class="num-input"></label>
+          </div>
+
         </div><!-- /column 2 -->
 
         <!-- ══════════════════════════════
@@ -426,6 +460,10 @@
             <label class="ctrl-row" id="rim-height-row"><span class="ctrl-label">Offset <em>% cqb</em></span>
               <input type="range" id="btn-rim-height" min="0" max="40" value="16" step="1">
               <input type="number" id="btn-rim-height-num" min="0" max="40" value="16" step="1" class="num-input"></label>
+            <!-- Independent rim (issue #74) — moves the rim off the shared,
+                 press-animating face shadow stack so it holds its value through press. -->
+            <label class="ctrl-row"><span class="ctrl-label">Rim indep.</span>
+              <input type="checkbox" id="btn-rim-independent" class="toggle-check"></label>
           </div>
 
           <!-- Card: Ambient Shadow -->
@@ -523,6 +561,10 @@
             <label class="ctrl-row"><span class="ctrl-label">Focus Size <em>px</em></span>
               <input type="range" id="btn-focus-size" min="1" max="6" value="3" step="1">
               <input type="number" id="btn-focus-size-num" min="1" max="6" value="3" step="1" class="num-input"></label>
+            <!-- Unclipped focus ring (issue #58) — fixes a WCAG 2.4.7 failure by
+                 moving the ring to .btn-housing:has(:focus-visible), off the clip. -->
+            <label class="ctrl-row"><span class="ctrl-label">Unclipped Focus Ring</span>
+              <input type="checkbox" id="btn-focus-unclipped" class="toggle-check"></label>
             <label class="ctrl-row"><span class="ctrl-label">Border Width <em>px</em></span>
               <input type="range" id="btn-border-width" min="0" max="6" value="0" step="1">
               <input type="number" id="btn-border-width-num" min="0" max="6" value="0" step="1" class="num-input"></label>

@@ -190,7 +190,7 @@ describe('conic-gradient corner bevel stop math (issue #18)', () => {
   });
 
   it('buildClickyVars only emits --frame-bevel-conic-* vars when frameBevelConic is true (byte-stable default — D3)', () => {
-    const off = buildClickyVars();
+    const off = buildClickyVars({ frameBevelConic: false });
     expect('--frame-bevel-conic-tr-start' in off).toBe(false);
     expect('--frame-bevel-conic-tr-end' in off).toBe(false);
     expect('--frame-bevel-conic-bl-start' in off).toBe(false);

@@ -93,6 +93,13 @@ const state = {
   iconOnlyAriaLabel: '',
 };
 
+// Glow (issue #53/#56) — glowColor doubles as both the enable-gate and the
+// value ('' = off, D3); there is no separate boolean key in ClickyConfig.
+// Remembers the last swatch picked so the Glow checkbox can toggle between
+// '' and a real color without losing the user's choice (see syncGlowRow /
+// wireGlow below).
+let lastGlowColor = '#ffcc33';
+
 // ── DOM helpers ───────────────────────────────────────────────
 const $ = id => document.getElementById(id);
 
@@ -341,6 +348,34 @@ function depRow(rowId, visible) {
   row.querySelectorAll('input, select').forEach(el => el.disabled = !visible);
 }
 
+// Glow (issue #53/#56) — see lastGlowColor's comment above. The Enable
+// checkbox is UI-only sugar over glowColor's '' = off convention: checking
+// it writes lastGlowColor into state.glowColor, unchecking writes ''. Kept
+// out of controlRegistry/wireCheckbox (there's no real boolean key to bind
+// to) the same way radiusCorners' null/object duality gets its own
+// syncRadiusCornerRows rather than a generic control-type entry.
+function syncGlowRow() {
+  const enableEl = $('btn-glow-enable');
+  const colorEl  = $('btn-glow-color');
+  const on = !!(state.glowColor && String(state.glowColor).trim());
+  if (on) lastGlowColor = state.glowColor;
+  if (enableEl) enableEl.checked = on;
+  if (colorEl) colorEl.value = on ? state.glowColor : lastGlowColor;
+  depRow('glow-color-row',    on);
+  depRow('glow-intensity-row', on);
+}
+
+function wireGlow() {
+  wireColor('btn-glow-color', 'glowColor');
+  wireRangeNum('btn-glow-intensity', 'btn-glow-intensity-num', 'glowIntensity');
+  $('btn-glow-enable')?.addEventListener('change', e => {
+    state.glowColor = e.target.checked ? lastGlowColor : '';
+    syncGlowRow();
+    updatePreview();
+  });
+  syncGlowRow();
+}
+
 // ── Per-corner radius (issue #35) ──────────────────────────────
 // state.radiusCorners is null (uniform legacy path, byte-identical default
 // output) until "Per-Corner Radius" is checked. Locked (default) mirrors one
@@ -457,6 +492,7 @@ function initControls() {
   wireRangeNum('btn-radius',        'btn-radius-num',        'radiusRatio');
   wireRadiusCorners();
   wireRangeNum('btn-chrome-radius', 'btn-chrome-radius-num', 'chromeRadiusRatio');
+  wireRangeNum('btn-face-tolerance','btn-face-tolerance-num','faceTolerance');
   wireRangeNum('btn-skew-x-angle',  'btn-skew-x-angle-num',  'skewXAngle', v => Math.round(v));
   wireRangeNum('btn-skew-y-angle',  'btn-skew-y-angle-num',  'skewYAngle', v => Math.round(v));
   wireColor('btn-face-color', 'faceColor');
@@ -498,10 +534,12 @@ function initControls() {
   wireColor('btn-toggle-color', 'toggleColor');
   wireRangeNum('btn-press-darken',      'btn-press-darken-num',      'pressDarken');
   wireRangeNum('btn-face-edge-alpha',   'btn-face-edge-alpha-num',   'faceEdgeAlpha');
+  wireSelect('btn-bevel-style', 'bevelStyle');
   wireRangeNum('btn-specular-alpha',    'btn-specular-alpha-num',    'specularAlpha');
   wireRangeNum('btn-light-angle-x',     'btn-light-angle-x-num',     'lightAngleX');
   wireRangeNum('btn-light-angle-y',     'btn-light-angle-y-num',     'lightAngleY');
   wireRangeNum('btn-specular-size',     'btn-specular-size-num',     'specularSize');
+  wireCheckbox('btn-specular-independent', 'specularIndependent');
 
   // Depth (shared geometry for both walls)
   wireRangeNum('btn-press-depth',       'btn-press-depth-num',       'pressDepthRatio');
@@ -521,6 +559,9 @@ function initControls() {
   wireRangeNum('btn-cavity-wall-shadow-edge-ratio', 'btn-cavity-wall-shadow-edge-ratio-num', 'cavityWallShadowEdgeRatio');
   wireRangeNum('btn-cavity-wall-gradient-spread',   'btn-cavity-wall-gradient-spread-num',   'cavityWallGradientSpread');
 
+  // Glow (travelling halo + lit cavity channel)
+  wireGlow();
+
   // Face shadows
   wireRangeNum('btn-inset-depth',       'btn-inset-depth-num',       'insetDepthRatio');
   wireRangeNum('btn-inset-blur',        'btn-inset-blur-num',        'insetBlurRatio');
@@ -535,6 +576,7 @@ function initControls() {
   wireColor('btn-highlight-color', 'highlightColor');
   wireRangeNum('btn-highlight-opacity','btn-highlight-opacity-num','highlightOpacity');
   wireRangeNum('btn-rim-height',       'btn-rim-height-num',       'rimHeightRatio');
+  wireCheckbox('btn-rim-independent', 'rimIndependent');
 
   // Chrome bevel frame
   wireCheckbox('btn-frame-enabled', 'frameEnabled', on => {
@@ -545,6 +587,7 @@ function initControls() {
     depRow('frame-bevel-alpha-row',    on);
     depRow('frame-bevel-width-row',    on);
     depRow('frame-bevel-conic-row',    on);
+    depRow('resting-chrome-floor-row', on);
   });
   wireRangeNum('btn-frame-width',       'btn-frame-width-num',       'frameWidth');
   wireColor('btn-frame-color-hi', 'frameColorHi');
@@ -557,6 +600,10 @@ function initControls() {
   // per-instance against the real chrome radius (see
   // computeFrameBevelConicStops in lib/clicky-button.js).
   wireCheckbox('btn-frame-bevel-conic', 'frameBevelConic');
+  // Resting-chrome tangency floor (issue #90) — % of frameWidth; zeroes out
+  // along with everything else in this card when the frame is disabled (fw
+  // itself collapses to 0 in buildVarMap), so it shares the same gate.
+  wireRangeNum('btn-resting-chrome-floor', 'btn-resting-chrome-floor-num', 'restingChromeFloorRatio');
 
   // Ambient shadow
   wireRangeNum('btn-ambient-intensity',    'btn-ambient-intensity-num',    'ambientIntensity');
@@ -659,6 +706,7 @@ function initControls() {
   wireSelect('btn-focus-style', 'focusStyle');
   wireColor('btn-focus-color', 'focusColor');
   wireRangeNum('btn-focus-size', 'btn-focus-size-num', 'focusSize');
+  wireCheckbox('btn-focus-unclipped', 'focusUnclipped');
 
   // Preview background
   document.querySelectorAll('input[name="preview-bg"]').forEach(radio => {
@@ -737,6 +785,7 @@ function initControls() {
     depRow('frame-bevel-alpha-row',    state.frameEnabled);
     depRow('frame-bevel-width-row',    state.frameEnabled);
     depRow('frame-bevel-conic-row',    state.frameEnabled);
+    depRow('resting-chrome-floor-row', state.frameEnabled);
     depRow('group-label-row',          state.housingLayout === 'segmented');
     depRow('segment-divider-row',      state.housingLayout === 'segmented');
 
@@ -1118,6 +1167,9 @@ function syncAllControls() {
   // Per-corner radius (issue #35) — not in controlRegistry (radiusCorners is
   // an object, not a scalar the generic range/checkbox sync above can read).
   syncRadiusCornerRows();
+  // Glow (issue #53/#56) — same reasoning: glowColor's ''/hex duality isn't
+  // a plain scalar the generic loop can drive the Enable checkbox from.
+  syncGlowRow();
 }
 
 function renderStylePicker() {

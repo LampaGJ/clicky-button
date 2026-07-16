@@ -44,8 +44,8 @@ describe('depth illusion invariants', () => {
 });
 
 describe('conic-gradient corner bevel (issue #18)', () => {
-  it('default (frameBevelConic: false) emits neither the ring nor its stop vars — byte-identical to pre-#18 (D3)', () => {
-    const css = buildClickyCss();
+  it('frameBevelConic:false emits neither the ring nor its stop vars — the OFF path (the conic bevel now DEFAULTS on, so set it off explicitly)', () => {
+    const css = buildClickyCss({ frameBevelConic: false });
     expect(css).not.toContain('.btn-housing::after');
     expect(css).not.toContain('--frame-bevel-conic');
     expect(css).not.toContain('conic-gradient');
@@ -106,8 +106,8 @@ describe('independent specular & rim light (issues #73/#74)', () => {
     return css.slice(start, end);
   }
 
-  it('#73 default (specularIndependent: false) still inlines the hotspot on .btn-face itself — documents the shared-element behavior being fixed', () => {
-    const css = buildClickyCss({ specularAlpha: 40 });
+  it('#73 specularIndependent:false inlines the hotspot on .btn-face itself — the OFF path (independent specular now DEFAULTS on, so set it off explicitly)', () => {
+    const css = buildClickyCss({ specularAlpha: 40, specularIndependent: false });
     const faceRule = extractRule(css, ':root .clicky-btn .btn-face {');
     expect(faceRule).toContain('radial-gradient(circle at var(--light-x) var(--light-y)');
     expect(faceRule).toContain('background-blend-mode: soft-light');
@@ -140,8 +140,8 @@ describe('independent specular & rim light (issues #73/#74)', () => {
     expect(css).not.toContain('radial-gradient');
   });
 
-  it('#74 default (rimIndependent: false) still bakes the rim into the shared, press-co-animated box-shadow stack — documents the behavior being fixed', () => {
-    const vars = buildClickyVars({});
+  it('#74 rimIndependent:false bakes the rim into the shared press-co-animated box-shadow stack — the OFF path (independent rim now DEFAULTS on, so set it off explicitly)', () => {
+    const vars = buildClickyVars({ rimIndependent: false });
     // L3, the rim highlight, present unconditionally in BOTH the resting
     // and pressed face-shadow strings — the SAME property whose L1/L2
     // layers activate (and spatially overlay it) only while pressed.
@@ -175,5 +175,44 @@ describe('independent specular & rim light (issues #73/#74)', () => {
     expect(beforeRule).toContain('rgba(255, 255, 255, var(--frame-bevel-alpha))');
     expect(beforeRule).toContain('rgba(0, 0, 0, var(--frame-bevel-alpha-shadow))');
     expect(beforeRule).toContain('var(--rim-shadow)');
+  });
+});
+
+// Correctness fixes ship ON (2026-07-15): these are not opt-in features, they
+// are the button being correct. "off emits nothing" (D3) was a DEVELOPMENT
+// discipline for landing each feature verifiably — not the shipping default.
+// This guards against a silent flip-back to the broken behaviour.
+describe('correctness fixes default ON', () => {
+  it('the conic corner bevel, unclipped focus ring, and independent specular/rim are on by default', () => {
+    expect(defaultClickyConfig.frameBevelConic, 'conic bevel (fixes the corner collision #18/#90)').toBe(true);
+    expect(defaultClickyConfig.focusUnclipped, 'unclipped focus ring (fixes WCAG 2.4.7 #58)').toBe(true);
+    expect(defaultClickyConfig.specularIndependent, 'specular must not dim on press #73').toBe(true);
+    expect(defaultClickyConfig.rimIndependent, 'rim must not dim on press #74').toBe(true);
+  });
+
+  it('the default button emits the conic ring and the independent rim', () => {
+    const css = buildClickyCss();
+    expect(css).toContain('.btn-housing::after');           // conic ring on
+    expect(css).toContain('conic-gradient(');
+    // Rim is on by default (topHighlight), so rimIndependent takes effect:
+    // the highlight lives on its own --rim-shadow, not baked into the shared
+    // press-co-animated face-shadow stack.
+    expect(css).toContain('--rim-shadow');
+  });
+
+  it('independent specular is on but inert until specularAlpha > 0 (no hotspot to relocate)', () => {
+    // The flip is a correctness guarantee for WHEN specular is used, not a
+    // visible default change: default specularAlpha is 0.
+    expect(defaultClickyConfig.specularAlpha).toBe(0);
+    expect(buildClickyCss()).not.toContain('.btn-face::after');
+    expect(buildClickyCss({ specularAlpha: 40 })).toContain('.btn-face::after');
+  });
+
+  it('style features stay OFF by default (opt-in): glow, bevelStyle, tolerance', () => {
+    const css = buildClickyCss();
+    expect(css).not.toContain('--glow-shadow');
+    expect(defaultClickyConfig.glowColor).toBe('');
+    expect(defaultClickyConfig.bevelStyle).toBe('none');
+    expect(defaultClickyConfig.faceTolerance).toBe(0);
   });
 });
