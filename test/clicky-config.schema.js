@@ -15,7 +15,7 @@ export const ClickyConfigSchema = z.object({
   btnCount: z.number().int().min(1),
   btnLabels: z.string(),
   gridDirection: z.enum(['row', 'column']),
-  gridWrap: z.enum(['wrap', 'nowrap']),
+  gridWrap: z.enum(['wrap', 'nowrap', 'wrap-reverse']),
   gridGap: z.number().min(0),
   gridJustify: z.enum(['center', 'flex-start', 'flex-end', 'space-between', 'space-around']),
   gridAlign: z.enum(['center', 'flex-start', 'flex-end', 'stretch']),
