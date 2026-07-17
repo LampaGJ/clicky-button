@@ -215,17 +215,15 @@
 :root .btn-cell::before {
   content: '';
   position: absolute;
-  /* The cavity's top edge sits exactly where the face lands when it goes
-     FLUSH — one wall-height below the resting face. Until the key has sunk
-     that far its own wall band still fills the gap, so nothing of the recess
-     may show; only once the visible wall reaches zero does the cavity start
-     to be revealed from its top edge. (Pinning this to --frame-width instead
-     leaked the recess in from the first pixel of travel on any key whose wall
-     is deeper than its frame — most visibly on frameless deep-travel keys,
-     where fw is 0.)
+  /* STATIC recess (does not animate). It sits at its full-reveal top —
+     max(0, wall-h - press-translate), i.e. 0 for a press that reaches flush
+     — hidden at rest behind the opaque cap+wall (which together cover the whole
+     cell) and simply UNCOVERED as the key sinks. A shallow press that never
+     reaches flush keeps the resting wall-h (its own footprint fills the gap,
+     so nothing of the recess may show before then). See cavityStaticTop.
      Slight 1px inflation on the visible edges prevents sub-pixel anti-alias
      gaps where the dark wall corner meets the bright chrome surround. */
-  top: var(--wall-h);
+  top: max(0px, calc(var(--wall-h) - var(--press-translate)));
   left: -1px;
   right: -1px;
   bottom: -1px;
@@ -253,12 +251,6 @@
   );
   background-blend-mode: multiply;
   pointer-events: none;
-  transition: top var(--duration) var(--transform-easing);
-}
-:root .btn-cell:has(.clicky-btn:active)::before,
-:root .btn-cell:has(.clicky-toggle input:checked)::before {
-  top: max(0px, calc(var(--wall-h) - var(--press-translate)));
-  transition: top var(--press-duration) var(--transform-easing);
 }
 
 /* Click mode */
@@ -394,22 +386,6 @@
    keyframe), so it stays glued to the cap through the press cycle. */
 :root .clicky-btn.clicky-press .btn-wall {
   animation: clicky-transform-cycle-217lh5 calc(var(--press-duration) + var(--duration)) linear forwards;
-}
-
-/* Cavity-reveal, click-mode full press cycle (issue #96) — the recess top edge
-   tracks the descending cap down and back, so the dark recess fills the band
-   the cap vacates (never bare housing chrome above the sinking cap). */
-@keyframes clicky-cavity-top-cycle {
-  0% { top: var(--wall-h); }
-  33.33% { top: max(0px, calc(var(--wall-h) - var(--press-translate))); }
-  100% { top: var(--wall-h); }
-}
-
-:root .btn-cell:has(.clicky-btn.clicky-press)::before {
-  animation-name: clicky-cavity-top-cycle;
-  animation-duration: calc(var(--press-duration) + var(--duration));
-  animation-timing-function: linear;
-  animation-fill-mode: forwards;
 }
 
 /* Icon press-darken (realism pack #7d) — the icon participates in the same

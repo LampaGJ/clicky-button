@@ -285,10 +285,22 @@ describe('equal ring + flush-gated reveal (owner invariants)', () => {
     expect(v['--face-shadow-pressed']).toBe(v['--face-shadow-resting']);
   });
 
-  it('cavity top sits one wall-height below the resting face, so nothing leaks in before flush', () => {
+  it('recess is a STATIC hole (does not animate): sits at its full-reveal top, no cavity-top transition/keyframe', () => {
+    // A press that reaches flush (default: press-depth === wall-h) parks the
+    // cavity at max(0, wall-h - press-translate) STATICALLY — hidden at rest
+    // behind the cap+wall, uncovered as the key sinks. It must never animate
+    // its own `top` (that read as the channel bouncing — owner report).
     const css = buildClickyCss();
-    expect(css).toMatch(/\.btn-cell::before\s*\{[^}]*top: var\(--wall-h\);/s);
+    expect(css).toMatch(/\.btn-cell::before\s*\{[^}]*top: max\(0px, calc\(var\(--wall-h\) - var\(--press-translate\)\)\);/s);
     expect(css).not.toMatch(/\.btn-cell::before\s*\{[^}]*top: var\(--frame-width\);/s);
+    expect(css).not.toContain('clicky-cavity-top-cycle');
+    expect(css).not.toMatch(/transition: top /);
+  });
+
+  it('a shallow press that never reaches flush keeps the cavity at the resting wall-h', () => {
+    // press-depth < wall-h ⇒ the cap's own footprint covers the gap, no reveal.
+    const css = buildClickyCss({ wallHRatio: 20, pressDepthRatio: 6 });
+    expect(css).toMatch(/\.btn-cell::before\s*\{[^}]*top: var\(--wall-h\);/s);
   });
 
   it('shadow keyframes hold resting until flush and clear it on the way back up', () => {
