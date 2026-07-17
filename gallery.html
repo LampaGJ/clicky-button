@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Clicky Button — Flexbox Playground</title>
+  <title>Clicky Button — Flexbox Playground &amp; Gallery</title>
   <style>
     :root {
       --ink: #1a1a1a; --muted: #6b6b6b; --line: #d9d6d0; --bg: #f4f1ed;
@@ -11,88 +11,107 @@
     }
     * { box-sizing: border-box; }
     body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; color: var(--ink); background: var(--bg); }
-    header { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; padding: 14px 22px; border-bottom: 1px solid var(--line); }
+    header { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; padding: 14px 22px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--bg); z-index: 5; }
     header h1 { font-size: 17px; margin: 0; }
     header .sub { font-size: 12px; color: var(--muted); }
-    header a { font-size: 12px; color: var(--accent); text-decoration: none; margin-left: auto; }
+    header nav { margin-left: auto; display: flex; gap: 16px; }
+    header a { font-size: 12px; color: var(--accent); text-decoration: none; }
 
-    .layout { display: grid; grid-template-columns: 260px 1fr; gap: 0; min-height: calc(100vh - 52px); }
-    .controls { padding: 18px 20px; border-right: 1px solid var(--line); background: var(--panel); }
+    /* ── Playground ─────────────────────────────────────────────── */
+    .playground { display: grid; grid-template-columns: 280px 1fr; min-height: calc(100vh - 52px); }
+    .controls { padding: 16px 20px; border-right: 1px solid var(--line); background: var(--panel); overflow-y: auto; }
     .controls h2 { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 0 0 4px; }
-    .ctrl { margin: 14px 0; }
+    .ctrl { margin: 13px 0; }
     .ctrl > label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; }
     .ctrl select, .ctrl input[type=range] { width: 100%; }
     .ctrl select { padding: 5px 6px; border: 1px solid var(--line); border-radius: 6px; background: #fff; font-size: 13px; }
     .ctrl .val { float: right; font-weight: 400; color: var(--muted); font-variant-numeric: tabular-nums; }
     .hint { font-size: 11px; color: var(--muted); line-height: 1.5; margin-top: 4px; }
 
-    .stage-wrap { padding: 22px; overflow: auto; }
-    .stage-meta { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
-    /* The resizable flex container the user is configuring. This IS the demo:
-       real CSS flexbox, buttons taking up the space. */
+    .stage-wrap { padding: 20px 22px; display: flex; flex-direction: column; min-width: 0; }
+    .stage-meta { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+    /* The resizable flex container the user is configuring — full-screen by
+       default (drag the ⌟ corner to resize; the buttons re-flow live). */
     #stage {
       background:
         linear-gradient(90deg, rgba(91,141,238,.04) 0 0),
         repeating-linear-gradient(45deg, #ecece6 0 10px, #f4f1ed 10px 20px);
-      border: 2px dashed #c3bfb6;
-      border-radius: 10px;
+      border: 2px dashed #c3bfb6; border-radius: 10px;
       resize: both; overflow: auto;
-      display: flex; /* JS overrides the individual flex props */
-      padding: 14px;
-      min-width: 160px; min-height: 90px;
+      display: flex; padding: 16px;
+      width: 100%; height: 62vh; min-width: 200px; min-height: 120px;
     }
-    /* Button fill modes — how each exported button (.btn-scale) takes space. */
-    #stage.fill-natural .btn-scale { flex: 0 0 auto; }        /* authored size, never squished */
-    #stage.fill-grow    .btn-scale { flex: 1 1 0; }           /* share the main axis equally */
-    #stage.fill-stretch .btn-scale { flex: 1 1 0; align-self: stretch; height: auto; } /* fill both axes */
+    #stage.fill-natural .btn-scale { flex: 0 0 auto; }
+    #stage.fill-grow    .btn-scale { flex: 1 1 0; }
+    #stage.fill-stretch .btn-scale { flex: 1 1 0; align-self: stretch; height: auto; }
     #stage.fill-stretch { align-items: stretch; }
 
-    .code { margin-top: 16px; background: #1e1e22; color: #d7d7db; border-radius: 8px; padding: 12px 14px; font: 12px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre; overflow-x: auto; }
+    .code { margin-top: 14px; background: #1e1e22; color: #d7d7db; border-radius: 8px; padding: 12px 14px; font: 12px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre; overflow-x: auto; }
     .code .k { color: #c586c0; } .code .p { color: #9cdcfe; } .code .v { color: #ce9178; }
+
+    /* ── Showcase gallery ───────────────────────────────────────── */
+    .showcase { border-top: 6px solid var(--line); padding: 26px 22px 60px; }
+    .showcase-head { max-width: 760px; margin: 0 auto 22px; text-align: center; }
+    .showcase-head h2 { font-size: 20px; margin: 0 0 6px; }
+    .showcase-head p { font-size: 13px; color: var(--muted); margin: 0; line-height: 1.55; }
+    #tile-count-note { font-size: 12px; color: var(--muted); text-align: center; margin-top: 8px; }
+    #gallery-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 18px; align-items: start; max-width: 1500px; margin: 0 auto;
+    }
+    /* Each tile centers its button at its own AUTHORED size — auto height, no
+       flex-shrink, so a Tall (80×200) button is never squished. */
+    .gallery-tile {
+      display: grid; place-items: center; gap: 14px;
+      padding: 22px 16px 16px; border-radius: 12px; border: 1px solid var(--line);
+      min-height: 200px;
+    }
+    .gallery-tile .btn-scale { flex: 0 0 auto; }
+    .tile-caption { font-size: 11.5px; line-height: 1.45; color: #4a4a4a; text-align: center; max-width: 100%; }
+    .gallery-tile[style*="#141414"] .tile-caption { color: #cfcfcf; }
   </style>
 </head>
 <body>
   <header>
-    <h1>Clicky Button — Flexbox Playground</h1>
-    <span class="sub">the exported button fills whatever flex space you give it, at any size &amp; ratio</span>
-    <a href="index.html">← Generator</a>
+    <h1>Clicky Button — Playground &amp; Gallery</h1>
+    <span class="sub">responsive buttons that fill any flex space, at any size &amp; ratio</span>
+    <nav>
+      <a href="#playground">Playground</a>
+      <a href="#gallery">Gallery</a>
+      <a href="index.html">Generator →</a>
+    </nav>
   </header>
 
-  <div class="layout">
+  <!-- ── Interactive flexbox playground ───────────────────────────── -->
+  <section class="playground" id="playground">
     <aside class="controls">
       <h2>Flex container</h2>
       <div class="ctrl"><label>flex-direction</label>
-        <select id="c-dir">
-          <option>row</option><option>row-reverse</option><option>column</option><option>column-reverse</option>
-        </select></div>
+        <select id="c-dir"><option>row</option><option>row-reverse</option><option>column</option><option>column-reverse</option></select>
+        <div class="hint">The <b>main axis</b>. <code>row</code> lays buttons left→right; <code>column</code> stacks them top→bottom. The <em>-reverse</em> variants flip the order.</div></div>
       <div class="ctrl"><label>justify-content</label>
-        <select id="c-justify">
-          <option>flex-start</option><option selected>center</option><option>flex-end</option>
-          <option>space-between</option><option>space-around</option><option>space-evenly</option>
-        </select></div>
+        <select id="c-justify"><option>flex-start</option><option selected>center</option><option>flex-end</option><option>space-between</option><option>space-around</option><option>space-evenly</option></select>
+        <div class="hint">Distributes buttons <b>along the main axis</b> — packs them to the start/center/end, or spreads the leftover space between them.</div></div>
       <div class="ctrl"><label>align-items</label>
-        <select id="c-align">
-          <option>stretch</option><option selected>center</option><option>flex-start</option><option>flex-end</option>
-        </select></div>
+        <select id="c-align"><option>stretch</option><option selected>center</option><option>flex-start</option><option>flex-end</option></select>
+        <div class="hint">Aligns buttons <b>across the main axis</b> (the other direction). <code>stretch</code> makes them fill that axis — pair with the <em>stretch</em> fill mode.</div></div>
       <div class="ctrl"><label>flex-wrap</label>
-        <select id="c-wrap"><option>nowrap</option><option selected>wrap</option><option>wrap-reverse</option></select></div>
+        <select id="c-wrap"><option>nowrap</option><option selected>wrap</option><option>wrap-reverse</option></select>
+        <div class="hint">Whether buttons flow onto <b>new lines</b> when they run out of room (<code>wrap</code>) or stay on one line and share the space (<code>nowrap</code>).</div></div>
       <div class="ctrl"><label>gap <span class="val" id="v-gap">16px</span></label>
-        <input type="range" id="c-gap" min="0" max="60" value="16"></div>
+        <input type="range" id="c-gap" min="0" max="60" value="16">
+        <div class="hint">Space between buttons — the modern replacement for margins.</div></div>
 
-      <h2 style="margin-top:22px">The button</h2>
+      <h2 style="margin-top:20px">The button</h2>
       <div class="ctrl"><label>fill mode</label>
-        <select id="c-fill">
-          <option value="natural">natural — authored size</option>
-          <option value="grow" selected>grow — share main axis</option>
-          <option value="stretch">stretch — fill both axes</option>
-        </select>
+        <select id="c-fill"><option value="natural">natural — authored size</option><option value="grow" selected>grow — share main axis</option><option value="stretch">stretch — fill both axes</option></select>
         <div class="hint" id="fill-hint"></div></div>
       <div class="ctrl"><label>material</label>
         <select id="c-mat"><option>plastic</option><option>metal</option><option>glass</option><option>rubber</option></select></div>
       <div class="ctrl"><label>count <span class="val" id="v-count">3</span></label>
         <input type="range" id="c-count" min="1" max="6" value="3"></div>
 
-      <div class="hint" style="margin-top:18px">Drag the ⌟ corner of the stage to resize it — the buttons re-flow live. That's the whole point: no regeneration, any size, any ratio.</div>
+      <div class="hint" style="margin-top:16px">Drag the <b>⌟ bottom-right corner</b> of the stage to resize it — the buttons re-flow live. No regeneration: any size, any ratio.</div>
     </aside>
 
     <main class="stage-wrap">
@@ -100,10 +119,21 @@
       <div id="stage" class="fill-grow"></div>
       <div class="code" id="code"></div>
     </main>
-  </div>
+  </section>
+
+  <!-- ── Showcase gallery ─────────────────────────────────────────── -->
+  <section class="showcase" id="gallery">
+    <div class="showcase-head">
+      <h2>Gallery</h2>
+      <p>Every button below is generated live from <code>lib/clicky-button.js</code> — one perceptual variable isolated per row (material → shape → size → color → frame/travel → specular/mode → shape primitives). Each renders at its own authored size to show the range of the engine.</p>
+      <div id="tile-count-note"></div>
+    </div>
+    <div id="gallery-grid"></div>
+    <style id="gallery-css"></style>
+  </section>
 
   <script type="module">
-    import { defaultClickyConfig, buildClickyCss, buildClickyHtml } from './lib/clicky-button.js';
+    import { defaultClickyConfig, buildClickyCss, buildClickyHtml, buildClickyGroupHtml, internals } from './lib/clicky-button.js';
 
     // Material presets (verbatim subset from app.js — gallery imports only the engine).
     const MATERIAL_PRESETS = {
@@ -112,28 +142,26 @@
       glass:   { radiusRatio: 22, faceColor: '#eaf6fb', textColor: '#1a2a33', wallHRatio: 14, pressDepthRatio: 16, pressDarken: 8, insetDepthRatio: 8, insetBlurRatio: 14, insetAlphaTop: 20, insetAlphaBot: 10, highlightOpacity: 45, rimHeightRatio: 10, buttonWallShadowAlpha: 35, buttonWallGradientSpread: 55, ambientIntensity: 15, ambientBlurMult: 4.0, frameEnabled: true, frameWidth: 8, frameBevelAlpha: 30, duration: 150, pressDuration: 80, easingPreset: 'clear', specularAlpha: 55, specularSize: 80, contactIntensity: 10 },
       rubber:  { radiusRatio: 30, faceColor: '#3f4142', textColor: '#e8e8e8', wallHRatio: 22, pressDepthRatio: 24, pressDarken: 18, insetDepthRatio: 10, insetBlurRatio: 20, insetAlphaTop: 40, insetAlphaBot: 20, highlightOpacity: 15, rimHeightRatio: 10, buttonWallShadowAlpha: 60, buttonWallGradientSpread: 40, ambientIntensity: 25, ambientBlurMult: 4.5, ambientYMult: 2.0, frameEnabled: false, duration: 260, pressDuration: 140, easingPreset: 'soft', specularAlpha: 8, specularSize: 70, contactIntensity: 20 },
     };
+
+    // ══ Playground ══════════════════════════════════════════════════
     const LABELS = ['PLAY', 'STOP', 'REC', 'PREV', 'NEXT', 'MENU'];
     const FILL_HINTS = {
-      natural: 'flex: 0 0 auto — keeps its designed size, never squished.',
+      natural: 'flex: 0 0 auto — every button keeps its designed size, never squished.',
       grow:    'flex: 1 1 0 — every button shares the main axis equally.',
-      stretch: 'flex: 1 1 0 + align-self: stretch — fills both axes (any ratio).',
+      stretch: 'flex: 1 1 0 + align-self: stretch — buttons fill both axes (try any stage ratio).',
     };
-
     const $ = id => document.getElementById(id);
     const stage = $('stage');
     let styleEl = null;
 
     function rebuild() {
-      const mat = $('c-mat').value;
-      const count = +$('c-count').value;
-      const config = { ...defaultClickyConfig, ...MATERIAL_PRESETS[mat], containerWidth: 150, containerHeight: 72 };
-      // One scoped stylesheet for every demo button (same config).
+      const config = { ...defaultClickyConfig, ...MATERIAL_PRESETS[$('c-mat').value], containerWidth: 150, containerHeight: 72 };
       const css = buildClickyCss(config, { scope: '#stage' });
       if (styleEl) styleEl.remove();
       styleEl = document.createElement('style');
       styleEl.textContent = css;
       document.head.appendChild(styleEl);
-      stage.innerHTML = Array.from({ length: count }, (_, i) =>
+      stage.innerHTML = Array.from({ length: +$('c-count').value }, (_, i) =>
         buildClickyHtml({ label: LABELS[i % LABELS.length], config })).join('');
       applyFlex();
     }
@@ -166,11 +194,118 @@
     $('c-gap').addEventListener('input', applyFlex);
     $('c-fill').addEventListener('change', applyFlex);
     ['c-mat','c-count'].forEach(id => $(id).addEventListener('input', rebuild));
-    // Live meta update as the user drags the resize handle.
     new ResizeObserver(applyFlex).observe(stage);
-
     rebuild();
-    stage.style.width = '640px'; stage.style.height = '260px';
+
+    // ══ Showcase gallery ════════════════════════════════════════════
+    const BG = { LIGHT: '#f5f5f5', DARK: '#141414', NEUTRAL: '#808080' };
+    function val(cfg, key) { return key in cfg ? cfg[key] : defaultClickyConfig[key]; }
+
+    const TILES = [
+      { name: 'Rubber', bg: 'NEUTRAL', config: { ...MATERIAL_PRESETS.rubber, iconName: 'send', btnLabels: 'SEND' },
+        axes: [{ label: 'material', literal: 'rubber' }, { label: 'icon', key: 'iconName' }, { label: 'mode', key: 'mode' }] },
+      { name: 'Plastic', bg: 'NEUTRAL', config: { ...MATERIAL_PRESETS.plastic, iconName: 'send', btnLabels: 'SEND' },
+        axes: [{ label: 'material', literal: 'plastic' }, { label: 'icon', key: 'iconName' }, { label: 'mode', key: 'mode' }] },
+      { name: 'Metal', bg: 'NEUTRAL', config: { ...MATERIAL_PRESETS.metal, iconName: 'send', btnLabels: 'SEND' },
+        axes: [{ label: 'material', literal: 'metal' }, { label: 'icon', key: 'iconName' }, { label: 'mode', key: 'mode' }] },
+      { name: 'Glass', bg: 'NEUTRAL', config: { ...MATERIAL_PRESETS.glass, iconName: 'send', btnLabels: 'SEND' },
+        axes: [{ label: 'material', literal: 'glass' }, { label: 'icon', key: 'iconName' }, { label: 'mode', key: 'mode' }] },
+      { name: 'Pill', bg: 'LIGHT', config: { ...MATERIAL_PRESETS.plastic, containerWidth: 200, containerHeight: 64, radiusRatio: 50, btnCount: 1, btnLabels: 'PILL' },
+        axes: [{ label: 'shape', key: 'radiusRatio', prefix: 'radiusRatio ' }, { label: 'size', size: true }, { label: 'count', key: 'btnCount' }] },
+      { name: 'Sharp', bg: 'LIGHT', config: { ...MATERIAL_PRESETS.plastic, radiusRatio: 0, btnLabels: 'SHARP' },
+        axes: [{ label: 'radiusRatio', key: 'radiusRatio' }, { label: 'material', literal: 'plastic' }] },
+      { name: 'Tall', bg: 'LIGHT', config: { ...MATERIAL_PRESETS.plastic, containerWidth: 80, containerHeight: 200, btnCount: 1, gridDirection: 'column', btnLabels: 'TALL' },
+        axes: [{ label: 'size', size: true }, { label: 'count', key: 'btnCount' }, { label: 'gridDirection', key: 'gridDirection' }] },
+      { name: 'Wide/Flat', bg: 'LIGHT', config: { ...MATERIAL_PRESETS.plastic, containerWidth: 320, containerHeight: 56, btnCount: 1, btnLabels: 'WIDE FLAT' },
+        axes: [{ label: 'size', size: true }, { label: 'count', key: 'btnCount' }, { label: 'material', literal: 'plastic' }] },
+      { name: 'Micro cluster', bg: 'LIGHT', config: { ...MATERIAL_PRESETS.plastic, containerWidth: 96, containerHeight: 48, btnCount: 4, fontSizeRatio: -20, gridGap: 4, btnLabels: 'A,B,C,D' },
+        axes: [{ label: 'size', size: true }, { label: 'count', key: 'btnCount' }, { label: 'fontSizeRatio', key: 'fontSizeRatio' }] },
+      { name: 'Giant single', bg: 'LIGHT', config: { ...MATERIAL_PRESETS.plastic, containerWidth: 280, containerHeight: 160, btnCount: 1, fontSizeRatio: 10, btnLabels: 'GIANT' },
+        axes: [{ label: 'size', size: true }, { label: 'count', key: 'btnCount' }, { label: 'fontSizeRatio', key: 'fontSizeRatio' }] },
+      { name: 'Dense grid', bg: 'LIGHT', config: { ...MATERIAL_PRESETS.plastic, containerWidth: 220, containerHeight: 140, btnCount: 9, gridWrap: 'wrap', btnLabels: '1,2,3,4,5,6,7,8,9' },
+        axes: [{ label: 'size', size: true }, { label: 'count', key: 'btnCount' }, { label: 'gridWrap', key: 'gridWrap' }] },
+      { name: 'Icon-only giant', bg: 'LIGHT', config: { ...MATERIAL_PRESETS.plastic, containerWidth: 120, containerHeight: 120, btnCount: 1, btnLabels: '', iconName: 'favorite', iconScale: 2.2 },
+        axes: [{ label: 'size', size: true }, { label: 'icon', key: 'iconName' }, { label: 'iconScale', key: 'iconScale' }] },
+      { name: 'Light-on-light', bg: 'LIGHT', config: { faceColor: '#f5f5f0', textColor: '#333333', frameColor: '#e0e0e0', btnLabels: 'LIGHT' },
+        axes: [{ label: 'faceColor', key: 'faceColor' }, { label: 'textColor', key: 'textColor' }, { label: 'frameColor', key: 'frameColor' }] },
+      { name: 'Dark-on-dark', bg: 'DARK', config: { faceColor: '#1c1c1c', textColor: '#e8e8e8', frameColor: '#0a0a0a', highlightOpacity: 15, btnLabels: 'DARK' },
+        axes: [{ label: 'faceColor', key: 'faceColor' }, { label: 'textColor', key: 'textColor' }, { label: 'highlightOpacity', key: 'highlightOpacity' }] },
+      { name: 'Vivid color', bg: 'NEUTRAL', config: { faceColor: '#ff6347', textColor: '#ffffff', useButtonWallColor: true, buttonWallColor: '#d4472e', btnLabels: 'VIVID' },
+        axes: [{ label: 'faceColor', key: 'faceColor' }, { label: 'buttonWallColor', key: 'buttonWallColor' }, { label: 'useButtonWallColor', key: 'useButtonWallColor' }] },
+      { name: 'Colored-on-dark', bg: 'DARK', config: { faceColor: '#1e90ff', textColor: '#ffffff', useButtonWallColor: true, buttonWallColor: '#0f5fb0', specularAlpha: 25, btnLabels: 'ACCENT' },
+        axes: [{ label: 'faceColor', key: 'faceColor' }, { label: 'buttonWallColor', key: 'buttonWallColor' }, { label: 'specularAlpha', key: 'specularAlpha' }] },
+      { name: 'Frameless flat', bg: 'NEUTRAL', config: { ...MATERIAL_PRESETS.plastic, frameEnabled: false, pressDepthRatio: 6, wallHRatio: 4, btnLabels: 'FLAT' },
+        axes: [{ label: 'frameEnabled', key: 'frameEnabled' }, { label: 'pressDepthRatio', key: 'pressDepthRatio' }, { label: 'wallHRatio', key: 'wallHRatio' }] },
+      { name: 'Heavy frame', bg: 'NEUTRAL', config: { ...MATERIAL_PRESETS.metal, frameWidth: 32, frameBevelAlpha: 85, frameBevelWidth: 3, btnLabels: 'FRAMED' },
+        axes: [{ label: 'frameWidth', key: 'frameWidth' }, { label: 'frameBevelAlpha', key: 'frameBevelAlpha' }, { label: 'material', literal: 'metal' }] },
+      { name: 'Deep travel', bg: 'NEUTRAL', config: { ...MATERIAL_PRESETS.rubber, pressDepthRatio: 45, wallHRatio: 35, btnLabels: 'DEEP' },
+        axes: [{ label: 'pressDepthRatio', key: 'pressDepthRatio' }, { label: 'wallHRatio', key: 'wallHRatio' }, { label: 'material', literal: 'rubber' }] },
+      { name: 'Shallow travel', bg: 'NEUTRAL', config: { ...MATERIAL_PRESETS.metal, pressDepthRatio: 4, wallHRatio: 3, btnLabels: 'SHALLOW' },
+        axes: [{ label: 'pressDepthRatio', key: 'pressDepthRatio' }, { label: 'wallHRatio', key: 'wallHRatio' }, { label: 'material', literal: 'metal' }] },
+      { name: 'Specular hot', bg: 'DARK', config: { ...MATERIAL_PRESETS.glass, specularAlpha: 80, specularSize: 90, lightAngleX: 30, lightAngleY: 15, btnLabels: 'SHINE' },
+        axes: [{ label: 'specularAlpha', key: 'specularAlpha' }, { label: 'specularSize', key: 'specularSize' }, { label: 'material', literal: 'glass' }] },
+      { name: 'Matte (no specular)', bg: 'DARK', config: { ...MATERIAL_PRESETS.rubber, specularAlpha: 0, contactIntensity: 0, btnLabels: 'MATTE' },
+        axes: [{ label: 'specularAlpha', key: 'specularAlpha' }, { label: 'contactIntensity', key: 'contactIntensity' }, { label: 'material', literal: 'rubber' }] },
+      { name: 'Toggle mode', bg: 'NEUTRAL', config: { ...MATERIAL_PRESETS.plastic, mode: 'toggle', useToggleColor: true, toggleColor: '#4caf50', toggleHeightRatio: 60, btnLabels: 'TOGGLE' },
+        axes: [{ label: 'mode', key: 'mode' }, { label: 'toggleColor', key: 'toggleColor' }, { label: 'toggleHeightRatio', key: 'toggleHeightRatio' }] },
+      { name: 'Label-only, no icon', bg: 'NEUTRAL', config: { ...MATERIAL_PRESETS.metal, btnCount: 3, btnLabels: 'PLAY,STOP,REC' },
+        axes: [{ label: 'material', literal: 'metal' }, { label: 'count', key: 'btnCount' }, { label: 'icon', literal: 'none' }] },
+      { name: 'Skew X +12°', bg: 'NEUTRAL', config: { ...MATERIAL_PRESETS.plastic, skewXAngle: 12, btnLabels: 'SKEW X+' },
+        axes: [{ label: 'skewXAngle', key: 'skewXAngle' }, { label: 'frameEnabled', key: 'frameEnabled' }, { label: 'shape', literal: 'parallelogram (+X)' }] },
+      { name: 'Skew Y +6°', bg: 'NEUTRAL', config: { ...MATERIAL_PRESETS.metal, skewYAngle: 6, btnLabels: 'SKEW Y+' },
+        axes: [{ label: 'skewYAngle', key: 'skewYAngle' }, { label: 'frameEnabled', key: 'frameEnabled' }, { label: 'shape', literal: 'parallelogram (+Y)' }] },
+      { name: 'Skew combined X+8/Y+4', bg: 'NEUTRAL', config: { ...MATERIAL_PRESETS.plastic, skewXAngle: 8, skewYAngle: 4, btnLabels: 'COMBO' },
+        axes: [{ label: 'skewXAngle', key: 'skewXAngle' }, { label: 'skewYAngle', key: 'skewYAngle' }, { label: 'shape', literal: 'combined shear' }] },
+      { name: 'Asymmetric corners', bg: 'NEUTRAL', config: { ...MATERIAL_PRESETS.plastic, radiusCorners: { tl: 0, tr: 50, br: 50, bl: 0 }, btnLabels: 'CORNERS' },
+        axes: [{ label: 'radiusCorners', literal: 'sharp-left / pill-right' }, { label: 'material', literal: 'plastic' }, { label: 'shape', literal: 'asymmetric corners' }] },
+      { name: 'Segmented', bg: 'NEUTRAL', config: { housingLayout: 'segmented', gridWrap: 'nowrap', groupLabel: 'Segmented view', btnCount: 3, btnLabels: 'List,Grid,Map' },
+        axes: [{ label: 'housingLayout', key: 'housingLayout' }, { label: 'mode', key: 'mode' }, { label: 'count', key: 'btnCount' }] },
+      { name: 'Tri-state (slicer)', bg: 'NEUTRAL',
+        config: { housingLayout: 'segmented', mode: 'radio', gridWrap: 'nowrap', groupLabel: 'Slicer filter', btnCount: 3, btnLabels: 'TACIT,INCLUDE,EXCLUDE', variants: { include: { toggleColor: '#2e9e4f' }, exclude: { toggleColor: '#c0392b' } } },
+        groupOpts: { name: 'gallery-tristate', values: ['tacit', 'include', 'exclude'], checked: 'tacit' },
+        axes: [{ label: 'housingLayout', key: 'housingLayout' }, { label: 'mode', key: 'mode' }, { label: 'toggleColor', literal: 'include #2e9e4f / exclude #c0392b' }] },
+    ];
+
+    function fmtAxis(cfg, a) {
+      if ('literal' in a) return `${a.label}: ${a.literal}`;
+      if (a.size) return `${a.label}: ${val(cfg, 'containerWidth')}×${val(cfg, 'containerHeight')}`;
+      const v = val(cfg, a.key);
+      return a.prefix ? `${a.label}: ${a.prefix}${v}` : `${a.label}: ${v}`;
+    }
+    const buildCaption = tile => `${tile.name} — ${tile.axes.map(a => fmtAxis(tile.config, a)).join(', ')}`;
+
+    function buildTileMarkup(tile) {
+      const cfg = tile.config;
+      if (cfg.housingLayout === 'segmented') return buildClickyGroupHtml(cfg, tile.groupOpts || {});
+      const merged = { ...defaultClickyConfig, ...cfg };
+      const labels = internals.getLabels(merged);
+      const buttons = labels.map(label => buildClickyHtml({ label, config: cfg, attrs: label ? {} : { 'aria-label': merged.iconName || merged.btnLabels || 'button' } })).join('');
+      return merged.btnCount > 1 ? `<div class="btn-grid">${buttons}</div>` : buttons;
+    }
+
+    const grid = $('gallery-grid');
+    const cssChunks = [];
+    let failed = 0;
+    TILES.forEach((tile, i) => {
+      const scope = `#tile-${i}`;
+      try {
+        cssChunks.push(buildClickyCss(tile.config, { scope }));
+        const el = document.createElement('div');
+        el.className = 'gallery-tile';
+        el.id = `tile-${i}`;
+        el.style.background = BG[tile.bg];
+        el.innerHTML = buildTileMarkup(tile);
+        const cap = document.createElement('div');
+        cap.className = 'tile-caption';
+        cap.textContent = buildCaption(tile);
+        el.appendChild(cap);
+        grid.appendChild(el);
+      } catch (err) { failed++; console.error(`Tile ${i} (${tile.name}) failed:`, err.message); }
+    });
+    $('gallery-css').textContent = cssChunks.join('\n');
+    $('tile-count-note').textContent = failed
+      ? `${TILES.length - failed}/${TILES.length} tiles rendered (${failed} failed — see console)`
+      : `${TILES.length} tiles, each generated live from the engine`;
   </script>
 </body>
 </html>
