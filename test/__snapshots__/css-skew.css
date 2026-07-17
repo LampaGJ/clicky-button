@@ -92,6 +92,25 @@
 
 @supports (width: 1cqi) {
     :root {
+      --housing-width: 100cqw;
+      --housing-height: 100cqh;
+      --skew-base-w: calc(100cqw - 100cqh * 0.2126);
+      --skew-base-h: calc(100cqh - var(--skew-base-w) * 0);
+      --skew-widen-y: calc(var(--skew-base-w) * 0);
+      --frame-width: 12.069cqmin;
+      --container-width: calc(var(--skew-base-w) - 2 * var(--frame-width));
+      --container-height: calc(var(--skew-base-h) - 2 * var(--frame-width));
+      --wall-h: calc(var(--container-height) * 0.16);
+      --press-translate: calc(var(--container-height) * 0.16);
+      --toggle-height: calc(var(--press-translate) * 0.5);
+      --radius: min(calc(var(--container-width) * 0.08), calc(var(--container-width) / 2), calc((var(--container-height) - var(--wall-h)) / 2), calc(var(--container-height) / 2));
+      --radius-bot: min(calc(var(--radius) + var(--frame-width) + 0px), calc(var(--housing-width) / 2), calc(var(--housing-height) / 2));
+      --frame-bevel-conic-tr-start: atan2(calc(calc(var(--housing-width) / 2) - var(--radius-bot)), calc(var(--housing-height) / 2));
+      --frame-bevel-conic-tr-end: atan2(calc(var(--housing-width) / 2), calc(calc(var(--housing-height) / 2) - var(--radius-bot)));
+      --frame-bevel-conic-bl-start: calc(var(--frame-bevel-conic-tr-start) + 180deg);
+      --frame-bevel-conic-bl-end: calc(var(--frame-bevel-conic-tr-end) + 180deg);
+      --housing-shadow: 0 calc(var(--wall-h) * 1.5000) calc(var(--wall-h) * 3.0000) 0 rgba(0, 0, 0, 0.250);
+      --housing-shadow-pressed: 0 calc(var(--wall-h) * 0.7500) calc(var(--wall-h) * 1.5000) 0 rgba(0, 0, 0, 0.125);
       --font-size: min(calc(var(--container-width) * 0.08), calc(var(--container-height) * 0.22));
       --face-shadow-resting: inset 0 0 0 0 transparent,
     inset 0 0 0 0 rgba(0, 0, 0, 0.550),
