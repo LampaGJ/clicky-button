@@ -105,6 +105,10 @@
       --toggle-height: calc(var(--press-translate) * 0.5);
       --radius: min(calc(var(--container-width) * 0.08), calc(var(--container-width) / 2), calc((var(--container-height) - var(--wall-h)) / 2), calc(var(--container-height) / 2));
       --radius-bot: min(calc(var(--radius) + var(--frame-width) + 0px), calc(var(--housing-width) / 2), calc(var(--housing-height) / 2));
+      --frame-bevel-conic-tr-start: atan2(calc(calc(var(--housing-width) / 2) - var(--radius-bot)), calc(var(--housing-height) / 2));
+      --frame-bevel-conic-tr-end: atan2(calc(var(--housing-width) / 2), calc(calc(var(--housing-height) / 2) - var(--radius-bot)));
+      --frame-bevel-conic-bl-start: calc(var(--frame-bevel-conic-tr-start) + 180deg);
+      --frame-bevel-conic-bl-end: calc(var(--frame-bevel-conic-tr-end) + 180deg);
       --font-size: min(calc(var(--container-width) * 0.08), calc(var(--container-height) * 0.22));
       --face-shadow-resting: inset 0 0 0 0 transparent,
     inset 0 0 0 0 rgba(0, 0, 0, 0.550),
