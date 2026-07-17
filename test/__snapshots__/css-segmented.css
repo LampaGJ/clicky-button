@@ -7,6 +7,8 @@
   --grid-align: center;
   --housing-width: 572px;
   --housing-height: 116px;
+  --housing-width-base: 572px;
+  --housing-height-base: 116px;
   --container-width: 180px;
   --container-height: 88px;
   --radius: 14px;
@@ -89,7 +91,7 @@
 
 @supports (width: 1cqi) {
     :root {
-      --font-size: min(8cqi, 22cqb);
+      --font-size: min(calc(var(--container-width) * 0.08), calc(var(--container-height) * 0.22));
       --face-shadow-resting: inset 0 0 0 0 transparent,
     inset 0 0 0 0 rgba(0, 0, 0, 0.550),
     inset 0 0 0 0 rgba(0, 0, 0, 0.280),
@@ -100,7 +102,7 @@
     inset 0 0 0 0 rgba(0, 0, 0, 0.280),
     inset 0 0 0 0 transparent,
     inset 0 -1px 0 0 rgba(0, 0, 0, 0.000);
-      --rim-shadow: inset 0 8cqb 4cqb 0 rgba(255, 255, 255, 0.300);
+      --rim-shadow: inset 0 calc(var(--container-height) * 0.0800) calc(var(--container-height) * 0.0400) 0 rgba(255, 255, 255, 0.300);
     }
   }
 
@@ -112,6 +114,19 @@
   gap: var(--grid-gap);
   justify-content: var(--grid-justify);
   align-items: var(--grid-align);
+}
+/* Responsive sizing boundary (issue #96). Defaults to the authored footprint
+   so a standalone or gridded button looks exactly as before; a consumer that
+   gives it a different size (flex stretch, width/height, aspect-ratio) makes
+   every box measure below reflow against it via container-query units. It is a
+   container-type: size box, so it never derives its own size from its contents
+   — the authored-px default (or the consumer's override) is what it queries.
+   No overflow/isolation here: containment must not clip the glow halo. */
+:root .btn-scale {
+  container-type: size;
+  width: var(--housing-width-base);
+  height: var(--housing-height-base);
+  max-width: 100%;
 }
 
 :root .btn-housing {
@@ -160,7 +175,12 @@
   left: var(--frame-width);
   right: var(--frame-width);
   height: var(--container-height);
-  container-type: size;
+  /* NOT a container-type here (issue #96): .btn-scale is the single cq
+     container, so every geometry var resolves in one space and the concentric
+     ring invariant (--radius-bot === --radius + --frame-width) holds textually.
+     A nested container would resolve shared vars against two different boxes
+     (verified in real WebKit). position:absolute still makes this the
+     containing block for the cap/wall, which is all that is needed here. */
   overflow: hidden;
   border-radius: var(--radius);
   background: transparent;
@@ -207,6 +227,12 @@
   );
   background-blend-mode: multiply;
   pointer-events: none;
+  transition: top var(--shadow-release-dur) var(--shadow-ease-release);
+}
+:root .btn-cell:has(.clicky-btn:active)::before,
+:root .btn-cell:has(.clicky-toggle input:checked)::before {
+  top: max(0px, calc(var(--wall-h) - var(--press-translate)));
+  transition: top var(--shadow-press-dur) var(--shadow-ease-press) var(--shadow-press-delay);
 }
 
 :root .btn-housing--segmented {
@@ -398,6 +424,22 @@
    keyframe), so it stays glued to the cap through the press cycle. */
 :root .clicky-btn.clicky-press .btn-wall {
   animation: clicky-transform-cycle-217lh5 calc(var(--press-duration) + var(--duration)) linear forwards;
+}
+
+/* Cavity-reveal, click-mode full press cycle (issue #96) — the recess top edge
+   tracks the descending cap down and back, so the dark recess fills the band
+   the cap vacates (never bare housing chrome above the sinking cap). */
+@keyframes clicky-cavity-top-cycle {
+  0% { top: var(--wall-h); }
+  33.33% { top: max(0px, calc(var(--wall-h) - var(--press-translate))); }
+  100% { top: var(--wall-h); }
+}
+
+:root .btn-cell:has(.clicky-btn.clicky-press)::before {
+  animation-name: clicky-cavity-top-cycle;
+  animation-duration: calc(var(--press-duration) + var(--duration));
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
 }
 
 /* Icon press-darken (realism pack #7d) — the icon participates in the same

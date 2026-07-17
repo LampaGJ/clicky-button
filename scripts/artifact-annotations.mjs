@@ -48,6 +48,23 @@ export const ELEMENT_ANNOTATIONS = {
       'Flex row/column wrapper (`.btn-grid`) reading the `--grid-*` vars; ' +
       'wraps every housing buildGridHtml/buildClickyGroupHtml emits.',
   },
+  'btn-scale': {
+    selector: 'btn-scale',
+    producedBy: 'buildGridCss (lib/clicky-button.js)',
+    displayName: 'Responsive Sizing Boundary',
+    strategicPurpose:
+      'The unconditional container-query boundary (issue #96) that makes ' +
+      'a single generated button reflow to any container size and aspect ' +
+      'ratio — a consumer sizes it (flex stretch, width/height, ' +
+      'aspect-ratio) and every box measurement below resolves against it ' +
+      'via cq units, so the exported button "takes up the available ' +
+      'space" instead of being frozen at its authored px size.',
+    tacticalObjective:
+      'A `container-type: size` wrapper defaulting to the authored ' +
+      '`--housing-width-base`/`--housing-height-base` footprint; carries ' +
+      'no paint (no overflow/isolation) so it never clips the glow halo. ' +
+      'Wraps the slot/housing in every HTML builder.',
+  },
   'btn-housing': {
     selector: 'btn-housing',
     producedBy: 'buildGridCss (lib/clicky-button.js)',
@@ -334,7 +351,7 @@ export const CSS_VAR_GROUPS = {
       'align-items directly, one-to-one with the matching config keys.',
   },
   'housing-geometry': {
-    vars: ['--housing-width', '--housing-height', '--container-width', '--container-height'],
+    vars: ['--housing-width', '--housing-height', '--container-width', '--container-height', '--housing-width-base', '--housing-height-base'],
     displayName: 'Housing & Container Dimensions',
     strategicPurpose:
       'The base pixel geometry every other measurement (radius clamps, ' +
@@ -345,7 +362,10 @@ export const CSS_VAR_GROUPS = {
     tacticalObjective:
       '`--housing-width`/`--housing-height` (post skew-widen), ' +
       '`--container-width`/`--container-height` (the caller’s raw ' +
-      'config values, unwidened).',
+      'config values, unwidened); `--housing-width-base`/' +
+      '`--housing-height-base` are the always-px authored footprint that ' +
+      'sizes the `.btn-scale` responsive wrapper and serves as the no-cq ' +
+      'fallback (issue #96).',
   },
   radius: {
     vars: ['--radius', '--radius-bot', '--radius-tl', '--radius-tr', '--radius-br', '--radius-bl'],
@@ -688,6 +708,27 @@ export const CSS_VAR_GROUPS = {
 // ── Keyframe groups ────────────────────────────────────────────────────
 // id → { names: [...], producedBy, displayName, strategicPurpose, tacticalObjective }
 export const KEYFRAME_GROUPS = {
+  'cavity-top-cycle': {
+    names: ['clicky-cavity-top-cycle'],
+    producedBy: 'buildClickFaceCss (lib/clicky-button.js)',
+    displayName: 'Cavity-Reveal Press Cycle',
+    strategicPurpose:
+      'Fixes the pressed-state illusion (issue #96): the recessed cavity ' +
+      'top is pinned at wall-height, so once the cap descends to/past that ' +
+      'edge it vacates a band that nothing covered — bare housing chrome ' +
+      'showed above the sinking cap (worst on tall buttons). This animates ' +
+      'the cavity top up to track the descending cap so the dark recess ' +
+      'fills that band, reading as a key sinking into a hole. Emitted for ' +
+      'every config whose press depth reaches wall height (cavityRevealsPress ' +
+      '— broader than resolveShadowTiming.animates, which misses the common ' +
+      'press-depth === wall-h default).',
+    tacticalObjective:
+      'Animates `.btn-cell::before` `top` from var(--wall-h) (rest) to ' +
+      'max(0px, calc(var(--wall-h) - var(--press-translate))) at the press ' +
+      'bottom and back, ramping on the cap DESCENT (0/bottom/100) rather than ' +
+      'the flush-gated window, which collapses to a spike when press-depth === ' +
+      'wall-h. Held-press/toggle-checked use the same value statically.',
+  },
   'glow-channel-cycle': {
     names: ['clicky-glow-channel-cycle'],
     producedBy: 'buildClickFaceCss (lib/clicky-button.js)',

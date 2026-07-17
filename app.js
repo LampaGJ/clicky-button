@@ -479,7 +479,7 @@ function initControls() {
     const segmented = on === 'segmented';
     depRow('group-label-row', segmented);
     depRow('segment-divider-row', segmented);
-    if (segmented && state.gridWrap === 'wrap') {
+    if (segmented && (state.gridWrap === 'wrap' || state.gridWrap === 'wrap-reverse')) {
       state.gridWrap = 'nowrap';
       const gw = $('grid-wrap');
       if (gw) gw.value = 'nowrap';
@@ -1122,8 +1122,17 @@ function syncAllControls() {
     switch (ctrl.type) {
       case 'range': {
         const range = $(ctrl.rangeId), num = $(ctrl.numId);
-        if (range) range.value = state[ctrl.stateKey];
-        if (num) num.value = state[ctrl.stateKey];
+        // Clamp the DISPLAY to the control's own min/max so the range thumb
+        // (which silently clips) and the number box (which does not) can never
+        // show two different values for one state key (issue #93). State itself
+        // is untouched; with control ranges kept ⊇ their schema ranges this
+        // never fires for schema-valid data, but it defends against drift.
+        const raw = state[ctrl.stateKey];
+        const shown = (range && Number.isFinite(+raw))
+          ? Math.min(Math.max(+raw, +range.min), +range.max)
+          : raw;
+        if (range) range.value = shown;
+        if (num) num.value = shown;
         break;
       }
       case 'color':

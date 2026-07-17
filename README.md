@@ -16,7 +16,25 @@ Design tactile, skeuomorphic **"clicky" buttons** in the browser — tune every 
 4. **Check it on your background** — flip the preview between *Light / Dark / Neutral*.
 5. **Export.** Hit **Export** to download a `.zip` with a standalone `.html` + `.css` (plus an optional `.enhancer.js` progressive-enhancement script — never required, since press/toggle motion is pure CSS) you can drop straight into a page. Hit **+ Save** to keep the current style in the in-app style picker so you can compare variants.
 
-The exported CSS is self-contained — the only requirement (`container-type: size` on the button cell, which makes the sizing responsive) is already baked in.
+The exported CSS is self-contained and **responsive out of the box** (v2): the button is wrapped in a `.btn-scale` container-query boundary, so it fills whatever space you give it — any size, any aspect ratio — with correct geometry throughout. See [Responsive by default](#responsive-by-default-v2).
+
+---
+
+## Responsive by default (v2)
+
+Every generated button is wrapped in a `.btn-scale` element that is a `container-type: size` boundary. All of the button's geometry — housing, frame, corner radii, wall depth, the frame bevel, and the shadows — is expressed relative to that boundary with CSS container-query units, so **one button fills any container at any size and aspect ratio, live, without regeneration.** The frame band stays proportionally balanced (it scales off the shorter axis), the concentric chrome ring holds, the bevel tracks the corner via `atan2()`, the shadows scale, and the press reveals the recess correctly at every ratio.
+
+By default `.btn-scale` renders at its authored footprint. To make it fill a flex/grid cell, size it in *your* CSS:
+
+```css
+.your-toolbar { display: flex; gap: 12px; }
+.your-toolbar .btn-scale { flex: 1 1 0; }          /* share the row */
+/* or: .btn-scale { width: 100%; height: 100%; }   fill both axes at any ratio */
+```
+
+**Try it:** the [gallery](gallery.html) has an interactive flexbox playground — pick `flex-direction`/`justify-content`/`align-items`/`wrap`/`gap`, drag the stage to any size, and watch the buttons re-flow.
+
+> **Migrating from a pre-v2 (0.x) export — breaking change.** v2 adds the `.btn-scale` wrapper, so the emitted markup gains one level: `.btn-grid > .btn-scale > .btn-housing > .btn-cell > …` (was `.btn-grid > .btn-housing > …`). Re-export your buttons, or update any consumer CSS/JS keyed to the old DOM depth. The container query moved off `.btn-cell` (no longer a container) onto `.btn-scale`; if you referenced that, move it up one level. Everything else (config API, `--clicky-*` theming contract, class names) is unchanged.
 
 ---
 
@@ -127,5 +145,6 @@ python3 -m http.server 8000      # or: npx serve
 | `app.js` | Wires the controls to state, live preview, save/export |
 | `styles.css` | Styling for the generator app itself |
 | `lib/clicky-button.js` | The importable, dependency-free button engine |
-| `gallery.html` | Standalone QA/showcase page: a 24-tile variation matrix generated live from `lib/clicky-button.js` |
+| `gallery.html` | Interactive **flexbox playground** (drop the responsive button into a resizable flex container) + a **showcase gallery** of variation tiles, all generated live from `lib/clicky-button.js` |
+| `CHANGELOG.md` | Release notes (see it for the v2 responsive-engine breaking change) |
 | `claudedocs/` | Config spec & design notes |

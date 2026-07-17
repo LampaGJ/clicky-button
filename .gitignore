@@ -14,3 +14,8 @@ amber-contact-sales-today.*
 
 # Local session handoff (volatile — see /prep)
 WORK-STATE.md
+
+# Scratch real-WebKit verification harnesses (issue #96) — never committed
+_verify.*
+_tall.*
+_cqprobe.*
