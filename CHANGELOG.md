@@ -3,6 +3,27 @@
 All notable changes to this project are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/); this project uses semantic versioning.
 
+## [2.0.1] — 2026-07-17
+
+Completes the v2 responsive promise — **every form** now reflows to any size and
+ratio, not just the common button. Each verified reflowing in real WebKit.
+
+### Fixed / Added
+
+- **Per-corner radius** configs are now live: each of the four corner radii scales
+  with the container (the browser applies the adjacent-corner overlap clamp live,
+  so no generation-time overlap pass is needed).
+- **Skewed (parallelogram)** configs are now live: the housing's skew-widen space
+  reservation is recovered from the filled scale via `W0 = housingW − housingH·|tanX|`
+  (the widen cross-term cancels), with the fixed skew angles baked as `tan()`
+  constants — the sheared button reflows at any ratio with its ring intact.
+- **Segmented housings** are now live: the shared housing's per-segment container
+  width is back-solved from the scale and divided by the segment count, so an
+  N-segment strip fills and reflows to any container width.
+
+Previously these three forms fell back to their frozen authored-px size (they
+rendered correctly but did not reflow). The base non-cq fallback is unchanged.
+
 ## [2.0.0] — 2026-07-17
 
 The **responsive engine** release: one generated button now fills any container
