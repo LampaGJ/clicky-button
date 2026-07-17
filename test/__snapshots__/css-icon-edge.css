@@ -92,7 +92,17 @@
 
 @supports (width: 1cqi) {
     :root {
-      --font-size: min(8cqi, 22cqb);
+      --housing-width: 100cqw;
+      --housing-height: 100cqh;
+      --frame-width: 12.069cqmin;
+      --container-width: calc(100cqw - 2 * var(--frame-width));
+      --container-height: calc(100cqh - 2 * var(--frame-width));
+      --wall-h: calc(var(--container-height) * 0.16);
+      --press-translate: calc(var(--container-height) * 0.16);
+      --toggle-height: calc(var(--press-translate) * 0.5);
+      --radius: min(calc(var(--container-width) * 0.08), calc(var(--container-width) / 2), calc((var(--container-height) - var(--wall-h)) / 2), calc(var(--container-height) / 2));
+      --radius-bot: min(calc(var(--radius) + var(--frame-width) + 0px), calc(var(--housing-width) / 2), calc(var(--housing-height) / 2));
+      --font-size: min(calc(var(--container-width) * 0.08), calc(var(--container-height) * 0.22));
       --face-shadow-resting: inset 0 0 0 0 transparent,
     inset 0 0 0 0 rgba(0, 0, 0, 0.550),
     inset 0 0 0 0 rgba(0, 0, 0, 0.280),
@@ -103,7 +113,7 @@
     inset 0 0 0 0 rgba(0, 0, 0, 0.280),
     inset 0 0 0 0 transparent,
     inset 0 -1px 0 0 rgba(0, 0, 0, 0.000);
-      --rim-shadow: inset 0 8cqb 4cqb 0 rgba(255, 255, 255, 0.300);
+      --rim-shadow: inset 0 calc(var(--container-height) * 0.0800) calc(var(--container-height) * 0.0400) 0 rgba(255, 255, 255, 0.300);
     }
   }
 
@@ -184,7 +194,12 @@
   left: var(--frame-width);
   right: var(--frame-width);
   height: var(--container-height);
-  container-type: size;
+  /* NOT a container-type here (issue #96): .btn-scale is the single cq
+     container, so every geometry var resolves in one space and the concentric
+     ring invariant (--radius-bot === --radius + --frame-width) holds textually.
+     A nested container would resolve shared vars against two different boxes
+     (verified in real WebKit). position:absolute still makes this the
+     containing block for the cap/wall, which is all that is needed here. */
   overflow: hidden;
   border-radius: var(--radius);
   background: transparent;
