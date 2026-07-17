@@ -254,10 +254,11 @@
   var(--cavity-glow-resting);
   background-blend-mode: multiply;
   pointer-events: none;
-  transition: background-image var(--shadow-release-dur) var(--shadow-ease-release);
+  transition: top var(--shadow-release-dur) var(--shadow-ease-release), background-image var(--shadow-release-dur) var(--shadow-ease-release);
 }
 :root .btn-cell:has(.clicky-btn:active)::before,
 :root .btn-cell:has(.clicky-toggle input:checked)::before {
+  top: max(0px, calc(var(--wall-h) - var(--press-translate)));
   background-image: linear-gradient(
     to right,
     rgba(0, 0, 0, var(--cavity-wall-shadow-alpha))                                                0%,
@@ -266,7 +267,7 @@
     rgba(0, 0, 0, var(--cavity-wall-shadow-alpha))                                              100%
   ),
   var(--cavity-glow-pressed);
-  transition: background-image var(--shadow-press-dur) var(--shadow-ease-press) var(--shadow-press-delay);
+  transition: top var(--shadow-press-dur) var(--shadow-ease-press) var(--shadow-press-delay), background-image var(--shadow-press-dur) var(--shadow-ease-press) var(--shadow-press-delay);
 }
 
   :root .btn-glow {
@@ -419,6 +420,15 @@
   animation: clicky-transform-cycle-217lh5 calc(var(--press-duration) + var(--duration)) linear forwards;
 }
 
+/* Cavity-reveal, click-mode full press cycle (issue #96) — the recess top edge
+   tracks the descending cap down and back, so the dark recess fills the band
+   the cap vacates (never bare housing chrome above the sinking cap). */
+@keyframes clicky-cavity-top-cycle {
+  0% { top: var(--wall-h); }
+  33.33% { top: max(0px, calc(var(--wall-h) - var(--press-translate))); }
+  100% { top: var(--wall-h); }
+}
+
 /* Lit channel, click-mode full press cycle (issue #53b) — driven by the SAME
    flush-point offsets clicky-shadow-cycle-217lh5 already uses (sh.flushDown /
    sh.bottom / sh.flushUp), never a parallel timing source: the channel only
@@ -441,12 +451,11 @@
 }
 
 :root .btn-cell:has(.clicky-btn.clicky-press)::before {
-  animation-name: clicky-glow-channel-cycle-217lh5;
-  animation-duration: calc(var(--press-duration) + var(--duration));
-  animation-timing-function: linear;
-  animation-fill-mode: forwards;
+  animation-name: clicky-cavity-top-cycle, clicky-glow-channel-cycle-217lh5;
+  animation-duration: calc(var(--press-duration) + var(--duration)), calc(var(--press-duration) + var(--duration));
+  animation-timing-function: linear, linear;
+  animation-fill-mode: forwards, forwards;
 }
-
 
 /* Icon press-darken (realism pack #7d) — the icon participates in the same
    darken effect as the face. Two paths must both be covered: the pseudo-class

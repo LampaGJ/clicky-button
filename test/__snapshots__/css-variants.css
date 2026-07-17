@@ -250,6 +250,12 @@
   );
   background-blend-mode: multiply;
   pointer-events: none;
+  transition: top var(--shadow-release-dur) var(--shadow-ease-release);
+}
+:root .btn-cell:has(.clicky-btn:active)::before,
+:root .btn-cell:has(.clicky-toggle input:checked)::before {
+  top: max(0px, calc(var(--wall-h) - var(--press-translate)));
+  transition: top var(--shadow-press-dur) var(--shadow-ease-press) var(--shadow-press-delay);
 }
 
 /* Click mode */
@@ -385,6 +391,22 @@
    keyframe), so it stays glued to the cap through the press cycle. */
 :root .clicky-btn.clicky-press .btn-wall {
   animation: clicky-transform-cycle-217lh5 calc(var(--press-duration) + var(--duration)) linear forwards;
+}
+
+/* Cavity-reveal, click-mode full press cycle (issue #96) — the recess top edge
+   tracks the descending cap down and back, so the dark recess fills the band
+   the cap vacates (never bare housing chrome above the sinking cap). */
+@keyframes clicky-cavity-top-cycle {
+  0% { top: var(--wall-h); }
+  33.33% { top: max(0px, calc(var(--wall-h) - var(--press-translate))); }
+  100% { top: var(--wall-h); }
+}
+
+:root .btn-cell:has(.clicky-btn.clicky-press)::before {
+  animation-name: clicky-cavity-top-cycle;
+  animation-duration: calc(var(--press-duration) + var(--duration));
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
 }
 
 /* Icon press-darken (realism pack #7d) — the icon participates in the same

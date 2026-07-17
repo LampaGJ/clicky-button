@@ -250,6 +250,12 @@
   );
   background-blend-mode: multiply;
   pointer-events: none;
+  transition: top var(--shadow-release-dur) var(--shadow-ease-release);
+}
+:root .btn-cell:has(.clicky-btn:active)::before,
+:root .btn-cell:has(.clicky-toggle input:checked)::before {
+  top: max(0px, calc(var(--wall-h) - var(--press-translate)));
+  transition: top var(--shadow-press-dur) var(--shadow-ease-press) var(--shadow-press-delay);
 }
 
 /* Toggle mode — hidden checkbox + visible face */

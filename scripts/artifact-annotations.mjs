@@ -708,6 +708,27 @@ export const CSS_VAR_GROUPS = {
 // ── Keyframe groups ────────────────────────────────────────────────────
 // id → { names: [...], producedBy, displayName, strategicPurpose, tacticalObjective }
 export const KEYFRAME_GROUPS = {
+  'cavity-top-cycle': {
+    names: ['clicky-cavity-top-cycle'],
+    producedBy: 'buildClickFaceCss (lib/clicky-button.js)',
+    displayName: 'Cavity-Reveal Press Cycle',
+    strategicPurpose:
+      'Fixes the pressed-state illusion (issue #96): the recessed cavity ' +
+      'top is pinned at wall-height, so once the cap descends to/past that ' +
+      'edge it vacates a band that nothing covered — bare housing chrome ' +
+      'showed above the sinking cap (worst on tall buttons). This animates ' +
+      'the cavity top up to track the descending cap so the dark recess ' +
+      'fills that band, reading as a key sinking into a hole. Emitted for ' +
+      'every config whose press depth reaches wall height (cavityRevealsPress ' +
+      '— broader than resolveShadowTiming.animates, which misses the common ' +
+      'press-depth === wall-h default).',
+    tacticalObjective:
+      'Animates `.btn-cell::before` `top` from var(--wall-h) (rest) to ' +
+      'max(0px, calc(var(--wall-h) - var(--press-translate))) at the press ' +
+      'bottom and back, ramping on the cap DESCENT (0/bottom/100) rather than ' +
+      'the flush-gated window, which collapses to a spike when press-depth === ' +
+      'wall-h. Held-press/toggle-checked use the same value statically.',
+  },
   'glow-channel-cycle': {
     names: ['clicky-glow-channel-cycle'],
     producedBy: 'buildClickFaceCss (lib/clicky-button.js)',
