@@ -214,15 +214,13 @@
 .contact-cta-host .btn-cell::before {
   content: '';
   position: absolute;
-  /* STATIC recess (does not animate). It sits at its full-reveal top —
-     max(0, wall-h - press-translate), i.e. 0 for a press that reaches flush
-     — hidden at rest behind the opaque cap+wall (which together cover the whole
-     cell) and simply UNCOVERED as the key sinks. A shallow press that never
-     reaches flush keeps the resting wall-h (its own footprint fills the gap,
-     so nothing of the recess may show before then). See cavityStaticTop.
+  /* STATIC recess pinned at the flush line (top: --wall-h) — it does NOT
+     animate. Hidden at rest behind the proud cap; as the key sinks the cap
+     uncovers the housing surface first (pre-flush, above this edge) and then
+     this channel (post-flush, below it). See cavityStaticTop.
      Slight 1px inflation on the visible edges prevents sub-pixel anti-alias
      gaps where the dark wall corner meets the bright chrome surround. */
-  top: max(0px, calc(var(--wall-h) - var(--press-translate)));
+  top: var(--wall-h);
   left: -1px;
   right: -1px;
   bottom: -1px;

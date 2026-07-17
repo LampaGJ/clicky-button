@@ -285,22 +285,29 @@ describe('equal ring + flush-gated reveal (owner invariants)', () => {
     expect(v['--face-shadow-pressed']).toBe(v['--face-shadow-resting']);
   });
 
-  it('recess is a STATIC hole (does not animate): sits at its full-reveal top, no cavity-top transition/keyframe', () => {
-    // A press that reaches flush (default: press-depth === wall-h) parks the
-    // cavity at max(0, wall-h - press-translate) STATICALLY — hidden at rest
-    // behind the cap+wall, uncovered as the key sinks. It must never animate
-    // its own `top` (that read as the channel bouncing — owner report).
+  it('recess is a STATIC hole pinned at the flush line (top: wall-h), no cavity-top transition/keyframe', () => {
+    // The cavity sits STATICALLY at --wall-h (the flush line): hidden at rest
+    // behind the proud cap, uncovered as the key sinks — housing surface shows
+    // pre-flush (above this edge), the channel post-flush (below it). It must
+    // never animate its own `top` (that read as the channel bouncing — owner
+    // report), and the position must NOT depend on press depth.
     const css = buildClickyCss();
-    expect(css).toMatch(/\.btn-cell::before\s*\{[^}]*top: max\(0px, calc\(var\(--wall-h\) - var\(--press-translate\)\)\);/s);
-    expect(css).not.toMatch(/\.btn-cell::before\s*\{[^}]*top: var\(--frame-width\);/s);
+    const cavityRule = css.match(/\.btn-cell::before\s*\{[^}]*\}/s)[0];
+    expect(cavityRule).toContain('top: var(--wall-h);');
+    // The cavity top must not track the cap (no press-translate in its geometry).
+    expect(cavityRule).not.toContain('press-translate');
+    expect(cavityRule).not.toContain('top: var(--frame-width);');
     expect(css).not.toContain('clicky-cavity-top-cycle');
     expect(css).not.toMatch(/transition: top /);
   });
 
-  it('a shallow press that never reaches flush keeps the cavity at the resting wall-h', () => {
-    // press-depth < wall-h ⇒ the cap's own footprint covers the gap, no reveal.
-    const css = buildClickyCss({ wallHRatio: 20, pressDepthRatio: 6 });
-    expect(css).toMatch(/\.btn-cell::before\s*\{[^}]*top: var\(--wall-h\);/s);
+  it('the static wall-h cavity is depth-independent: deep and shallow presses match', () => {
+    // Same static top regardless of press depth — the cap uncovers a fixed hole.
+    const deep = buildClickyCss({ wallHRatio: 16, pressDepthRatio: 40 });
+    const shallow = buildClickyCss({ wallHRatio: 20, pressDepthRatio: 6 });
+    for (const css of [deep, shallow]) {
+      expect(css).toMatch(/\.btn-cell::before\s*\{[^}]*top: var\(--wall-h\);/s);
+    }
   });
 
   it('shadow keyframes hold resting until flush and clear it on the way back up', () => {
