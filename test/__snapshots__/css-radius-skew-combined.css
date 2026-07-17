@@ -40,6 +40,8 @@
   --light-y: 25%;
   --specular-alpha: 0.000;
   --specular-size: 60%;
+  --taper: 0px;
+  --dish: 0.000;
   --button-wall-color: #c8c0b4;
   --button-wall-shadow-alpha: 0.850;
   --button-wall-shadow-edge-ratio: 0.500;
@@ -265,12 +267,12 @@
   );
   background-blend-mode: multiply;
   pointer-events: none;
-  transition: top var(--shadow-release-dur) var(--shadow-ease-release);
+  transition: top var(--duration) var(--transform-easing);
 }
 :root .btn-cell:has(.clicky-btn:active)::before,
 :root .btn-cell:has(.clicky-toggle input:checked)::before {
   top: max(0px, calc(var(--wall-h) - var(--press-translate)));
-  transition: top var(--shadow-press-dur) var(--shadow-ease-press) var(--shadow-press-delay);
+  transition: top var(--press-duration) var(--transform-easing);
 }
 
 /* Click mode */

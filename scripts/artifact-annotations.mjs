@@ -489,6 +489,19 @@ export const CSS_VAR_GROUPS = {
       '`--light-x`/`--light-y` (%, light-source position), ' +
       '`--specular-alpha`, `--specular-size` (falloff radius).',
   },
+  'keycap-sculpt': {
+    vars: ['--taper', '--dish'],
+    displayName: 'Mechanical-Keycap Sculpt Vars (2.1.0)',
+    strategicPurpose:
+      'Turns the flat-top button into a sculpted keyboard keycap: `--taper` ' +
+      'narrows the cap top so the wall/skirt flares to a trapezoid, `--dish` ' +
+      'concaves the face top. Both default 0 → straight-walled flat button, ' +
+      'byte-identical (D3); the geometry/gradient is gated on taper/dish > 0.',
+    tacticalObjective:
+      '`--taper` (px, per-side cap-top inset consumed by the face left/right ' +
+      'and the wall clip-path trapezoid), `--dish` (0..1 concavity depth for ' +
+      'the face bowl radial-gradients).',
+  },
   'button-wall-finish': {
     vars: [
       '--button-wall-color', '--button-wall-shadow-alpha',
