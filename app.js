@@ -491,7 +491,7 @@ function initControls() {
   // Appearance
   wireRangeNum('btn-radius',        'btn-radius-num',        'radiusRatio');
   wireRadiusCorners();
-  wireRangeNum('btn-chrome-radius', 'btn-chrome-radius-num', 'chromeRadiusRatio');
+  wireRangeNum('btn-chrome-radius', 'btn-chrome-radius-num', 'chromeRadiusOffset');
   wireRangeNum('btn-face-tolerance','btn-face-tolerance-num','faceTolerance');
   wireRangeNum('btn-skew-x-angle',  'btn-skew-x-angle-num',  'skewXAngle', v => Math.round(v));
   wireRangeNum('btn-skew-y-angle',  'btn-skew-y-angle-num',  'skewYAngle', v => Math.round(v));
@@ -952,7 +952,7 @@ function syncIconPicker() {
 // the same mechanism the saved-style picker uses.
 const MATERIAL_PRESETS = {
   rubber: {
-    radiusRatio: 30, chromeRadiusRatio: 20, faceColor: '#3f4142', textColor: '#e8e8e8',
+    radiusRatio: 30, faceColor: '#3f4142', textColor: '#e8e8e8',
     wallHRatio: 22, pressDepthRatio: 30, pressDarken: 18,
     insetDepthRatio: 10, insetBlurRatio: 20, insetAlphaTop: 40, insetAlphaBot: 20, faceEdgeAlpha: 5,
     topHighlight: true, highlightColor: '#ffffff', highlightOpacity: 15, rimHeightRatio: 10,
@@ -965,7 +965,7 @@ const MATERIAL_PRESETS = {
     contactIntensity: 20,
   },
   plastic: {
-    radiusRatio: 14, chromeRadiusRatio: 16, faceColor: '#e6e6ea', textColor: '#1a1a1a',
+    radiusRatio: 14, faceColor: '#e6e6ea', textColor: '#1a1a1a',
     wallHRatio: 8, pressDepthRatio: 10, pressDarken: 10,
     insetDepthRatio: 5, insetBlurRatio: 4, insetAlphaTop: 65, insetAlphaBot: 35, faceEdgeAlpha: 15,
     topHighlight: true, highlightColor: '#ffffff', highlightOpacity: 35, rimHeightRatio: 6,
@@ -978,7 +978,7 @@ const MATERIAL_PRESETS = {
     contactIntensity: 10,
   },
   metal: {
-    radiusRatio: 10, chromeRadiusRatio: 14, faceColor: '#b0b8c0', textColor: '#12161a',
+    radiusRatio: 10, faceColor: '#b0b8c0', textColor: '#12161a',
     wallHRatio: 12, pressDepthRatio: 14, pressDarken: 14,
     insetDepthRatio: 6, insetBlurRatio: 6, insetAlphaTop: 60, insetAlphaBot: 30, faceEdgeAlpha: 10,
     topHighlight: true, highlightColor: '#eef3f8', highlightOpacity: 25, rimHeightRatio: 6,
@@ -993,7 +993,7 @@ const MATERIAL_PRESETS = {
     contactIntensity: 15,
   },
   glass: {
-    radiusRatio: 22, chromeRadiusRatio: 18, faceColor: '#eaf6fb', textColor: '#1a2a33',
+    radiusRatio: 22, faceColor: '#eaf6fb', textColor: '#1a2a33',
     wallHRatio: 14, pressDepthRatio: 16, pressDarken: 8,
     insetDepthRatio: 8, insetBlurRatio: 14, insetAlphaTop: 20, insetAlphaBot: 10, faceEdgeAlpha: 0,
     topHighlight: true, highlightColor: '#ffffff', highlightOpacity: 45, rimHeightRatio: 10,

@@ -363,7 +363,7 @@ export const CSS_VAR_GROUPS = {
       'half-height (maxRadiusPx), then (per-corner only) the CSS spec’s ' +
       'own adjacent-corner-overlap algorithm (clampRadiusCorners); ' +
       '`--radius-bot` is the chrome housing’s independent ' +
-      'chromeRadiusRatio-derived value.',
+      'derived (concentric) housing radius.',
   },
   skew: {
     vars: ['--skew-x-angle', '--skew-y-angle', '--skew-widen-y'],
@@ -614,7 +614,7 @@ export const CSS_VAR_GROUPS = {
       'against THIS housing’s real aspect ratio and chrome radius ' +
       '(computeFrameBevelConicStops) — never hardcoded degrees, since a ' +
       'fixed angle desyncs from a non-square housing or a changed ' +
-      'chromeRadiusRatio.',
+      'the concentric-derived housing radius.',
     tacticalObjective:
       "Only emitted when `frameBevelConic: true`; feed the " +
       '`.btn-housing::after` conic-gradient ring’s transition-zone stop ' +

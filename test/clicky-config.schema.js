@@ -34,7 +34,7 @@ export const ClickyConfigSchema = z.object({
     br: pct0to100,
     bl: pct0to100,
   }).nullable(),
-  chromeRadiusRatio: pct0to100,
+  chromeRadiusOffset: z.number().int().min(-48).max(96),
   // Parallelogram skew v2 (issue #40, extends #34 to two axes + moves the
   // shear to `.btn-housing`) — skewXAngle keeps #34's ±18° clamp (beyond
   // ~18-20° the tan() housing-width term dominates and adjacent grid buttons
