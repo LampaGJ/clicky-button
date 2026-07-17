@@ -6,9 +6,9 @@
   --grid-justify: center;
   --grid-align: center;
   --housing-width: 572px;
-  --housing-height: 116px;
+  --housing-height: 102px;
   --housing-width-base: 572px;
-  --housing-height-base: 116px;
+  --housing-height-base: 102px;
   --container-width: 180px;
   --container-height: 88px;
   --radius: 14px;
@@ -74,10 +74,10 @@
   --frame-bevel-alpha: 0.500;
   --frame-bevel-alpha-shadow: 0.350;
   --frame-bevel-width: 1px;
-  --frame-bevel-conic-tr-start: 77.33deg;
-  --frame-bevel-conic-tr-end: 84.01deg;
-  --frame-bevel-conic-bl-start: 257.33deg;
-  --frame-bevel-conic-bl-end: 264.01deg;
+  --frame-bevel-conic-tr-start: 78.82deg;
+  --frame-bevel-conic-tr-end: 85.40deg;
+  --frame-bevel-conic-bl-start: 258.82deg;
+  --frame-bevel-conic-bl-end: 265.40deg;
   --duration: 160ms;
   --press-duration: 80ms;
   --shadow-flush-frac: 1.000;
@@ -189,7 +189,7 @@
 
 :root .btn-cell {
   position: absolute;
-  top: var(--frame-width);
+  top: max(0px, calc(var(--frame-width) - var(--wall-h)));
   left: var(--frame-width);
   right: var(--frame-width);
   height: var(--container-height);

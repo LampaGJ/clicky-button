@@ -276,16 +276,16 @@ describe('parallelogram skew v2 (issue #40 — housing-level shear, two axes)', 
     expect(css).toMatch(/\.btn-housing\s*\{[^}]*transform: skewX\(var\(--skew-x-angle\)\) skewY\(var\(--skew-y-angle\)\);/s);
   });
 
-  it('active skew switches .btn-cell to housing-relative centering horizontally, and keeps the even-ring top inset (issue #90)', () => {
+  it('active skew switches .btn-cell to housing-relative centering horizontally, and keeps the channel-centred top inset', () => {
     const css = buildClickyCss({ skewXAngle: 12 });
     expect(css).toMatch(/\.btn-cell\s*\{[^}]*left: calc\(\(var\(--housing-width\) - var\(--container-width\)\) \/ 2\);/s);
-    // Even-ring top inset (fw), plus the skew's own height reservation.
-    expect(css).toMatch(/\.btn-cell\s*\{[^}]*top: calc\(var\(--frame-width\) \+ var\(--skew-widen-y, 0px\) \/ 2\);/s);
+    // Channel-centred top inset max(0, fw - wallH), plus the skew's own height reservation.
+    expect(css).toMatch(/\.btn-cell\s*\{[^}]*top: calc\(max\(0px, calc\(var\(--frame-width\) - var\(--wall-h\)\)\) \+ var\(--skew-widen-y, 0px\) \/ 2\);/s);
   });
 
-  it('.btn-cell top inset is exactly frame-width — the even ring (issue #90)', () => {
+  it('.btn-cell top inset is max(0, fw - wallH) — the even ring is around the CHANNEL, not the proud cap', () => {
     const css = buildClickyCss();
-    expect(css).toMatch(/\.btn-cell\s*\{\s*position: absolute;\s*top: var\(--frame-width\);\s*left: var\(--frame-width\);\s*right: var\(--frame-width\);/);
+    expect(css).toMatch(/\.btn-cell\s*\{\s*position: absolute;\s*top: max\(0px, calc\(var\(--frame-width\) - var\(--wall-h\)\)\);\s*left: var\(--frame-width\);\s*right: var\(--frame-width\);/);
   });
 
   it('hard-clamps skewXAngle to ±18deg and skewYAngle to ±8deg (tighter) even though the runtime validator is typeof-only', () => {
