@@ -587,7 +587,6 @@ function initControls() {
     depRow('frame-bevel-alpha-row',    on);
     depRow('frame-bevel-width-row',    on);
     depRow('frame-bevel-conic-row',    on);
-    depRow('resting-chrome-floor-row', on);
   });
   wireRangeNum('btn-frame-width',       'btn-frame-width-num',       'frameWidth');
   wireColor('btn-frame-color-hi', 'frameColorHi');
@@ -603,7 +602,6 @@ function initControls() {
   // Resting-chrome tangency floor (issue #90) — % of frameWidth; zeroes out
   // along with everything else in this card when the frame is disabled (fw
   // itself collapses to 0 in buildVarMap), so it shares the same gate.
-  wireRangeNum('btn-resting-chrome-floor', 'btn-resting-chrome-floor-num', 'restingChromeFloorRatio');
 
   // Ambient shadow
   wireRangeNum('btn-ambient-intensity',    'btn-ambient-intensity-num',    'ambientIntensity');
@@ -785,7 +783,6 @@ function initControls() {
     depRow('frame-bevel-alpha-row',    state.frameEnabled);
     depRow('frame-bevel-width-row',    state.frameEnabled);
     depRow('frame-bevel-conic-row',    state.frameEnabled);
-    depRow('resting-chrome-floor-row', state.frameEnabled);
     depRow('group-label-row',          state.housingLayout === 'segmented');
     depRow('segment-divider-row',      state.housingLayout === 'segmented');
 

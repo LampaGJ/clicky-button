@@ -5,12 +5,12 @@
   --grid-gap: 12px;
   --grid-justify: center;
   --grid-align: center;
-  --housing-width: 225px;
-  --housing-height: 121px;
+  --housing-width: 227px;
+  --housing-height: 131px;
   --container-width: 180px;
   --container-height: 88px;
   --radius: 14px;
-  --radius-bot: 27px;
+  --radius-bot: 28px;
   --skew-x-angle: 8deg;
   --skew-y-angle: 4deg;
   --skew-widen-y: 15px;
@@ -66,17 +66,16 @@
   --press-translate: 14px;
   --toggle-height: 7px;
   --frame-width: 14px;
-  --resting-chrome-floor: 4px;
   --frame-color: #b8bcc0;
   --frame-color-hi: #e8e8ec;
   --frame-color-lo: #8c9094;
   --frame-bevel-alpha: 0.500;
   --frame-bevel-alpha-shadow: 0.350;
   --frame-bevel-width: 1px;
-  --frame-bevel-conic-tr-start: 54.72deg;
-  --frame-bevel-conic-tr-end: 73.42deg;
-  --frame-bevel-conic-bl-start: 234.72deg;
-  --frame-bevel-conic-bl-end: 253.42deg;
+  --frame-bevel-conic-tr-start: 52.54deg;
+  --frame-bevel-conic-tr-end: 71.72deg;
+  --frame-bevel-conic-bl-start: 232.54deg;
+  --frame-bevel-conic-bl-end: 251.72deg;
   --duration: 160ms;
   --press-duration: 80ms;
   --shadow-flush-frac: 1.000;
@@ -169,7 +168,7 @@
 
 :root .btn-cell {
   position: absolute;
-  top: calc(max(var(--resting-chrome-floor), calc(var(--frame-width) - var(--wall-h))) + var(--skew-widen-y, 0px) / 2);
+  top: calc(var(--frame-width) + var(--skew-widen-y, 0px) / 2);
   left: calc((var(--housing-width) - var(--container-width)) / 2);
   right: calc((var(--housing-width) - var(--container-width)) / 2);
   height: var(--container-height);

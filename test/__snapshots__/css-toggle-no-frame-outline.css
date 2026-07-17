@@ -65,7 +65,6 @@
   --press-translate: 14px;
   --toggle-height: 7px;
   --frame-width: 0px;
-  --resting-chrome-floor: 0px;
   --frame-color: #b8bcc0;
   --frame-color-hi: #e8e8ec;
   --frame-color-lo: #8c9094;
@@ -136,7 +135,7 @@
 
 :root .btn-cell {
   position: absolute;
-  top: max(var(--resting-chrome-floor), calc(var(--frame-width) - var(--wall-h)));
+  top: var(--frame-width);
   left: var(--frame-width);
   right: var(--frame-width);
   height: var(--container-height);
