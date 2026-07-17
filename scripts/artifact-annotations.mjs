@@ -48,6 +48,23 @@ export const ELEMENT_ANNOTATIONS = {
       'Flex row/column wrapper (`.btn-grid`) reading the `--grid-*` vars; ' +
       'wraps every housing buildGridHtml/buildClickyGroupHtml emits.',
   },
+  'btn-scale': {
+    selector: 'btn-scale',
+    producedBy: 'buildGridCss (lib/clicky-button.js)',
+    displayName: 'Responsive Sizing Boundary',
+    strategicPurpose:
+      'The unconditional container-query boundary (issue #96) that makes ' +
+      'a single generated button reflow to any container size and aspect ' +
+      'ratio — a consumer sizes it (flex stretch, width/height, ' +
+      'aspect-ratio) and every box measurement below resolves against it ' +
+      'via cq units, so the exported button "takes up the available ' +
+      'space" instead of being frozen at its authored px size.',
+    tacticalObjective:
+      'A `container-type: size` wrapper defaulting to the authored ' +
+      '`--housing-width-base`/`--housing-height-base` footprint; carries ' +
+      'no paint (no overflow/isolation) so it never clips the glow halo. ' +
+      'Wraps the slot/housing in every HTML builder.',
+  },
   'btn-housing': {
     selector: 'btn-housing',
     producedBy: 'buildGridCss (lib/clicky-button.js)',
@@ -334,7 +351,7 @@ export const CSS_VAR_GROUPS = {
       'align-items directly, one-to-one with the matching config keys.',
   },
   'housing-geometry': {
-    vars: ['--housing-width', '--housing-height', '--container-width', '--container-height'],
+    vars: ['--housing-width', '--housing-height', '--container-width', '--container-height', '--housing-width-base', '--housing-height-base'],
     displayName: 'Housing & Container Dimensions',
     strategicPurpose:
       'The base pixel geometry every other measurement (radius clamps, ' +
@@ -345,7 +362,10 @@ export const CSS_VAR_GROUPS = {
     tacticalObjective:
       '`--housing-width`/`--housing-height` (post skew-widen), ' +
       '`--container-width`/`--container-height` (the caller’s raw ' +
-      'config values, unwidened).',
+      'config values, unwidened); `--housing-width-base`/' +
+      '`--housing-height-base` are the always-px authored footprint that ' +
+      'sizes the `.btn-scale` responsive wrapper and serves as the no-cq ' +
+      'fallback (issue #96).',
   },
   radius: {
     vars: ['--radius', '--radius-bot', '--radius-tl', '--radius-tr', '--radius-br', '--radius-bl'],
