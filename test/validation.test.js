@@ -279,13 +279,13 @@ describe('parallelogram skew v2 (issue #40 — housing-level shear, two axes)', 
   it('active skew switches .btn-cell to housing-relative centering horizontally, and keeps the channel-centred top inset', () => {
     const css = buildClickyCss({ skewXAngle: 12 });
     expect(css).toMatch(/\.btn-cell\s*\{[^}]*left: calc\(\(var\(--housing-width\) - var\(--container-width\)\) \/ 2\);/s);
-    // Channel-centred top inset max(0, fw - wallH), plus the skew's own height reservation.
-    expect(css).toMatch(/\.btn-cell\s*\{[^}]*top: calc\(max\(0px, calc\(var\(--frame-width\) - var\(--wall-h\)\)\) \+ var\(--skew-widen-y, 0px\) \/ 2\);/s);
+    // Channel-centred top inset, floored at fw/2 (corner-tangency), plus the skew height reservation.
+    expect(css).toMatch(/\.btn-cell\s*\{[^}]*top: calc\(max\(calc\(var\(--frame-width\) \/ 2\), calc\(var\(--frame-width\) - var\(--wall-h\)\)\) \+ var\(--skew-widen-y, 0px\) \/ 2\);/s);
   });
 
-  it('.btn-cell top inset is max(0, fw - wallH) — the even ring is around the CHANNEL, not the proud cap', () => {
+  it('.btn-cell top inset is max(fw/2, fw - wallH) — channel-centred, floored off the corner-tangency singularity', () => {
     const css = buildClickyCss();
-    expect(css).toMatch(/\.btn-cell\s*\{\s*position: absolute;\s*top: max\(0px, calc\(var\(--frame-width\) - var\(--wall-h\)\)\);\s*left: var\(--frame-width\);\s*right: var\(--frame-width\);/);
+    expect(css).toMatch(/\.btn-cell\s*\{\s*position: absolute;\s*top: max\(calc\(var\(--frame-width\) \/ 2\), calc\(var\(--frame-width\) - var\(--wall-h\)\)\);\s*left: var\(--frame-width\);\s*right: var\(--frame-width\);/);
   });
 
   it('hard-clamps skewXAngle to ±18deg and skewYAngle to ±8deg (tighter) even though the runtime validator is typeof-only', () => {

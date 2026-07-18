@@ -211,7 +211,7 @@
 
 :root .btn-cell {
   position: absolute;
-  top: calc(max(0px, calc(var(--frame-width) - var(--wall-h))) + var(--skew-widen-y, 0px) / 2);
+  top: calc(max(calc(var(--frame-width) / 2), calc(var(--frame-width) - var(--wall-h))) + var(--skew-widen-y, 0px) / 2);
   left: calc((var(--housing-width) - var(--container-width)) / 2);
   right: calc((var(--housing-width) - var(--container-width)) / 2);
   bottom: calc(var(--frame-width) + var(--skew-widen-y, 0px) / 2);

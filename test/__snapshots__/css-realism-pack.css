@@ -196,7 +196,7 @@
 
 :root .btn-cell {
   position: absolute;
-  top: max(0px, calc(var(--frame-width) - var(--wall-h)));
+  top: max(calc(var(--frame-width) / 2), calc(var(--frame-width) - var(--wall-h)));
   left: var(--frame-width);
   right: var(--frame-width);
   bottom: var(--frame-width);
