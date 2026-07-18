@@ -169,7 +169,7 @@
   top: max(0px, calc(var(--frame-width) - var(--wall-h)));
   left: var(--frame-width);
   right: var(--frame-width);
-  height: var(--container-height);
+  bottom: var(--frame-width);
   /* NOT a container-type here (issue #96): .btn-scale is the single cq
      container, so every geometry var resolves in one space and the concentric
      ring invariant (--radius-bot === --radius + --frame-width) holds textually.
