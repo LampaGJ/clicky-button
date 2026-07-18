@@ -1,0 +1,81 @@
+// Shared presets — material styles + gallery tiles. Imported by BOTH the
+// generator (app.js) and the gallery (gallery.html) so the two never drift
+// (MATERIAL_PRESETS used to be duplicated in both). The engine
+// (lib/clicky-button.js) stays pure; this is app-level catalog data.
+//
+// Each TILE: { name, bg, config, [axes], [groupOpts] }. `config` is a partial
+// ClickyConfig (overrides on defaults); `axes`/`groupOpts` are gallery-only
+// display metadata (ignored by the generator's Gallery dropdown, which uses
+// only `name` + `config`).
+
+export const MATERIAL_PRESETS = {
+      plastic: { radiusRatio: 14, faceColor: '#e6e6ea', textColor: '#1a1a1a', wallHRatio: 8, pressDepthRatio: 10, pressDarken: 10, insetDepthRatio: 5, insetBlurRatio: 4, insetAlphaTop: 65, insetAlphaBot: 35, faceEdgeAlpha: 15, highlightOpacity: 35, rimHeightRatio: 6, buttonWallShadowAlpha: 90, buttonWallShadowEdgeRatio: 60, buttonWallGradientSpread: 10, cavityWallShadowAlpha: 90, cavityWallShadowEdgeRatio: 60, cavityWallGradientSpread: 10, ambientIntensity: 20, ambientBlurMult: 2.0, ambientYMult: 1.0, frameEnabled: true, frameWidth: 8, duration: 90, pressDuration: 50, easingPreset: 'snappy', specularAlpha: 20, specularSize: 40, contactIntensity: 10 },
+      metal:   { radiusRatio: 10, faceColor: '#b0b8c0', textColor: '#12161a', wallHRatio: 12, pressDepthRatio: 14, pressDarken: 14, insetDepthRatio: 6, insetBlurRatio: 6, insetAlphaTop: 60, insetAlphaBot: 30, faceEdgeAlpha: 10, highlightColor: '#eef3f8', highlightOpacity: 25, rimHeightRatio: 6, buttonWallShadowAlpha: 90, buttonWallShadowEdgeRatio: 65, useCavityWallColor: true, cavityWallColor: '#9aa4ad', ambientIntensity: 20, ambientBlurMult: 1.5, frameEnabled: true, frameWidth: 14, frameColorHi: '#eef2f6', frameColor: '#9aa4ad', frameColorLo: '#5b6670', frameBevelAlpha: 70, frameBevelWidth: 2, duration: 130, pressDuration: 70, easingPreset: 'black', specularAlpha: 12, specularSize: 30, contactIntensity: 15 },
+      glass:   { radiusRatio: 22, faceColor: '#eaf6fb', textColor: '#1a2a33', wallHRatio: 14, pressDepthRatio: 16, pressDarken: 8, insetDepthRatio: 8, insetBlurRatio: 14, insetAlphaTop: 20, insetAlphaBot: 10, highlightOpacity: 45, rimHeightRatio: 10, buttonWallShadowAlpha: 35, buttonWallGradientSpread: 55, ambientIntensity: 15, ambientBlurMult: 4.0, frameEnabled: true, frameWidth: 8, frameBevelAlpha: 30, duration: 150, pressDuration: 80, easingPreset: 'clear', specularAlpha: 55, specularSize: 80, contactIntensity: 10 },
+      rubber:  { radiusRatio: 30, faceColor: '#3f4142', textColor: '#e8e8e8', wallHRatio: 22, pressDepthRatio: 24, pressDarken: 18, insetDepthRatio: 10, insetBlurRatio: 20, insetAlphaTop: 40, insetAlphaBot: 20, highlightOpacity: 15, rimHeightRatio: 10, buttonWallShadowAlpha: 60, buttonWallGradientSpread: 40, ambientIntensity: 25, ambientBlurMult: 4.5, ambientYMult: 2.0, frameEnabled: false, duration: 260, pressDuration: 140, easingPreset: 'soft', specularAlpha: 8, specularSize: 70, contactIntensity: 20 },
+};
+
+export const TILES = [
+      { name: 'Rubber', bg: 'NEUTRAL', config: { ...MATERIAL_PRESETS.rubber, iconName: 'send', btnLabels: 'SEND' },
+        axes: [{ label: 'material', literal: 'rubber' }, { label: 'icon', key: 'iconName' }, { label: 'mode', key: 'mode' }] },
+      { name: 'Plastic', bg: 'NEUTRAL', config: { ...MATERIAL_PRESETS.plastic, iconName: 'send', btnLabels: 'SEND' },
+        axes: [{ label: 'material', literal: 'plastic' }, { label: 'icon', key: 'iconName' }, { label: 'mode', key: 'mode' }] },
+      { name: 'Metal', bg: 'NEUTRAL', config: { ...MATERIAL_PRESETS.metal, iconName: 'send', btnLabels: 'SEND' },
+        axes: [{ label: 'material', literal: 'metal' }, { label: 'icon', key: 'iconName' }, { label: 'mode', key: 'mode' }] },
+      { name: 'Glass', bg: 'NEUTRAL', config: { ...MATERIAL_PRESETS.glass, iconName: 'send', btnLabels: 'SEND' },
+        axes: [{ label: 'material', literal: 'glass' }, { label: 'icon', key: 'iconName' }, { label: 'mode', key: 'mode' }] },
+      { name: 'Pill', bg: 'LIGHT', config: { ...MATERIAL_PRESETS.plastic, containerWidth: 200, containerHeight: 64, radiusRatio: 50, btnCount: 1, btnLabels: 'PILL' },
+        axes: [{ label: 'shape', key: 'radiusRatio', prefix: 'radiusRatio ' }, { label: 'size', size: true }, { label: 'count', key: 'btnCount' }] },
+      { name: 'Sharp', bg: 'LIGHT', config: { ...MATERIAL_PRESETS.plastic, radiusRatio: 0, btnLabels: 'SHARP' },
+        axes: [{ label: 'radiusRatio', key: 'radiusRatio' }, { label: 'material', literal: 'plastic' }] },
+      { name: 'Tall', bg: 'LIGHT', config: { ...MATERIAL_PRESETS.plastic, containerWidth: 80, containerHeight: 200, btnCount: 1, gridDirection: 'column', btnLabels: 'TALL' },
+        axes: [{ label: 'size', size: true }, { label: 'count', key: 'btnCount' }, { label: 'gridDirection', key: 'gridDirection' }] },
+      { name: 'Wide/Flat', bg: 'LIGHT', config: { ...MATERIAL_PRESETS.plastic, containerWidth: 320, containerHeight: 56, btnCount: 1, btnLabels: 'WIDE FLAT' },
+        axes: [{ label: 'size', size: true }, { label: 'count', key: 'btnCount' }, { label: 'material', literal: 'plastic' }] },
+      { name: 'Micro cluster', bg: 'LIGHT', config: { ...MATERIAL_PRESETS.plastic, containerWidth: 96, containerHeight: 48, btnCount: 4, fontSizeRatio: -20, gridGap: 4, btnLabels: 'A,B,C,D' },
+        axes: [{ label: 'size', size: true }, { label: 'count', key: 'btnCount' }, { label: 'fontSizeRatio', key: 'fontSizeRatio' }] },
+      { name: 'Giant single', bg: 'LIGHT', config: { ...MATERIAL_PRESETS.plastic, containerWidth: 280, containerHeight: 160, btnCount: 1, fontSizeRatio: 10, btnLabels: 'GIANT' },
+        axes: [{ label: 'size', size: true }, { label: 'count', key: 'btnCount' }, { label: 'fontSizeRatio', key: 'fontSizeRatio' }] },
+      { name: 'Dense grid', bg: 'LIGHT', config: { ...MATERIAL_PRESETS.plastic, containerWidth: 220, containerHeight: 140, btnCount: 9, gridWrap: 'wrap', btnLabels: '1,2,3,4,5,6,7,8,9' },
+        axes: [{ label: 'size', size: true }, { label: 'count', key: 'btnCount' }, { label: 'gridWrap', key: 'gridWrap' }] },
+      { name: 'Icon-only giant', bg: 'LIGHT', config: { ...MATERIAL_PRESETS.plastic, containerWidth: 120, containerHeight: 120, btnCount: 1, btnLabels: '', iconName: 'favorite', iconScale: 2.2 },
+        axes: [{ label: 'size', size: true }, { label: 'icon', key: 'iconName' }, { label: 'iconScale', key: 'iconScale' }] },
+      { name: 'Light-on-light', bg: 'LIGHT', config: { faceColor: '#f5f5f0', textColor: '#333333', frameColor: '#e0e0e0', btnLabels: 'LIGHT' },
+        axes: [{ label: 'faceColor', key: 'faceColor' }, { label: 'textColor', key: 'textColor' }, { label: 'frameColor', key: 'frameColor' }] },
+      { name: 'Dark-on-dark', bg: 'DARK', config: { faceColor: '#1c1c1c', textColor: '#e8e8e8', frameColor: '#0a0a0a', highlightOpacity: 15, btnLabels: 'DARK' },
+        axes: [{ label: 'faceColor', key: 'faceColor' }, { label: 'textColor', key: 'textColor' }, { label: 'highlightOpacity', key: 'highlightOpacity' }] },
+      { name: 'Vivid color', bg: 'NEUTRAL', config: { faceColor: '#ff6347', textColor: '#ffffff', useButtonWallColor: true, buttonWallColor: '#d4472e', btnLabels: 'VIVID' },
+        axes: [{ label: 'faceColor', key: 'faceColor' }, { label: 'buttonWallColor', key: 'buttonWallColor' }, { label: 'useButtonWallColor', key: 'useButtonWallColor' }] },
+      { name: 'Colored-on-dark', bg: 'DARK', config: { faceColor: '#1e90ff', textColor: '#ffffff', useButtonWallColor: true, buttonWallColor: '#0f5fb0', specularAlpha: 25, btnLabels: 'ACCENT' },
+        axes: [{ label: 'faceColor', key: 'faceColor' }, { label: 'buttonWallColor', key: 'buttonWallColor' }, { label: 'specularAlpha', key: 'specularAlpha' }] },
+      { name: 'Frameless flat', bg: 'NEUTRAL', config: { ...MATERIAL_PRESETS.plastic, frameEnabled: false, pressDepthRatio: 6, wallHRatio: 4, btnLabels: 'FLAT' },
+        axes: [{ label: 'frameEnabled', key: 'frameEnabled' }, { label: 'pressDepthRatio', key: 'pressDepthRatio' }, { label: 'wallHRatio', key: 'wallHRatio' }] },
+      { name: 'Heavy frame', bg: 'NEUTRAL', config: { ...MATERIAL_PRESETS.metal, frameWidth: 32, frameBevelAlpha: 85, frameBevelWidth: 3, btnLabels: 'FRAMED' },
+        axes: [{ label: 'frameWidth', key: 'frameWidth' }, { label: 'frameBevelAlpha', key: 'frameBevelAlpha' }, { label: 'material', literal: 'metal' }] },
+      { name: 'Deep travel', bg: 'NEUTRAL', config: { ...MATERIAL_PRESETS.rubber, pressDepthRatio: 45, wallHRatio: 35, btnLabels: 'DEEP' },
+        axes: [{ label: 'pressDepthRatio', key: 'pressDepthRatio' }, { label: 'wallHRatio', key: 'wallHRatio' }, { label: 'material', literal: 'rubber' }] },
+      { name: 'Shallow travel', bg: 'NEUTRAL', config: { ...MATERIAL_PRESETS.metal, pressDepthRatio: 4, wallHRatio: 3, btnLabels: 'SHALLOW' },
+        axes: [{ label: 'pressDepthRatio', key: 'pressDepthRatio' }, { label: 'wallHRatio', key: 'wallHRatio' }, { label: 'material', literal: 'metal' }] },
+      { name: 'Specular hot', bg: 'DARK', config: { ...MATERIAL_PRESETS.glass, specularAlpha: 80, specularSize: 90, lightAngleX: 30, lightAngleY: 15, btnLabels: 'SHINE' },
+        axes: [{ label: 'specularAlpha', key: 'specularAlpha' }, { label: 'specularSize', key: 'specularSize' }, { label: 'material', literal: 'glass' }] },
+      { name: 'Matte (no specular)', bg: 'DARK', config: { ...MATERIAL_PRESETS.rubber, specularAlpha: 0, contactIntensity: 0, btnLabels: 'MATTE' },
+        axes: [{ label: 'specularAlpha', key: 'specularAlpha' }, { label: 'contactIntensity', key: 'contactIntensity' }, { label: 'material', literal: 'rubber' }] },
+      { name: 'Toggle mode', bg: 'NEUTRAL', config: { ...MATERIAL_PRESETS.plastic, mode: 'toggle', useToggleColor: true, toggleColor: '#4caf50', toggleHeightRatio: 60, btnLabels: 'TOGGLE' },
+        axes: [{ label: 'mode', key: 'mode' }, { label: 'toggleColor', key: 'toggleColor' }, { label: 'toggleHeightRatio', key: 'toggleHeightRatio' }] },
+      { name: 'Label-only, no icon', bg: 'NEUTRAL', config: { ...MATERIAL_PRESETS.metal, btnCount: 3, btnLabels: 'PLAY,STOP,REC' },
+        axes: [{ label: 'material', literal: 'metal' }, { label: 'count', key: 'btnCount' }, { label: 'icon', literal: 'none' }] },
+      { name: 'Skew X +12°', bg: 'NEUTRAL', config: { ...MATERIAL_PRESETS.plastic, skewXAngle: 12, btnLabels: 'SKEW X+' },
+        axes: [{ label: 'skewXAngle', key: 'skewXAngle' }, { label: 'frameEnabled', key: 'frameEnabled' }, { label: 'shape', literal: 'parallelogram (+X)' }] },
+      { name: 'Skew Y +6°', bg: 'NEUTRAL', config: { ...MATERIAL_PRESETS.metal, skewYAngle: 6, btnLabels: 'SKEW Y+' },
+        axes: [{ label: 'skewYAngle', key: 'skewYAngle' }, { label: 'frameEnabled', key: 'frameEnabled' }, { label: 'shape', literal: 'parallelogram (+Y)' }] },
+      { name: 'Skew combined X+8/Y+4', bg: 'NEUTRAL', config: { ...MATERIAL_PRESETS.plastic, skewXAngle: 8, skewYAngle: 4, btnLabels: 'COMBO' },
+        axes: [{ label: 'skewXAngle', key: 'skewXAngle' }, { label: 'skewYAngle', key: 'skewYAngle' }, { label: 'shape', literal: 'combined shear' }] },
+      { name: 'Asymmetric corners', bg: 'NEUTRAL', config: { ...MATERIAL_PRESETS.plastic, radiusCorners: { tl: 0, tr: 50, br: 50, bl: 0 }, btnLabels: 'CORNERS' },
+        axes: [{ label: 'radiusCorners', literal: 'sharp-left / pill-right' }, { label: 'material', literal: 'plastic' }, { label: 'shape', literal: 'asymmetric corners' }] },
+      { name: 'Segmented', bg: 'NEUTRAL', config: { housingLayout: 'segmented', gridWrap: 'nowrap', groupLabel: 'Segmented view', btnCount: 3, btnLabels: 'List,Grid,Map' },
+        axes: [{ label: 'housingLayout', key: 'housingLayout' }, { label: 'mode', key: 'mode' }, { label: 'count', key: 'btnCount' }] },
+      { name: 'Tri-state (slicer)', bg: 'NEUTRAL',
+        config: { housingLayout: 'segmented', mode: 'radio', gridWrap: 'nowrap', groupLabel: 'Slicer filter', btnCount: 3, btnLabels: 'TACIT,INCLUDE,EXCLUDE', variants: { include: { toggleColor: '#2e9e4f' }, exclude: { toggleColor: '#c0392b' } } },
+        groupOpts: { name: 'gallery-tristate', values: ['tacit', 'include', 'exclude'], checked: 'tacit' },
+        axes: [{ label: 'housingLayout', key: 'housingLayout' }, { label: 'mode', key: 'mode' }, { label: 'toggleColor', literal: 'include #2e9e4f / exclude #c0392b' }] },
+];

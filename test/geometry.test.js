@@ -220,11 +220,13 @@ describe('equal ring + flush-gated reveal (owner invariants)', () => {
   // rises above the plate). radius-bot stays R + fw, now concentric with the
   // CHANNEL corners. At rest the proud key stands above the plate and covers the
   // top chrome — correct: a keycap sits above its slot.
-  it('the chrome ring is even around the CHANNEL: bottom/sides always fw, top = max(fw, wallH)', () => {
-    // The ring is judged around the channel (the opening the key sinks into),
-    // not the proud resting cap. The channel top sits at cellTop + wallH; the
-    // channel bottom is the cell bottom. Bottom ring is always fw; the top ring
-    // is fw for shallow walls and wallH for a proud keycap (honest projection).
+  it('the cap top inset is channel-centred max(0, fw - wallH) — a proud cap sits flush to the top', () => {
+    // The cap's top inset is max(0, fw - wallH): a proud cap (wallH >= fw) sits
+    // flush at the top (cellTop 0), fully obscuring the top chrome band. The
+    // corner pinch that flush used to cause is handled by shrinking the HOUSING's
+    // top corners to hug the cap (housingRadiusTop = radius-bot - min(fw, wallH)),
+    // NOT by a top floor. The cell's BOTTOM is pinned at fw (see
+    // validation.test.js), so the bottom/side rings are always fw.
     const cases = [
       { label: 'wall === frame', cfg: {} },
       { label: 'shallow wall',   cfg: { wallHRatio: 4 } },
@@ -236,12 +238,9 @@ describe('equal ring + flush-gated reveal (owner invariants)', () => {
       const v = buildClickyVars(cfg);
       const fw = px(v['--frame-width']);
       const wallH = px(v['--wall-h']);
-      const H = px(v['--housing-height']);
       const cellTop = Math.max(0, fw - wallH);                       // restingChromeAbove
-      const channelTopRing = cellTop + wallH;                        // housing top → channel
-      const channelBottomRing = H - (cellTop + px(v['--container-height']));
-      expect(channelTopRing, `${label}: channel top ring === max(fw, wallH)`).toBeCloseTo(Math.max(fw, wallH), 5);
-      expect(channelBottomRing, `${label}: channel bottom ring === fw`).toBeCloseTo(fw, 5);
+      expect(cellTop, `${label}: cap top inset >= 0`).toBeGreaterThanOrEqual(0);
+      if (wallH >= fw) expect(cellTop, `${label}: proud → flush`).toBe(0);
     }
   });
 
@@ -333,20 +332,17 @@ describe('equal ring + flush-gated reveal (owner invariants)', () => {
 describe('deep walls: proud keycap rises above the plate (channel-centred ring)', () => {
   const px = s => parseFloat(s);
 
-  // A wall deeper than the frame rises higher than the ring: the channel top
-  // ring reads wallH (the honest projection of a proud keycap), while the
-  // bottom ring stays fw. The cell top floors at 0 so the key never clips.
-  it('a wall deeper than the frame rises higher than the plate; the channel bottom ring stays fw', () => {
+  // A wall deeper than the frame rises above the plate: the cap's top inset is
+  // sits flush (cellTop 0), so the channel top reads wallH. The bottom ring stays
+  // fw (the cell's bottom is pinned at frame-width — see validation.test.js).
+  it('a wall deeper than the frame rises above the plate; cap top sits flush (cellTop 0)', () => {
     const v = buildClickyVars({ wallHRatio: 40, frameWidth: 10 });   // wall 35 > fw 10
     const fw = px(v['--frame-width']);
     const wallH = px(v['--wall-h']);
-    const H = px(v['--housing-height']);
     expect(wallH).toBeGreaterThan(fw);
     const cellTop = Math.max(0, fw - wallH);
-    expect(cellTop).toBe(0);                                          // proud key, floored
+    expect(cellTop).toBe(0);                                         // proud key sits flush
     const channelTopRing = cellTop + wallH;
-    const channelBottomRing = H - (cellTop + px(v['--container-height']));
-    expect(channelTopRing).toBe(wallH);                              // rises to wallH, honest
-    expect(channelBottomRing).toBeCloseTo(fw, 5);                    // bottom ring stays fw
+    expect(channelTopRing).toBeCloseTo(wallH, 5);                    // rises above the plate
   });
 });

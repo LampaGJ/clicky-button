@@ -279,13 +279,24 @@ describe('parallelogram skew v2 (issue #40 — housing-level shear, two axes)', 
   it('active skew switches .btn-cell to housing-relative centering horizontally, and keeps the channel-centred top inset', () => {
     const css = buildClickyCss({ skewXAngle: 12 });
     expect(css).toMatch(/\.btn-cell\s*\{[^}]*left: calc\(\(var\(--housing-width\) - var\(--container-width\)\) \/ 2\);/s);
-    // Channel-centred top inset max(0, fw - wallH), plus the skew's own height reservation.
+    // Channel-centred top inset (proud cap sits flush; the pinch is handled by
+    // the housing's top corners, not a top floor), plus the skew height reservation.
     expect(css).toMatch(/\.btn-cell\s*\{[^}]*top: calc\(max\(0px, calc\(var\(--frame-width\) - var\(--wall-h\)\)\) \+ var\(--skew-widen-y, 0px\) \/ 2\);/s);
   });
 
-  it('.btn-cell top inset is max(0, fw - wallH) — the even ring is around the CHANNEL, not the proud cap', () => {
+  it('.btn-cell top inset is max(0, fw - wallH) — a proud cap sits flush to the top', () => {
     const css = buildClickyCss();
     expect(css).toMatch(/\.btn-cell\s*\{\s*position: absolute;\s*top: max\(0px, calc\(var\(--frame-width\) - var\(--wall-h\)\)\);\s*left: var\(--frame-width\);\s*right: var\(--frame-width\);/);
+  });
+
+  it('the housing top corners hug the cap: radius-bot - min(fw, wallH), bottom stays radius-bot', () => {
+    // Proud cap (default wallH === fw) → top corners shrink to the cap radius so
+    // there is no gap/pinch; a flat cap (wallH 0) → subtract 0 → radius-bot (uniform).
+    const css = buildClickyCss();
+    expect(css).toMatch(/\.btn-housing\s*\{[^}]*border-radius: max\(0px, calc\(var\(--radius-bot\) - min\(var\(--frame-width\), var\(--wall-h\)\)\)\) max\(0px, calc\(var\(--radius-bot\) - min\(var\(--frame-width\), var\(--wall-h\)\)\)\) var\(--radius-bot\) var\(--radius-bot\);/s);
+    // Flat cap: min(fw, 0) = 0 → housing keeps uniform radius-bot (byte-identical shape).
+    const flat = buildClickyCss({ wallHRatio: 0 });
+    expect(flat).toMatch(/\.btn-housing\s*\{[^}]*border-radius: max\(0px, calc\(var\(--radius-bot\) - min\(var\(--frame-width\), var\(--wall-h\)\)\)\)/s);
   });
 
   it('hard-clamps skewXAngle to ±18deg and skewYAngle to ±8deg (tighter) even though the runtime validator is typeof-only', () => {
