@@ -220,14 +220,13 @@ describe('equal ring + flush-gated reveal (owner invariants)', () => {
   // rises above the plate). radius-bot stays R + fw, now concentric with the
   // CHANNEL corners. At rest the proud key stands above the plate and covers the
   // top chrome — correct: a keycap sits above its slot.
-  it('the cap top inset is the channel-centred value floored at fw/2 (off the corner-tangency singularity)', () => {
-    // The ring is judged around the channel. The cap's top inset is
-    // max(fw/2, fw - wallH): channel-centred (fw - wallH) for shallow walls,
-    // floored at fw/2 for a proud keycap so it never lands on the corner-
-    // tangency singularity at 0 (where the cap's rounded corner touches the
-    // housing's and the ring pinches to zero). The cell's BOTTOM is pinned at
-    // fw (see the .btn-cell `bottom: var(--frame-width)` assertion in
-    // validation.test.js), so the channel bottom/side rings are always fw.
+  it('the cap top inset is channel-centred max(0, fw - wallH) — a proud cap sits flush to the top', () => {
+    // The cap's top inset is max(0, fw - wallH): a proud cap (wallH >= fw) sits
+    // flush at the top (cellTop 0), fully obscuring the top chrome band. The
+    // corner pinch that flush used to cause is handled by shrinking the HOUSING's
+    // top corners to hug the cap (housingRadiusTop = radius-bot - min(fw, wallH)),
+    // NOT by a top floor. The cell's BOTTOM is pinned at fw (see
+    // validation.test.js), so the bottom/side rings are always fw.
     const cases = [
       { label: 'wall === frame', cfg: {} },
       { label: 'shallow wall',   cfg: { wallHRatio: 4 } },
@@ -239,11 +238,9 @@ describe('equal ring + flush-gated reveal (owner invariants)', () => {
       const v = buildClickyVars(cfg);
       const fw = px(v['--frame-width']);
       const wallH = px(v['--wall-h']);
-      const cellTop = Math.max(fw / 2, fw - wallH);                  // restingChromeAbove
-      // Never on the tangency singularity at 0: a thin continuous top band.
-      expect(cellTop, `${label}: cap top inset >= fw/2`).toBeGreaterThanOrEqual(fw / 2 - 1e-9);
-      // Shallow/flat keys keep the exact channel-centred inset (byte-identical).
-      if (wallH <= fw / 2) expect(cellTop, `${label}: channel-centred`).toBeCloseTo(fw - wallH, 5);
+      const cellTop = Math.max(0, fw - wallH);                       // restingChromeAbove
+      expect(cellTop, `${label}: cap top inset >= 0`).toBeGreaterThanOrEqual(0);
+      if (wallH >= fw) expect(cellTop, `${label}: proud → flush`).toBe(0);
     }
   });
 
@@ -260,7 +257,7 @@ describe('equal ring + flush-gated reveal (owner invariants)', () => {
   });
 
   // Channel-centred housing: H = max(fw, wallH) + faceH + fw (faceH =
-  // containerHeight - wallH). The proud key never clips (cellTop floors at fw/2).
+  // containerHeight - wallH). The proud key never clips (cellTop floors at 0).
   it('the housing reserves an even fw ring around the channel: H = max(fw,wallH) + faceH + fw', () => {
     for (const wallHRatio of [4, 16, 30, 40]) {
       const v = buildClickyVars({ wallHRatio });
@@ -269,8 +266,8 @@ describe('equal ring + flush-gated reveal (owner invariants)', () => {
       const H = px(v['--housing-height']);
       const faceH = px(v['--container-height']) - wallH;
       expect(H).toBe(Math.max(fw, wallH) + faceH + fw);
-      // The proud key never clips: cellTop = max(fw/2, fw - wallH) >= fw/2 > 0.
-      expect(Math.max(fw / 2, fw - wallH)).toBeGreaterThanOrEqual(fw / 2);
+      // The proud key never clips: cellTop = max(0, fw - wallH) >= 0.
+      expect(Math.max(0, fw - wallH)).toBeGreaterThanOrEqual(0);
     }
   });
 
@@ -336,17 +333,16 @@ describe('deep walls: proud keycap rises above the plate (channel-centred ring)'
   const px = s => parseFloat(s);
 
   // A wall deeper than the frame rises above the plate: the cap's top inset is
-  // floored at fw/2 (off the corner-tangency singularity, not 0), so the channel
-  // top reads fw/2 + wallH. The bottom ring stays fw (the cell's bottom is pinned
-  // at frame-width — see validation.test.js).
-  it('a wall deeper than the frame rises above the plate; cap top floored at fw/2', () => {
+  // sits flush (cellTop 0), so the channel top reads wallH. The bottom ring stays
+  // fw (the cell's bottom is pinned at frame-width — see validation.test.js).
+  it('a wall deeper than the frame rises above the plate; cap top sits flush (cellTop 0)', () => {
     const v = buildClickyVars({ wallHRatio: 40, frameWidth: 10 });   // wall 35 > fw 10
     const fw = px(v['--frame-width']);
     const wallH = px(v['--wall-h']);
     expect(wallH).toBeGreaterThan(fw);
-    const cellTop = Math.max(fw / 2, fw - wallH);
-    expect(cellTop).toBeCloseTo(fw / 2, 5);                          // proud key, floored off 0
+    const cellTop = Math.max(0, fw - wallH);
+    expect(cellTop).toBe(0);                                         // proud key sits flush
     const channelTopRing = cellTop + wallH;
-    expect(channelTopRing).toBeCloseTo(fw / 2 + wallH, 5);           // rises above the plate
+    expect(channelTopRing).toBeCloseTo(wallH, 5);                    // rises above the plate
   });
 });
