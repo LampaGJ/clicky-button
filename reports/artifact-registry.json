@@ -18,8 +18,8 @@
   },
   "producerTypeCounts": {
     "schema": 13,
-    "column-blob": 24,
-    "event": 23,
+    "column-blob": 25,
+    "event": 22,
     "file-artifact": 1,
     "db-row": 0,
     "subprocess-handoff": 0
@@ -28,13 +28,13 @@
     "config-contract:default-clicky-config": {
       "id": "config-contract:default-clicky-config",
       "sourceFile": "lib/clicky-button.js",
-      "sourceLine": 269,
+      "sourceLine": 271,
       "displayName": "Clicky Button Configuration Contract",
       "strategicPurpose": "The single input surface a consumer tunes to describe one button's whole appearance and behavior — geometry, color, timing, icon, and per-button variants — so every other artifact in the engine (CSS var map, emitted CSS/HTML, the export bundle) derives from one authoritative shape instead of ad hoc parameters at each call site.",
       "tacticalObjective": "Supplies the default value for every one of the keys documented per-key in the adjacent `@typedef ClickyConfig` block (kept key-synced by test/typedef.test.js) and the richer range/enum contract in test/clicky-config.schema.js; every public builder (buildClickyCss/buildClickyHtml/buildClickyGroupHtml/buildClickyVars) merges a caller's partial override over this object via `{ ...defaultClickyConfig, ...config }` before doing anything else.",
       "annotated": true,
       "missingTags": [],
-      "keyCount": 104,
+      "keyCount": 106,
       "typedefRef": "lib/clicky-button.js — the `@typedef {object} ClickyConfig` block (per-key docs live there, not duplicated here)",
       "keySyncTest": "test/typedef.test.js",
       "richerContractRef": "test/clicky-config.schema.js"
@@ -72,7 +72,7 @@
     "api:buildClickyCss": {
       "id": "api:buildClickyCss",
       "sourceFile": "lib/clicky-button.js",
-      "sourceLine": 3619,
+      "sourceLine": 3631,
       "displayName": "CSS Bundle Builder (Public API)",
       "strategicPurpose": "The single entry point that turns a ClickyConfig into the complete, self-contained stylesheet a page needs to render and animate a clicky button — the \"Option B\" runtime-generation path the README documents alongside the static export.",
       "tacticalObjective": "Validates config, merges it over defaultClickyConfig, and returns the full CSS string (var block + `@supports` cq-unit override + every scoped rule) for the given scope selector.",
@@ -82,7 +82,7 @@
     "api:buildClickyGroupHtml": {
       "id": "api:buildClickyGroupHtml",
       "sourceFile": "lib/clicky-button.js",
-      "sourceLine": 3749,
+      "sourceLine": 3761,
       "displayName": "Button-Group HTML Builder (Public API)",
       "strategicPurpose": "Issue #36/#37's promoted public entry point for rendering MULTIPLE buttons that must agree on layout — either N independent housings (default) or N segments sharing one housing — so gallery.html and any consumer no longer hand-assembles the grid the way gallery.html used to before this existed.",
       "tacticalObjective": "Delegates to buildGridHtml for the 'separate' layout or buildSegmentedHousingHtml for 'segmented' (click/toggle/radio), enforcing the identity args (`name`/`values`/`checked`) a radio group needs at call time rather than in config.",
@@ -92,7 +92,7 @@
     "api:buildClickyHtml": {
       "id": "api:buildClickyHtml",
       "sourceFile": "lib/clicky-button.js",
-      "sourceLine": 3649,
+      "sourceLine": 3661,
       "displayName": "Single-Button HTML Builder (Public API)",
       "strategicPurpose": "The markup half of the \"Option B\" runtime-generation path — stamps one button's housing→cell→face DOM tree so a consumer never hand-writes the class list buildClickyCss's selectors expect.",
       "tacticalObjective": "Validates config, resolves the label slug and icon markup, and returns one `.btn-housing` tree in click or toggle mode; throws for `housingLayout: 'segmented'` (use buildClickyGroupHtml) and for an empty label with no aria-label.",
@@ -102,7 +102,7 @@
     "api:buildClickyVars": {
       "id": "api:buildClickyVars",
       "sourceFile": "lib/clicky-button.js",
-      "sourceLine": 3782,
+      "sourceLine": 3794,
       "displayName": "CSS Custom-Property Map Accessor (Public API)",
       "strategicPurpose": "The lower-level escape hatch onto buildVarMap's output for a consumer that wants the raw `--*` values without a full stylesheet — e.g. to drive an external animation library off the same numbers the CSS itself uses.",
       "tacticalObjective": "Validates config, merges it over defaultClickyConfig, and returns the flat `Record<string,string>` buildVarMap produces.",
@@ -132,7 +132,7 @@
     "api:escapeHtml": {
       "id": "api:escapeHtml",
       "sourceFile": "lib/clicky-button.js",
-      "sourceLine": 628,
+      "sourceLine": 638,
       "displayName": "HTML Escaper (Public Utility)",
       "strategicPurpose": "Every label/attribute value the engine writes into markup goes through this — the one place that prevents a consumer's config value (label text, aria attributes) from breaking out of its HTML context.",
       "tacticalObjective": "Replaces &, <, >, \" with their HTML entities; used by every HTML-emitting builder for label text and attribute values.",
@@ -142,7 +142,7 @@
     "api:hexToRgba": {
       "id": "api:hexToRgba",
       "sourceFile": "lib/clicky-button.js",
-      "sourceLine": 593,
+      "sourceLine": 603,
       "displayName": "Hex/Color-to-RGBA Converter (Public Utility)",
       "strategicPurpose": "A generation-time color utility exposed publicly so a consumer building custom UI around the library (e.g. a color picker preview) doesn't need to re-implement hex parsing or reach for an external color library — keeps the engine dependency-free.",
       "tacticalObjective": "Parses a 3/6-digit hex color and returns `rgba(r,g,b,a)`; for a non-hex CSS color value (e.g. a CSS variable or named color) falls back to `color-mix()`.",
@@ -152,7 +152,7 @@
     "api:internals": {
       "id": "api:internals",
       "sourceFile": "lib/clicky-button.js",
-      "sourceLine": 3805,
+      "sourceLine": 3817,
       "displayName": "Internals Escape Hatch (Public API)",
       "strategicPurpose": "The generator UI (app.js) and advanced consumers need direct access to individual builder functions (e.g. to preview one CSS fragment, or drive per-state shadow computation in the 3D view) without re-implementing them — exporting them under one namespace keeps that access explicit and auditable instead of consumers reaching into unexported closures.",
       "tacticalObjective": "Re-exports every internal builder/helper function (buildVarMap, buildGridCss, buildButtonWallCss, resolveSkew, deriveFaceColorFamily, scopeCssBlock, validateClickyConfig, etc.) under one object, for advanced consumers and the generator UI — not part of the stable versioned contract the way the top-level exports are.",
@@ -391,6 +391,18 @@
       "displayName": "Hover Lift & Text Wrap",
       "strategicPurpose": "Two independent, unrelated-but-small interaction affordances (a hover-only pointer-device rise, and whether the label may wrap) grouped together because neither warrants its own family.",
       "tacticalObjective": "`--hover-lift` (px, 0 disables the hover transform), `--text-wrap` ('normal' | 'nowrap').",
+      "annotated": true,
+      "missingTags": []
+    },
+    "css-var-group:keycap-sculpt": {
+      "id": "css-var-group:keycap-sculpt",
+      "vars": [
+        "--dish",
+        "--taper"
+      ],
+      "displayName": "Mechanical-Keycap Sculpt Vars (2.1.0)",
+      "strategicPurpose": "Turns the flat-top button into a sculpted keyboard keycap: `--taper` narrows the cap top so the wall/skirt flares to a trapezoid, `--dish` concaves the face top. Both default 0 → straight-walled flat button, byte-identical (D3); the geometry/gradient is gated on taper/dish > 0.",
+      "tacticalObjective": "`--taper` (px, per-side cap-top inset consumed by the face left/right and the wall clip-path trapezoid), `--dish` (0..1 concavity depth for the face bowl radial-gradients).",
       "annotated": true,
       "missingTags": []
     },
@@ -688,18 +700,6 @@
       "annotated": true,
       "missingTags": []
     },
-    "keyframe-group:cavity-top-cycle": {
-      "id": "keyframe-group:cavity-top-cycle",
-      "names": [
-        "clicky-cavity-top-cycle"
-      ],
-      "producedBy": "buildClickFaceCss (lib/clicky-button.js)",
-      "displayName": "Cavity-Reveal Press Cycle",
-      "strategicPurpose": "Fixes the pressed-state illusion (issue #96): the recessed cavity top is pinned at wall-height, so once the cap descends to/past that edge it vacates a band that nothing covered — bare housing chrome showed above the sinking cap (worst on tall buttons). This animates the cavity top up to track the descending cap so the dark recess fills that band, reading as a key sinking into a hole. Emitted for every config whose press depth reaches wall height (cavityRevealsPress — broader than resolveShadowTiming.animates, which misses the common press-depth === wall-h default).",
-      "tacticalObjective": "Animates `.btn-cell::before` `top` from var(--wall-h) (rest) to max(0px, calc(var(--wall-h) - var(--press-translate))) at the press bottom and back, ramping on the cap DESCENT (0/bottom/100) rather than the flush-gated window, which collapses to a spike when press-depth === wall-h. Held-press/toggle-checked use the same value statically.",
-      "annotated": true,
-      "missingTags": []
-    },
     "keyframe-group:click-mode-full-cycle": {
       "id": "keyframe-group:click-mode-full-cycle",
       "names": [
@@ -773,7 +773,7 @@
       "buildButtonWallCss": {
         "id": "builder:buildButtonWallCss",
         "sourceFile": "lib/clicky-button.js",
-        "sourceLine": 1883,
+        "sourceLine": 1907,
         "displayName": "Button-Wall & Label/Icon Rule Emitter",
         "strategicPurpose": "The moving side of the keycap needed its own real element (not a drop-shadow) so it can carry an independent left-right gradient while still hugging the cap's rounded silhouette at any corner radius — this is where that element, plus the label and icon it sits behind, get their CSS.",
         "tacticalObjective": "Emits `.btn-wall` (true-extrusion geometry, background gradient, transform mirroring), `.btn-label` (clipped text wrapper), and `.btn-icon` (Material Symbols ligature styling), plus the parallelogram counter-skew rule for label/icon when skew is active.",
@@ -783,7 +783,7 @@
       "buildClickFaceCss": {
         "id": "builder:buildClickFaceCss",
         "sourceFile": "lib/clicky-button.js",
-        "sourceLine": 2817,
+        "sourceLine": 2852,
         "displayName": "Click-Mode Face Rule + Keyframe Emitter",
         "strategicPurpose": "Click mode's whole interaction model — a spring that always completes its cycle once triggered, holds only while :active — lives here, split into three independently-timed CSS properties (transform/shadow/color) per the issue #12/#16 pattern, so a future edit to one property's timing can never silently desync another's.",
         "tacticalObjective": "Emits `.clicky-btn` (and its `:hover`/`:active`/`:focus-visible` states) plus the clicky-transform-cycle, clicky-shadow-cycle, clicky-color-cycle, and clicky-icon-color-cycle keyframes used by the JS-driven full press-and-release bounce.",
@@ -793,21 +793,17 @@
       "buildGridCss": {
         "id": "builder:buildGridCss",
         "sourceFile": "lib/clicky-button.js",
-        "sourceLine": 2254,
-        "displayName": null,
-        "strategicPurpose": null,
-        "tacticalObjective": null,
-        "annotated": false,
-        "missingTags": [
-          "displayName",
-          "strategicPurpose",
-          "tacticalObjective"
-        ]
+        "sourceLine": 2260,
+        "displayName": "Grid & Housing Chrome Rule Emitter",
+        "strategicPurpose": "Owns the outermost structural layer of the DOM tree — the flex grid wrapper, the chrome housing (with its bevel/shadow finish), the per-button cell that clips the cap, and the cavity that is revealed as the key presses down — so the illusion of a key seated in a chrome-framed slot lives in one place instead of being re-derived per element.",
+        "tacticalObjective": "Emits the CSS rules for `.btn-grid`, `.btn-housing` (+ its `--segmented` variant and the pressed-state box-shadow/filter swap), `.btn-cell` and its `::before` cavity pseudo-element, and — when housingLayout is 'segmented' — `.btn-housing--segmented`, `.btn-divider`, and the `.seg-first`/`.seg-last` corner-radius rules. Per-element detail is gap-tracked in scripts/artifact-annotations.mjs (id prefix `element:`).",
+        "annotated": true,
+        "missingTags": []
       },
       "buildToggleFaceCss": {
         "id": "builder:buildToggleFaceCss",
         "sourceFile": "lib/clicky-button.js",
-        "sourceLine": 3032,
+        "sourceLine": 3044,
         "displayName": "Toggle/Radio-Mode Face Rule + Keyframe Emitter",
         "strategicPurpose": "Toggle mode (and radio, built on top of it per issue #37 — `:has(input:checked)` is input-type-agnostic) needs a persistent checked-state read, not just a momentary press, so its rules and keyframes are a parallel but distinct system from click mode's, sharing only the visual language.",
         "tacticalObjective": "Emits `.clicky-toggle` (and its checked/hover/focus states) plus the toggle-press-on, toggle-press-off, toggle-xform-on, toggle-xform-off, toggle-icon-color-on, and toggle-icon-color-off keyframes used by the `.toggle-did-interact` JS-driven bounce.",
@@ -817,7 +813,7 @@
       "buildVarMap": {
         "id": "builder:buildVarMap",
         "sourceFile": "lib/clicky-button.js",
-        "sourceLine": 1058,
+        "sourceLine": 1068,
         "displayName": "CSS Custom-Property Map Compiler",
         "strategicPurpose": "The intermediate artifact every emitted CSS rule consumes — collapsing all client-tunable geometry/color/timing math (radius clamping, skew space-reservation, shadow layering, per-property animation delay) into one flat, generation-time-frozen set of `--*` custom properties, so the CSS emitters below never re-derive that math and can never disagree with each other about it.",
         "tacticalObjective": "Merges a validated ClickyConfig into ~71 (up to 87 with optional features active) CSS custom properties, grouped and gap-tracked in scripts/artifact-annotations.mjs; exposed publicly via buildClickyVars and consumed internally by buildCss.",
@@ -827,7 +823,7 @@
       "sharedFaceCssProps": {
         "id": "builder:sharedFaceCssProps",
         "sourceFile": "lib/clicky-button.js",
-        "sourceLine": 2670,
+        "sourceLine": 2679,
         "displayName": "Shared Button-Face Property Emitter",
         "strategicPurpose": "The cap's resting-state declarations (position, sizing, color, shadow, padding) are identical in click and toggle mode — factoring them into one function is what guarantees the two modes' `.btn-face` can never drift apart on the properties they share.",
         "tacticalObjective": "Emits the shared `.btn-face` declaration block consumed by both buildClickFaceCss and buildToggleFaceCss.",

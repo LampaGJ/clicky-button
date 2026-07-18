@@ -169,6 +169,11 @@ export const ClickyConfigSchema = z.object({
   specularIndependent: z.boolean(),
   contactIntensity: pct0to100,
 
+  // Mechanical-keycap sculpt (2.1.0). taper: per-side cap-top inset (% of
+  // container width); dish: face concavity depth (%). Both 0 = flat button.
+  taper: pct0to100,
+  dish: pct0to100,
+
   // Per-button variants (issue #29) — v1: color + icon family only.
   variants: z.record(
     z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, { error: 'variant keys are label slugs' }),

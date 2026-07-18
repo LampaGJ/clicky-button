@@ -7,9 +7,9 @@
   --grid-align: center;
   --slot-breathing-room: 28px;
   --housing-width: 208px;
-  --housing-height: 116px;
+  --housing-height: 102px;
   --housing-width-base: 208px;
-  --housing-height-base: 116px;
+  --housing-height-base: 102px;
   --container-width: 180px;
   --container-height: 88px;
   --radius: 14px;
@@ -35,6 +35,8 @@
   --light-y: 25%;
   --specular-alpha: 0.000;
   --specular-size: 60%;
+  --taper: 0px;
+  --dish: 0.000;
   --button-wall-color: #c8c0b4;
   --button-wall-shadow-alpha: 0.850;
   --button-wall-shadow-edge-ratio: 0.500;
@@ -76,10 +78,10 @@
   --frame-bevel-alpha: 0.500;
   --frame-bevel-alpha-shadow: 0.350;
   --frame-bevel-width: 1px;
-  --frame-bevel-conic-tr-start: 52.65deg;
-  --frame-bevel-conic-tr-end: 73.91deg;
-  --frame-bevel-conic-bl-start: 232.65deg;
-  --frame-bevel-conic-bl-end: 253.91deg;
+  --frame-bevel-conic-tr-start: 56.14deg;
+  --frame-bevel-conic-tr-end: 77.53deg;
+  --frame-bevel-conic-bl-start: 236.14deg;
+  --frame-bevel-conic-bl-end: 257.53deg;
   --duration: 160ms;
   --press-duration: 80ms;
   --shadow-flush-frac: 1.000;
@@ -207,10 +209,10 @@
 
 :root .btn-cell {
   position: absolute;
-  top: var(--frame-width);
+  top: max(0px, calc(var(--frame-width) - var(--wall-h)));
   left: var(--frame-width);
   right: var(--frame-width);
-  height: var(--container-height);
+  bottom: var(--frame-width);
   /* NOT a container-type here (issue #96): .btn-scale is the single cq
      container, so every geometry var resolves in one space and the concentric
      ring invariant (--radius-bot === --radius + --frame-width) holds textually.
@@ -225,14 +227,10 @@
 :root .btn-cell::before {
   content: '';
   position: absolute;
-  /* The cavity's top edge sits exactly where the face lands when it goes
-     FLUSH — one wall-height below the resting face. Until the key has sunk
-     that far its own wall band still fills the gap, so nothing of the recess
-     may show; only once the visible wall reaches zero does the cavity start
-     to be revealed from its top edge. (Pinning this to --frame-width instead
-     leaked the recess in from the first pixel of travel on any key whose wall
-     is deeper than its frame — most visibly on frameless deep-travel keys,
-     where fw is 0.)
+  /* STATIC recess pinned at the flush line (top: --wall-h) — it does NOT
+     animate. Hidden at rest behind the proud cap; as the key sinks the cap
+     uncovers the housing surface first (pre-flush, above this edge) and then
+     this channel (post-flush, below it). See cavityStaticTop.
      Slight 1px inflation on the visible edges prevents sub-pixel anti-alias
      gaps where the dark wall corner meets the bright chrome surround. */
   top: var(--wall-h);
@@ -264,11 +262,10 @@
   var(--cavity-glow-resting);
   background-blend-mode: multiply;
   pointer-events: none;
-  transition: top var(--shadow-release-dur) var(--shadow-ease-release), background-image var(--shadow-release-dur) var(--shadow-ease-release);
+  transition: background-image var(--shadow-release-dur) var(--shadow-ease-release);
 }
 :root .btn-cell:has(.clicky-btn:active)::before,
 :root .btn-cell:has(.clicky-toggle input:checked)::before {
-  top: max(0px, calc(var(--wall-h) - var(--press-translate)));
   background-image: linear-gradient(
     to right,
     rgba(0, 0, 0, var(--cavity-wall-shadow-alpha))                                                0%,
@@ -277,7 +274,7 @@
     rgba(0, 0, 0, var(--cavity-wall-shadow-alpha))                                              100%
   ),
   var(--cavity-glow-pressed);
-  transition: top var(--shadow-press-dur) var(--shadow-ease-press) var(--shadow-press-delay), background-image var(--shadow-press-dur) var(--shadow-ease-press) var(--shadow-press-delay);
+  transition: background-image var(--shadow-press-dur) var(--shadow-ease-press) var(--shadow-press-delay);
 }
 
   :root .btn-glow {
@@ -428,16 +425,6 @@
 :root .clicky-btn.clicky-press .btn-wall {
   animation: clicky-transform-cycle-217lh5 calc(var(--press-duration) + var(--duration)) linear forwards;
 }
-
-/* Cavity-reveal, click-mode full press cycle (issue #96) — the recess top edge
-   tracks the descending cap down and back, so the dark recess fills the band
-   the cap vacates (never bare housing chrome above the sinking cap). */
-@keyframes clicky-cavity-top-cycle {
-  0% { top: var(--wall-h); }
-  33.33% { top: max(0px, calc(var(--wall-h) - var(--press-translate))); }
-  100% { top: var(--wall-h); }
-}
-
 /* Lit channel, click-mode full press cycle (issue #53b) — driven by the SAME
    flush-point offsets clicky-shadow-cycle-217lh5 already uses (sh.flushDown /
    sh.bottom / sh.flushUp), never a parallel timing source: the channel only
@@ -460,10 +447,10 @@
 }
 
 :root .btn-cell:has(.clicky-btn.clicky-press)::before {
-  animation-name: clicky-cavity-top-cycle, clicky-glow-channel-cycle-217lh5;
-  animation-duration: calc(var(--press-duration) + var(--duration)), calc(var(--press-duration) + var(--duration));
-  animation-timing-function: linear, linear;
-  animation-fill-mode: forwards, forwards;
+  animation-name: clicky-glow-channel-cycle-217lh5;
+  animation-duration: calc(var(--press-duration) + var(--duration));
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
 }
 
 /* Icon press-darken (realism pack #7d) — the icon participates in the same

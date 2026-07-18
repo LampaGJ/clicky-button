@@ -98,8 +98,10 @@ describe('parallelogram skew v2 geometry (issue #40 — housing-level shear, bot
     const fw = 14; // default frameWidth, frameEnabled default true
     const vars = buildClickyVars({ containerWidth, containerHeight, skewXAngle, skewYAngle });
     const W0 = containerWidth + 2 * fw;
-    // Even ring (issue #90): housing reserves fw above AND below the keycap.
-    const H0 = containerHeight + 2 * fw;
+    // Channel-centred ring: H0 = max(fw, wallH) + faceH + fw (faceH = ch - wallH).
+    const wallH = Math.max(1, Math.round(containerHeight * 16 / 100)); // default wallHRatio 16
+    const faceH = containerHeight - wallH;
+    const H0 = Math.max(fw, wallH) + faceH + fw;
     const expectedWidenX = Math.ceil(H0 * Math.abs(tan(skewXAngle)) + W0 * Math.abs(tan(skewXAngle) * tan(skewYAngle)));
     const expectedWidenY = Math.ceil(W0 * Math.abs(tan(skewYAngle)));
     expect(vars['--housing-width']).toBe(`${W0 + expectedWidenX}px`);
@@ -211,19 +213,18 @@ describe('conic-gradient corner bevel stop math (issue #18)', () => {
 describe('equal ring + flush-gated reveal (owner invariants)', () => {
   const px = s => parseFloat(s);
 
-  // Issue #90 VOIDS the pre-#90 "ring is exactly equal top and bottom at
-  // flush" invariant on owner's explicit directive: an exactly-equal ring
-  // requires cellTop === 0 whenever wallH >= frameWidth, which is precisely
-  // the corner-tangency singularity that read as a hard wedge/seam (issues
-  // #89/#90). The bottom ring (never touched by the floor) still lands
-  // exactly on frameWidth; the top ring is now `max(floor + wallH,
-  // frameWidth)` — equal to the old invariant only when the floor is 0.
-  // Even ring + concentric corners (issue #90, final model): the keycap is
-  // inset exactly frame-width on all four sides, and the housing corner radius
-  // is derived as cap-radius + frame-width, so the two corner arcs are
-  // concentric and the chrome ring is a uniform fw band all the way around —
-  // no wedge, no lumpy top corners.
-  it('the chrome ring is exactly frame width on every side at rest', () => {
+  // Even ring around the CHANNEL (owner directive, revisiting #90): the ring is
+  // judged around the opening the key sinks into, not the proud resting cap.
+  // The channel is inset fw on all four sides (bottom/sides exactly fw; top fw
+  // when wallH <= fw, else wallH — the honest projection of a proud keycap that
+  // rises above the plate). radius-bot stays R + fw, now concentric with the
+  // CHANNEL corners. At rest the proud key stands above the plate and covers the
+  // top chrome — correct: a keycap sits above its slot.
+  it('the chrome ring is even around the CHANNEL: bottom/sides always fw, top = max(fw, wallH)', () => {
+    // The ring is judged around the channel (the opening the key sinks into),
+    // not the proud resting cap. The channel top sits at cellTop + wallH; the
+    // channel bottom is the cell bottom. Bottom ring is always fw; the top ring
+    // is fw for shallow walls and wallH for a proud keycap (honest projection).
     const cases = [
       { label: 'wall === frame', cfg: {} },
       { label: 'shallow wall',   cfg: { wallHRatio: 4 } },
@@ -234,15 +235,17 @@ describe('equal ring + flush-gated reveal (owner invariants)', () => {
     for (const { label, cfg } of cases) {
       const v = buildClickyVars(cfg);
       const fw = px(v['--frame-width']);
+      const wallH = px(v['--wall-h']);
       const H = px(v['--housing-height']);
-      const cellTop = fw;                                  // top inset (restingChromeAbove)
-      const cellBottom = H - (cellTop + px(v['--container-height']));  // bottom inset
-      expect(cellTop, `${label}: top ring === fw`).toBe(fw);
-      expect(cellBottom, `${label}: bottom ring === fw`).toBeCloseTo(fw, 5);
+      const cellTop = Math.max(0, fw - wallH);                       // restingChromeAbove
+      const channelTopRing = cellTop + wallH;                        // housing top → channel
+      const channelBottomRing = H - (cellTop + px(v['--container-height']));
+      expect(channelTopRing, `${label}: channel top ring === max(fw, wallH)`).toBeCloseTo(Math.max(fw, wallH), 5);
+      expect(channelBottomRing, `${label}: channel bottom ring === fw`).toBeCloseTo(fw, 5);
     }
   });
 
-  it('the housing corner is concentric with the cap corner (Rh === R + fw) so corners never wedge', () => {
+  it('the housing corner is concentric with the channel corner (Rh === R + fw)', () => {
     const cases = [ {}, { frameWidth: 30 }, { radiusRatio: 10 }, { radiusRatio: 0 }, { containerHeight: 200 } ];
     for (const cfg of cases) {
       const v = buildClickyVars(cfg);
@@ -254,16 +257,18 @@ describe('equal ring + flush-gated reveal (owner invariants)', () => {
     }
   });
 
-  // A wall deeper than the frame rises higher than the plate's ring; it must
-  // still never be clipped by the housing (cell top floors at
-  // --resting-chrome-floor, issue #90 — never 0, and never negative).
-  it('the housing always fits the whole keycap plus an fw ring above and below', () => {
+  // Channel-centred housing: H = max(fw, wallH) + faceH + fw (faceH =
+  // containerHeight - wallH). The proud key never clips (cellTop floors at 0).
+  it('the housing reserves an even fw ring around the channel: H = max(fw,wallH) + faceH + fw', () => {
     for (const wallHRatio of [4, 16, 30, 40]) {
       const v = buildClickyVars({ wallHRatio });
       const fw = px(v['--frame-width']);
+      const wallH = px(v['--wall-h']);
       const H = px(v['--housing-height']);
-      // Even ring: H === containerHeight + 2*fw, cellTop === fw, for every wall.
-      expect(H).toBe(px(v['--container-height']) + 2 * fw);
+      const faceH = px(v['--container-height']) - wallH;
+      expect(H).toBe(Math.max(fw, wallH) + faceH + fw);
+      // The proud key never clips: cellTop = max(0, fw - wallH) >= 0.
+      expect(Math.max(0, fw - wallH)).toBeGreaterThanOrEqual(0);
     }
   });
 
@@ -285,10 +290,29 @@ describe('equal ring + flush-gated reveal (owner invariants)', () => {
     expect(v['--face-shadow-pressed']).toBe(v['--face-shadow-resting']);
   });
 
-  it('cavity top sits one wall-height below the resting face, so nothing leaks in before flush', () => {
+  it('recess is a STATIC hole pinned at the flush line (top: wall-h), no cavity-top transition/keyframe', () => {
+    // The cavity sits STATICALLY at --wall-h (the flush line): hidden at rest
+    // behind the proud cap, uncovered as the key sinks — housing surface shows
+    // pre-flush (above this edge), the channel post-flush (below it). It must
+    // never animate its own `top` (that read as the channel bouncing — owner
+    // report), and the position must NOT depend on press depth.
     const css = buildClickyCss();
-    expect(css).toMatch(/\.btn-cell::before\s*\{[^}]*top: var\(--wall-h\);/s);
-    expect(css).not.toMatch(/\.btn-cell::before\s*\{[^}]*top: var\(--frame-width\);/s);
+    const cavityRule = css.match(/\.btn-cell::before\s*\{[^}]*\}/s)[0];
+    expect(cavityRule).toContain('top: var(--wall-h);');
+    // The cavity top must not track the cap (no press-translate in its geometry).
+    expect(cavityRule).not.toContain('press-translate');
+    expect(cavityRule).not.toContain('top: var(--frame-width);');
+    expect(css).not.toContain('clicky-cavity-top-cycle');
+    expect(css).not.toMatch(/transition: top /);
+  });
+
+  it('the static wall-h cavity is depth-independent: deep and shallow presses match', () => {
+    // Same static top regardless of press depth — the cap uncovers a fixed hole.
+    const deep = buildClickyCss({ wallHRatio: 16, pressDepthRatio: 40 });
+    const shallow = buildClickyCss({ wallHRatio: 20, pressDepthRatio: 6 });
+    for (const css of [deep, shallow]) {
+      expect(css).toMatch(/\.btn-cell::before\s*\{[^}]*top: var\(--wall-h\);/s);
+    }
   });
 
   it('shadow keyframes hold resting until flush and clear it on the way back up', () => {
@@ -306,18 +330,23 @@ describe('equal ring + flush-gated reveal (owner invariants)', () => {
   });
 });
 
-describe('deep walls keep the even ring (issue #90 final model)', () => {
+describe('deep walls: proud keycap rises above the plate (channel-centred ring)', () => {
   const px = s => parseFloat(s);
 
-  // Under the even-ring model the wall depth no longer perturbs the ring: the
-  // keycap (face + wall) fills the cell, the cell is inset fw all around, so
-  // even a wall much deeper than the frame sits inside a uniform fw ring.
-  it('a wall deeper than the frame still sits in a uniform fw ring', () => {
+  // A wall deeper than the frame rises higher than the ring: the channel top
+  // ring reads wallH (the honest projection of a proud keycap), while the
+  // bottom ring stays fw. The cell top floors at 0 so the key never clips.
+  it('a wall deeper than the frame rises higher than the plate; the channel bottom ring stays fw', () => {
     const v = buildClickyVars({ wallHRatio: 40, frameWidth: 10 });   // wall 35 > fw 10
     const fw = px(v['--frame-width']);
     const wallH = px(v['--wall-h']);
     const H = px(v['--housing-height']);
     expect(wallH).toBeGreaterThan(fw);
-    expect(H).toBe(px(v['--container-height']) + 2 * fw);            // even ring, no wall term
+    const cellTop = Math.max(0, fw - wallH);
+    expect(cellTop).toBe(0);                                          // proud key, floored
+    const channelTopRing = cellTop + wallH;
+    const channelBottomRing = H - (cellTop + px(v['--container-height']));
+    expect(channelTopRing).toBe(wallH);                              // rises to wallH, honest
+    expect(channelBottomRing).toBeCloseTo(fw, 5);                    // bottom ring stays fw
   });
 });

@@ -22,3 +22,5 @@ _cqprobe.*
 _pc.*
 _sk.*
 _seg.*
+_proto_*.html
+_proto_*.mjs

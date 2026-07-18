@@ -3,6 +3,32 @@
 All notable changes to this project are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/); this project uses semantic versioning.
 
+## [2.0.2] — 2026-07-17
+
+Keycap geometry fixes — the pressed state and the chrome ring now render
+correctly on proud keycaps (a tall wall relative to the frame). Verified in real
+WebKit and visually across rest → flush → deep press.
+
+### Fixed
+
+- **Pressed state** no longer bounces or reveals a recess too early. The cavity is
+  now a static hole pinned at the flush line (`top: --wall-h`): as the key sinks it
+  uncovers the housing surface pre-flush, then the channel post-flush. Nothing
+  animates its position, so there is no channel bounce.
+- **Chrome ring is measured around the channel, not the resting cap.** A proud key
+  stands above its plate, so centering the ring on the cap pushed the channel down
+  and read as excess chrome above the button. The ring is now even (frame-width) on
+  the sides and bottom, with the proud key rising out of the top.
+- **Bottom ring no longer doubles.** The cell is pinned by top + bottom rather than
+  a fixed height, so the freed top inset on a proud key can't pile up at the bottom.
+
+### Internal
+
+- Groundwork for the mechanical-keycap **sculpt** (taper + dish config keys) is in the
+  engine, off by default and byte-identical when unset. The generator controls and a
+  Keyboard preset land in 2.1.0 alongside the light switch and first-class button-type
+  modes.
+
 ## [2.0.1] — 2026-07-17
 
 Completes the v2 responsive promise — **every form** now reflows to any size and
