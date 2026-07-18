@@ -50,8 +50,12 @@
 
         <div class="toolbar-style-picker" id="style-picker"></div>
 
-        <div class="toolbar-style-picker">
+        <!-- Gallery-preset dropdown (populated by app.js, issue #99) -->
+        <div class="toolbar-style-picker" id="gallery-picker"></div>
+
+        <div class="toolbar-style-picker" style="display:inline-flex;gap:6px;">
           <a href="gallery.html" style="display:inline-flex;align-items:center;justify-content:center;padding:3px 10px;background:var(--ctrl-bg);border:1px solid var(--ctrl-border);border-radius:99px;font-size:11px;font-weight:500;line-height:1.4;color:var(--text-secondary);text-decoration:none;white-space:nowrap;">Gallery</a>
+          <button type="button" id="btn-test-layout" title="Open this button in the flexbox layout playground" style="display:inline-flex;align-items:center;justify-content:center;padding:3px 10px;background:var(--ctrl-bg);border:1px solid var(--ctrl-border);border-radius:99px;font-size:11px;font-weight:500;line-height:1.4;color:var(--text-secondary);cursor:pointer;white-space:nowrap;">Test in layout ▸</button>
         </div>
 
         <div class="toolbar-mode-toggle">

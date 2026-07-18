@@ -20,6 +20,10 @@ const {
 const { clickyEnhancerJs } = await import(
   __v ? `./lib/clicky-button-enhancer.js?v=${__v}` : './lib/clicky-button-enhancer.js'
 );
+// Shared catalog data — material styles + gallery tiles (issue #99). Same source
+// the gallery page imports, so the Material picker and Gallery-preset dropdown
+// never drift from what the gallery renders.
+const { MATERIAL_PRESETS, TILES } = await import(__v ? `./presets.js?v=${__v}` : './presets.js');
 
 const {
   buildCss,
@@ -944,68 +948,6 @@ function syncIconPicker() {
   depRow('icon-color-row', !!state.iconUseColor);
 }
 
-// ── Material presets (rubber / plastic / metal / glass) ────────
-// Config bundles over existing sliders (item #7 dissent) — pure data, no lib
-// changes. Values are pasted verbatim from the expert-review comment on
-// issue #19 (3D-illusion designer sign-off) — do not invent replacements.
-// Applied via the existing applyStyleConfig()/syncAllControls() round-trip,
-// the same mechanism the saved-style picker uses.
-const MATERIAL_PRESETS = {
-  rubber: {
-    radiusRatio: 30, faceColor: '#3f4142', textColor: '#e8e8e8',
-    wallHRatio: 22, pressDepthRatio: 30, pressDarken: 18,
-    insetDepthRatio: 10, insetBlurRatio: 20, insetAlphaTop: 40, insetAlphaBot: 20, faceEdgeAlpha: 5,
-    topHighlight: true, highlightColor: '#ffffff', highlightOpacity: 15, rimHeightRatio: 10,
-    buttonWallShadowAlpha: 60, buttonWallShadowEdgeRatio: 35, buttonWallGradientSpread: 40,
-    cavityWallShadowAlpha: 60, cavityWallShadowEdgeRatio: 35, cavityWallGradientSpread: 40,
-    ambientIntensity: 25, ambientBlurMult: 4.5, ambientYMult: 2.0, ambientPressReduction: 50,
-    frameEnabled: false,
-    duration: 260, pressDuration: 140, easingPreset: 'soft', overshoot: false,
-    specularAlpha: 8, lightAngleX: 50, lightAngleY: 25, specularSize: 70,
-    contactIntensity: 20,
-  },
-  plastic: {
-    radiusRatio: 14, faceColor: '#e6e6ea', textColor: '#1a1a1a',
-    wallHRatio: 8, pressDepthRatio: 10, pressDarken: 10,
-    insetDepthRatio: 5, insetBlurRatio: 4, insetAlphaTop: 65, insetAlphaBot: 35, faceEdgeAlpha: 15,
-    topHighlight: true, highlightColor: '#ffffff', highlightOpacity: 35, rimHeightRatio: 6,
-    buttonWallShadowAlpha: 90, buttonWallShadowEdgeRatio: 60, buttonWallGradientSpread: 10,
-    cavityWallShadowAlpha: 90, cavityWallShadowEdgeRatio: 60, cavityWallGradientSpread: 10,
-    ambientIntensity: 20, ambientBlurMult: 2.0, ambientYMult: 1.0, ambientPressReduction: 50,
-    frameEnabled: true, frameWidth: 6, frameBevelAlpha: 50, frameBevelWidth: 1,
-    duration: 90, pressDuration: 50, easingPreset: 'snappy', overshoot: true,
-    specularAlpha: 20, lightAngleX: 50, lightAngleY: 25, specularSize: 40,
-    contactIntensity: 10,
-  },
-  metal: {
-    radiusRatio: 10, faceColor: '#b0b8c0', textColor: '#12161a',
-    wallHRatio: 12, pressDepthRatio: 14, pressDarken: 14,
-    insetDepthRatio: 6, insetBlurRatio: 6, insetAlphaTop: 60, insetAlphaBot: 30, faceEdgeAlpha: 10,
-    topHighlight: true, highlightColor: '#eef3f8', highlightOpacity: 25, rimHeightRatio: 6,
-    buttonWallShadowAlpha: 90, buttonWallShadowEdgeRatio: 65, buttonWallGradientSpread: 15,
-    useCavityWallColor: true, cavityWallColor: '#9aa4ad',
-    cavityWallShadowAlpha: 90, cavityWallShadowEdgeRatio: 65, cavityWallGradientSpread: 15,
-    ambientIntensity: 20, ambientBlurMult: 1.5, ambientYMult: 1.0, ambientPressReduction: 50,
-    frameEnabled: true, frameWidth: 20, frameColorHi: '#eef2f6', frameColor: '#9aa4ad', frameColorLo: '#5b6670',
-    frameBevelAlpha: 70, frameBevelWidth: 2,
-    duration: 130, pressDuration: 70, easingPreset: 'black', overshoot: true,
-    specularAlpha: 12, lightAngleX: 40, lightAngleY: 20, specularSize: 30,
-    contactIntensity: 15,
-  },
-  glass: {
-    radiusRatio: 22, faceColor: '#eaf6fb', textColor: '#1a2a33',
-    wallHRatio: 14, pressDepthRatio: 16, pressDarken: 8,
-    insetDepthRatio: 8, insetBlurRatio: 14, insetAlphaTop: 20, insetAlphaBot: 10, faceEdgeAlpha: 0,
-    topHighlight: true, highlightColor: '#ffffff', highlightOpacity: 45, rimHeightRatio: 10,
-    buttonWallShadowAlpha: 35, buttonWallShadowEdgeRatio: 20, buttonWallGradientSpread: 55,
-    cavityWallShadowAlpha: 35, cavityWallShadowEdgeRatio: 20, cavityWallGradientSpread: 55,
-    ambientIntensity: 15, ambientBlurMult: 4.0, ambientYMult: 1.75, ambientPressReduction: 50,
-    frameEnabled: true, frameWidth: 8, frameBevelAlpha: 30, frameBevelWidth: 1,
-    duration: 150, pressDuration: 80, easingPreset: 'clear', overshoot: true,
-    specularAlpha: 55, lightAngleX: 45, lightAngleY: 20, specularSize: 80,
-    contactIntensity: 10,
-  },
-};
 
 // ── Square / circle quick-preset (issue #32) ───────────────────
 // No new CSS mechanism needed — buildVarMap already clamps radius via
@@ -1045,6 +987,47 @@ function renderMaterialPicker() {
   container.querySelector('#material-preset-select').addEventListener('change', e => {
     const preset = MATERIAL_PRESETS[e.target.value];
     if (preset) applyStyleConfig(preset);
+  });
+}
+
+// Gallery-preset dropdown (issue #99) — loads any gallery tile's full config
+// (geometry + style) into the configurator. Populates the #gallery-picker
+// container in index.html's toolbar. Uses the SAME applyStyleConfig round-trip
+// as the material picker; TILES is the shared catalog (presets.js) the gallery
+// renders from, so the dropdown and the gallery never drift.
+function renderGalleryPicker() {
+  const picker = $('gallery-picker');
+  if (!picker) return;
+  const opts = TILES.map((t, i) => `<option value="${i}">${t.name}</option>`).join('');
+  picker.innerHTML = `<select id="gallery-preset-select" title="Load a gallery preset into the configurator">
+    <option value="" selected disabled>Gallery preset…</option>
+    ${opts}
+  </select>`;
+  picker.querySelector('#gallery-preset-select').addEventListener('change', e => {
+    const tile = TILES[+e.target.value];
+    // Gallery tiles are COMPLETE looks (the showcase renders them as
+    // defaults + tile), so load defaults FIRST, then the tile — a full replace,
+    // not an override on the current state (otherwise a prior icon/skew/etc.
+    // would leak in and the loaded preset wouldn't match the gallery tile).
+    // Contrast the Material picker above, which is deliberately a style overlay.
+    if (tile) applyStyleConfig({ ...defaultClickyConfig, ...tile.config });
+  });
+}
+
+// "Test in layout" — round-trip the current button into the gallery's flexbox
+// playground (issue #99). Stashes the working config where gallery.html reads
+// it, then navigates to the playground section. Carries the dev cache-buster.
+function wireTestInLayout() {
+  const btn = $('btn-test-layout');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    // Stash ONLY valid ClickyConfig keys — `state` also holds UI-only fields
+    // (previewBg, view3dRotate*, iconOnlyAriaLabel) that the engine's strict
+    // validator would reject in the playground.
+    const config = {};
+    for (const key of Object.keys(defaultClickyConfig)) config[key] = state[key];
+    try { localStorage.setItem('clicky-playground-config', JSON.stringify(config)); } catch { /* private mode: fall through to samples */ }
+    window.location.href = `gallery.html${__v ? `?v=${__v}` : ''}#playground`;
   });
 }
 
@@ -1458,6 +1441,8 @@ function boot() {
   renderIconPicker();
   renderStylePicker();
   renderMaterialPicker();
+  renderGalleryPicker();
+  wireTestInLayout();
   // Reflect the configurator's default state (amber SUBMIT) into every control
   // so the inputs match the preview on first load, then render.
   syncAllControls();
