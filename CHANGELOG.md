@@ -3,6 +3,35 @@
 All notable changes to this project are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/); this project uses semantic versioning.
 
+## [2.1.0] — 2026-07-18
+
+Generator UX + the final keycap corner polish.
+
+### Added
+
+- **Gallery-preset dropdown** in the generator toolbar — load any of the 30 gallery
+  tiles' full config (geometry + style) into the configurator with one pick. A
+  shared `presets.js` module now backs both the generator and the gallery, so the
+  dropdown and the showcase never drift.
+- **"Test in layout"** button — round-trips the current button into the gallery's
+  flexbox playground, rendering *your* configured button in a resizable flex
+  container (with a banner and a revert-to-samples link). (#99)
+
+### Fixed
+
+- **Proud keycap corners.** A proud cap now sits flush to the top (the top chrome
+  band is fully obscured by the cap), and the housing's top corners shrink to hug
+  the cap — so the cap's rounded corner no longer has a larger housing corner to
+  peek past. No top padding, no corner pinch, no gap. A flat cap keeps the uniform
+  frame-width ring; sharp (radius-0) buttons stay square; frameless buttons are
+  unaffected.
+
+### Note
+
+- The mechanical-keycap **sculpt** (taper + dish) remains in the engine, off by
+  default. Its generator controls + Keyboard preset, and the toggle **light
+  switch** and other button-type modes, are still planned for a follow-up release.
+
 ## [2.0.2] — 2026-07-17
 
 Keycap geometry fixes — the pressed state and the chrome ring now render
