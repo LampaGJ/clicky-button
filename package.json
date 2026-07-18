@@ -1,6 +1,6 @@
 {
   "name": "clicky-button",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Design tactile, skeuomorphic \"clicky\" buttons in the browser — tune every detail with live sliders, watch them press and toggle in 2D and 3D, then export drop-in HTML + CSS or generate them programmatically from a dependency-free ES module. v2: the exported button is genuinely responsive — it fills any container size and aspect ratio via container queries.",
   "private": true,
   "type": "module",
